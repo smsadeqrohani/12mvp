@@ -70,6 +70,96 @@ src/
 - ✅ **Profile Management**: User profile creation and management
 - ✅ **Responsive Design**: Mobile-first responsive layout
 - ✅ **RTL Layout**: Proper right-to-left text and layout support
+- ✅ **Toast Notifications**: Comprehensive notification system with Persian messages
+
+## 🔔 Toast Notification System
+
+The application includes a simple toast notification system built with [Sonner](https://sonner.emilkowal.ski/) that supports Persian (RTL) messages and matches the application's design system.
+
+### Features
+
+- **Persian Language Support**: All messages are in Persian with RTL text direction
+- **Authentication Feedback**: Success and error messages for login/logout operations
+- **Welcome Messages**: Personalized welcome toast when users access their dashboard
+- **Design System Integration**: Matches the app's dark theme and color palette
+
+### Usage
+
+#### Basic Usage
+
+```typescript
+import { toast } from "sonner";
+
+// Success message
+toast.success("با موفقیت وارد شدید");
+
+// Error message
+toast.error("خطا در ورود. لطفاً دوباره تلاش کنید");
+
+// Custom message with description
+toast.success(`سلام، ${userName}! 👋`, {
+  description: "به داشبورد خود خوش آمدید",
+  duration: 4000,
+});
+```
+
+#### Current Implementation
+
+The toast system is currently used in:
+
+1. **Welcome Message** (`HelloPage.tsx`): Shows a personalized welcome toast when users first load their dashboard
+2. **Login Success/Error** (`SignInForm.tsx`): Shows success message on successful login/signup and error messages for failed attempts
+3. **Logout Success/Error** (`SignOutButton.tsx`): Shows success message on logout and error message if logout fails
+
+### Configuration
+
+The toast system is configured in `src/App.tsx` with RTL support and custom styling:
+
+```typescript
+<Toaster
+  position="top-center"
+  expand={true}
+  richColors={true}
+  closeButton={true}
+  duration={4000}
+  toastOptions={{
+    style: {
+      direction: 'rtl',
+      textAlign: 'right',
+    },
+    className: 'toast-rtl',
+  }}
+/>
+```
+
+### Styling
+
+Custom styles are defined in `src/index.css` to match the application's design system with:
+- Dark theme colors (`#0f4a6b` background)
+- RTL text direction
+- Persian font family (Vazirmatn)
+- Color-coded borders for different toast types
+- Custom action button styling
+
+### Future Usage
+
+To add toast notifications to new features:
+
+```typescript
+import { toast } from "sonner";
+
+// For success operations
+toast.success("عملیات با موفقیت انجام شد");
+
+// For errors
+toast.error("خطا در انجام عملیات");
+
+// For warnings
+toast.warning("توجه: تغییرات ذخیره نشده‌ای دارید");
+
+// For information
+toast.info("اطلاعات جدید موجود است");
+```
 
 ## 🎨 Design Guidelines
 

@@ -44,7 +44,20 @@ function AppContent() {
           </Routes>
         </div>
       </main>
-      <Toaster />
+      <Toaster
+        position="top-center"
+        expand={true}
+        richColors={true}
+        closeButton={true}
+        duration={4000}
+        toastOptions={{
+          style: {
+            direction: 'rtl',
+            textAlign: 'right',
+          },
+          className: 'toast-rtl',
+        }}
+      />
     </div>
   );
 }

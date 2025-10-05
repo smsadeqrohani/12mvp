@@ -54,3 +54,98 @@ body {
 .dark {
   color-scheme: dark;
 }
+
+/* Toast notification styles */
+.toast-rtl {
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: "Vazirmatn", "Inter Variable", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+/* Custom toast styling to match design system */
+[data-sonner-toaster] {
+  --normal-bg: #0f4a6b;
+  --normal-border: #374151;
+  --normal-text: #e5e7eb;
+  --success-bg: #0f4a6b;
+  --success-border: #10b981;
+  --success-text: #e5e7eb;
+  --error-bg: #0f4a6b;
+  --error-border: #ef4444;
+  --error-text: #e5e7eb;
+  --warning-bg: #0f4a6b;
+  --warning-border: #f59e0b;
+  --warning-text: #e5e7eb;
+  --info-bg: #0f4a6b;
+  --info-border: #3b82f6;
+  --info-text: #e5e7eb;
+}
+
+[data-sonner-toast] {
+  background: #0f4a6b !important;
+  border: 1px solid #374151 !important;
+  color: #e5e7eb !important;
+  direction: rtl !important;
+  text-align: right !important;
+  font-family: "Vazirmatn", "Inter Variable", ui-sans-serif, system-ui, sans-serif !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  border-color: #10b981 !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  border-color: #ef4444 !important;
+}
+
+[data-sonner-toast][data-type="warning"] {
+  border-color: #f59e0b !important;
+}
+
+[data-sonner-toast][data-type="info"] {
+  border-color: #3b82f6 !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: #e5e7eb !important;
+  font-weight: 600 !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #9ca3af !important;
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+[data-sonner-toast] [data-close-button] {
+  color: #9ca3af !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  margin-left: 8px !important;
+  margin-right: 0 !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  color: #e5e7eb !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-sonner-toast] [data-action-button] {
+  background: #ff701a !important;
+  color: white !important;
+  border: none !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  margin-left: 8px !important;
+  margin-right: 0 !important;
+}
+
+[data-sonner-toast] [data-action-button]:hover {
+  background: #e55a00 !important;
+}

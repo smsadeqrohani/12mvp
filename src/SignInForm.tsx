@@ -21,6 +21,7 @@ export function SignInForm() {
           formData.set("flow", flow);
           void signIn("password", formData)
             .then(() => {
+              toast.success(flow === "signIn" ? "با موفقیت وارد شدید" : "حساب کاربری با موفقیت ایجاد شد");
               navigate("/");
             })
             .catch((error) => {
