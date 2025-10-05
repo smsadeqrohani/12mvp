@@ -55,32 +55,7 @@ export function SignInForm() {
         <button className="auth-button" type="submit" disabled={submitting}>
           {flow === "signIn" ? "ورود" : "ثبت نام"}
         </button>
-        <div className="text-center text-sm text-gray-300">
-          <span>
-            {flow === "signIn"
-              ? "حساب ندارید؟ "
-              : "قبلاً حساب دارید؟ "}
-          </span>
-          <button
-            type="button"
-            className="text-accent hover:text-accent-hover hover:underline font-medium cursor-pointer"
-            onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
-          >
-            {flow === "signIn" ? "ثبت نام کنید" : "وارد شوید"}
-          </button>
-        </div>
       </form>
-      <div className="flex items-center justify-center my-3">
-        <hr className="my-4 grow border-gray-500" />
-        <span className="mx-4 text-gray-300">یا</span>
-        <hr className="my-4 grow border-gray-500" />
-      </div>
-      <button 
-        className="auth-button" 
-        onClick={() => void signIn("anonymous").then(() => navigate("/"))}
-      >
-        ورود ناشناس
-      </button>
     </div>
   );
 }
