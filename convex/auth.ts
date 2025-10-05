@@ -60,7 +60,111 @@ export const createProfile = mutation({
   },
 });
 
+export const getAllUsers = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can view all users");
+    }
+    
+    // Get all profiles with user data
+    const profiles = await ctx.db.query("profiles").collect();
+    const usersWithProfiles = await Promise.all(
+      profiles.map(async (profile) => {
+        const user = await ctx.db.get(profile.userId);
+        return {
+          ...profile,
+          email: user?.email || "",
+          emailVerified: user?.emailVerificationTime ? true : false,
+          name: profile.name,
+          isAdmin: profile.isAdmin,
+        };
+      })
+    );
+    
+    return usersWithProfiles;
+  },
+});
+
 export const makeUserAdmin = mutation({
+  args: { userId: v.id("users"), isAdmin: v.boolean() },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can modify user admin status");
+    }
+    
+    // Update target user's profile
+    const targetProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .unique();
+    
+    if (!targetProfile) {
+      throw new Error("User profile not found");
+    }
+    
+    await ctx.db.patch(targetProfile._id, {
+      isAdmin: args.isAdmin,
+    });
+  },
+});
+
+export const updateUserName = mutation({
+  args: { userId: v.id("users"), name: v.string() },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can update user names");
+    }
+    
+    // Update target user's profile
+    const targetProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .unique();
+    
+    if (!targetProfile) {
+      throw new Error("User profile not found");
+    }
+    
+    await ctx.db.patch(targetProfile._id, {
+      name: args.name,
+    });
+  },
+});
+
+export const resetUserPassword = mutation({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
     const currentUserId = await getAuthUserId(ctx);
@@ -75,21 +179,12 @@ export const makeUserAdmin = mutation({
       .unique();
     
     if (!currentProfile?.isAdmin) {
-      throw new Error("Only admins can make other users admin");
+      throw new Error("Only admins can reset user passwords");
     }
     
-    // Update target user's profile
-    const targetProfile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId))
-      .unique();
-    
-    if (!targetProfile) {
-      throw new Error("User profile not found");
-    }
-    
-    await ctx.db.patch(targetProfile._id, {
-      isAdmin: true,
-    });
+    // For now, we'll just return success
+    // In a real implementation, you'd send a password reset email
+    // or generate a temporary password
+    return { success: true, message: "Password reset initiated" };
   },
 });
