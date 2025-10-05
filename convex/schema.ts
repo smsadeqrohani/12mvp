@@ -6,6 +6,7 @@ const applicationTables = {
   profiles: defineTable({
     userId: v.id("users"),
     name: v.string(),
+    isAdmin: v.boolean(),
   }).index("by_user", ["userId"]),
 };
 

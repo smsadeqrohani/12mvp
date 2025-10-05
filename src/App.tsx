@@ -1,25 +1,47 @@
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
-import { SignUpForm } from "./SignUpForm";
-import { ProfileSetup } from "./ProfileSetup";
-import { HelloPage } from "./HelloPage";
+import { LoginPage } from "./LoginPage";
+import { HomePage } from "./HomePage";
+import { AdminPage } from "./AdminPage";
 import { Toaster } from "sonner";
-import { useState } from "react";
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+  const userProfile = useQuery(api.auth.getUserProfile);
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4">
-        <h2 className="text-xl font-semibold text-primary">Chef</h2>
-        <Authenticated>
+    <div className="min-h-screen flex flex-col bg-background dark">
+      <header className="sticky top-0 z-10 bg-background-light/80 backdrop-blur-sm h-16 flex justify-between items-center border-b border-gray-600 shadow-sm pl-4 pr-4">
+        <h2 className="text-xl font-semibold text-accent">12 MVP</h2>
+        <div className="flex gap-2">
+          {userProfile?.isAdmin && location.pathname !== '/admin' && (
+            <a 
+              href="/admin"
+              className="pl-3 pr-3 py-2 rounded bg-background-light text-accent border border-gray-500 font-semibold hover:bg-accent hover:text-white transition-colors shadow-sm hover:shadow"
+            >
+              پنل مدیریت
+            </a>
+          )}
+          {location.pathname === '/admin' && (
+            <a 
+              href="/"
+              className="pl-3 pr-3 py-2 rounded bg-background-light text-accent border border-gray-500 font-semibold hover:bg-accent hover:text-white transition-colors shadow-sm hover:shadow"
+            >
+              بازگشت
+            </a>
+          )}
           <SignOutButton />
-        </Authenticated>
+        </div>
       </header>
       <main className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md mx-auto">
-          <Content />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+          </Routes>
         </div>
       </main>
       <Toaster />
@@ -27,47 +49,11 @@ export default function App() {
   );
 }
 
-function Content() {
-  const [isSignUp, setIsSignUp] = useState(false);
-  const loggedInUser = useQuery(api.auth.loggedInUser);
-  const userProfile = useQuery(api.auth.getUserProfile);
-
-  if (loggedInUser === undefined || userProfile === undefined) {
-    return (
-      <div className="flex justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
+export default function App() {
   return (
-    <div className="flex flex-col gap-6">
-      <Unauthenticated>
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-primary mb-4">Welcome to Chef</h1>
-          <p className="text-lg text-gray-600">
-            {isSignUp ? "Create your account" : "Sign in to continue"}
-          </p>
-        </div>
-
-        {isSignUp ? <SignUpForm /> : <SignInForm />}
-        
-        <div className="text-center mt-4">
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="text-primary hover:underline"
-          >
-            {isSignUp 
-              ? "Already have an account? Sign in" 
-              : "Don't have an account? Sign up"
-            }
-          </button>
-        </div>
-      </Unauthenticated>
-
-      <Authenticated>
-        {!userProfile ? <ProfileSetup /> : <HelloPage />}
-      </Authenticated>
-    </div>
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
+

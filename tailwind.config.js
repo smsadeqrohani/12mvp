@@ -3,10 +3,11 @@ const { fontFamily } = require("tailwindcss/defaultTheme");
 module.exports = {
   mode: "jit",
   purge: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter var", ...fontFamily.sans],
+        sans: ["Vazirmatn", "Inter var", ...fontFamily.sans],
       },
       borderRadius: {
         DEFAULT: "8px",
@@ -19,16 +20,20 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "#4F46E5",
-          hover: "#4338CA",
+          DEFAULT: "#0a3651",
+          hover: "#0a2d42",
         },
         secondary: {
-          DEFAULT: "#6B7280",
-          hover: "#4B5563",
+          DEFAULT: "#0a3651",
+          hover: "#0a2d42",
         },
         accent: {
-          DEFAULT: "#8B5CF6",
-          hover: "#7C3AED",
+          DEFAULT: "#ff701a",
+          hover: "#e55a00",
+        },
+        background: {
+          DEFAULT: "#0a3651",
+          light: "#0f4a6b",
         },
       },
       spacing: {
@@ -42,4 +47,5 @@ module.exports = {
       boxShadow: ["hover", "active"],
     },
   },
+  plugins: [],
 };

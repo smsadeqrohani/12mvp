@@ -2,15 +2,17 @@ import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export function ProfileSetup() {
   const createProfile = useMutation(api.auth.createProfile);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="text-center">
-      <h2 className="text-2xl font-bold text-primary mb-4">Complete Your Profile</h2>
-      <p className="text-gray-600 mb-6">What should we call you?</p>
+      <h2 className="text-2xl font-bold text-accent mb-4">پروفایل خود را تکمیل کنید</h2>
+      <p className="text-gray-300 mb-6">چطور شما را صدا کنیم؟</p>
       
       <form
         className="flex flex-col gap-4"
@@ -22,27 +24,28 @@ export function ProfileSetup() {
 
           createProfile({ name })
             .then(() => {
-              toast.success("Profile created!");
+              toast.success("پروفایل ایجاد شد!");
+              navigate("/");
             })
             .catch((error) => {
               console.error(error);
-              toast.error("Could not create profile");
+              toast.error("نمی‌توان پروفایل ایجاد کرد");
             })
             .finally(() => setLoading(false));
         }}
       >
-        <label htmlFor="name">Your Name</label>
+        <label htmlFor="name" className="text-gray-200">نام شما</label>
         <input
           name="name"
           id="name"
           type="text"
           className="auth-input-field"
-          placeholder="Enter your name"
+          placeholder="نام خود را وارد کنید"
           required
           disabled={loading}
         />
         <button type="submit" className="auth-button" disabled={loading}>
-          {loading ? "Creating profile..." : "Continue"}
+          {loading ? "در حال ایجاد پروفایل..." : "ادامه"}
         </button>
       </form>
     </div>

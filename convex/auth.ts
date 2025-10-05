@@ -55,6 +55,41 @@ export const createProfile = mutation({
     await ctx.db.insert("profiles", {
       userId,
       name: args.name,
+      isAdmin: false,
+    });
+  },
+});
+
+export const makeUserAdmin = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can make other users admin");
+    }
+    
+    // Update target user's profile
+    const targetProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .unique();
+    
+    if (!targetProfile) {
+      throw new Error("User profile not found");
+    }
+    
+    await ctx.db.patch(targetProfile._id, {
+      isAdmin: true,
     });
   },
 });

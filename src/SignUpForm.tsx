@@ -1,10 +1,12 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export function SignUpForm() {
   const { signIn } = useAuthActions();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <form
@@ -18,20 +20,23 @@ export function SignUpForm() {
         const confirmPassword = formData.get("confirmPassword") as string;
 
         if (password !== confirmPassword) {
-          toast.error("Passwords don't match");
+          toast.error("رمزهای عبور مطابقت ندارند");
           setLoading(false);
           return;
         }
 
         signIn("password", { email, password, flow: "signUp" })
+          .then(() => {
+            navigate("/");
+          })
           .catch((error) => {
             console.error(error);
-            toast.error("Could not create account");
+            toast.error("نمی‌توان حساب ایجاد کرد");
           })
           .finally(() => setLoading(false));
       }}
     >
-      <label htmlFor="email">Email</label>
+      <label htmlFor="email" className="text-gray-300">ایمیل</label>
       <input
         name="email"
         id="email"
@@ -40,7 +45,7 @@ export function SignUpForm() {
         required
         disabled={loading}
       />
-      <label htmlFor="password">Password</label>
+      <label htmlFor="password" className="text-gray-300">رمز عبور</label>
       <input
         name="password"
         id="password"
@@ -49,7 +54,7 @@ export function SignUpForm() {
         required
         disabled={loading}
       />
-      <label htmlFor="confirmPassword">Confirm Password</label>
+      <label htmlFor="confirmPassword" className="text-gray-300">تأیید رمز عبور</label>
       <input
         name="confirmPassword"
         id="confirmPassword"
@@ -59,7 +64,7 @@ export function SignUpForm() {
         disabled={loading}
       />
       <button type="submit" className="auth-button" disabled={loading}>
-        {loading ? "Creating account..." : "Sign up"}
+        {loading ? "در حال ایجاد حساب..." : "ثبت نام"}
       </button>
     </form>
   );
