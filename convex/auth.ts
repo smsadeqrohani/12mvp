@@ -188,3 +188,366 @@ export const resetUserPassword = mutation({
     return { success: true, message: "Password reset initiated" };
   },
 });
+
+// Questions CRUD operations
+export const getAllQuestions = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can view all questions");
+    }
+    
+    return await ctx.db.query("questions").collect();
+  },
+});
+
+export const createQuestion = mutation({
+  args: {
+    mediaPath: v.optional(v.string()),
+    mediaStorageId: v.optional(v.id("_storage")),
+    questionText: v.string(),
+    option1Text: v.string(),
+    option2Text: v.string(),
+    option3Text: v.string(),
+    option4Text: v.string(),
+    rightAnswer: v.number(),
+    timeToRespond: v.number(),
+    grade: v.number(),
+    category: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can create questions");
+    }
+    
+    // Validate grade is between 1 and 5
+    if (args.grade < 1 || args.grade > 5) {
+      throw new Error("Grade must be between 1 and 5");
+    }
+    
+    // Validate time to respond is positive
+    if (args.timeToRespond <= 0) {
+      throw new Error("Time to respond must be positive");
+    }
+    
+    // Validate rightAnswer is between 1 and 4
+    if (args.rightAnswer < 1 || args.rightAnswer > 4) {
+      throw new Error("Right answer must be between 1 and 4");
+    }
+    
+    return await ctx.db.insert("questions", {
+      mediaPath: args.mediaPath,
+      mediaStorageId: args.mediaStorageId,
+      questionText: args.questionText,
+      option1Text: args.option1Text,
+      option2Text: args.option2Text,
+      option3Text: args.option3Text,
+      option4Text: args.option4Text,
+      rightAnswer: args.rightAnswer,
+      timeToRespond: args.timeToRespond,
+      grade: args.grade,
+      category: args.category,
+    });
+  },
+});
+
+export const updateQuestion = mutation({
+  args: {
+    questionId: v.id("questions"),
+    mediaPath: v.optional(v.string()),
+    mediaStorageId: v.optional(v.id("_storage")),
+    questionText: v.string(),
+    option1Text: v.string(),
+    option2Text: v.string(),
+    option3Text: v.string(),
+    option4Text: v.string(),
+    rightAnswer: v.number(),
+    timeToRespond: v.number(),
+    grade: v.number(),
+    category: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can update questions");
+    }
+    
+    // Validate grade is between 1 and 5
+    if (args.grade < 1 || args.grade > 5) {
+      throw new Error("Grade must be between 1 and 5");
+    }
+    
+    // Validate time to respond is positive
+    if (args.timeToRespond <= 0) {
+      throw new Error("Time to respond must be positive");
+    }
+    
+    // Validate rightAnswer is between 1 and 4
+    if (args.rightAnswer < 1 || args.rightAnswer > 4) {
+      throw new Error("Right answer must be between 1 and 4");
+    }
+    
+    // Check if question exists
+    const question = await ctx.db.get(args.questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    
+    await ctx.db.patch(args.questionId, {
+      mediaPath: args.mediaPath,
+      mediaStorageId: args.mediaStorageId,
+      questionText: args.questionText,
+      option1Text: args.option1Text,
+      option2Text: args.option2Text,
+      option3Text: args.option3Text,
+      option4Text: args.option4Text,
+      rightAnswer: args.rightAnswer,
+      timeToRespond: args.timeToRespond,
+      grade: args.grade,
+      category: args.category,
+    });
+  },
+});
+
+export const deleteQuestion = mutation({
+  args: { questionId: v.id("questions") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can delete questions");
+    }
+    
+    // Check if question exists
+    const question = await ctx.db.get(args.questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    
+    // Delete associated media file if exists
+    if (question.mediaStorageId) {
+      await ctx.storage.delete(question.mediaStorageId);
+    }
+    
+    await ctx.db.delete(args.questionId);
+  },
+});
+
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can upload media");
+    }
+    
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const getMediaUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can view media");
+    }
+    
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
+// File management functions
+export const getAllFiles = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can view all files");
+    }
+    
+    const files = await ctx.db.query("files").collect();
+    
+    // Get uploader names
+    const filesWithUploaderNames = await Promise.all(
+      files.map(async (file) => {
+        const uploader = await ctx.db.get(file.uploadedBy);
+        return {
+          ...file,
+          uploaderName: uploader?.email || "Unknown",
+        };
+      })
+    );
+    
+    return filesWithUploaderNames;
+  },
+});
+
+export const uploadFile = mutation({
+  args: {
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    originalName: v.string(),
+    fileType: v.string(),
+    fileSize: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can upload files");
+    }
+    
+    return await ctx.db.insert("files", {
+      storageId: args.storageId,
+      fileName: args.fileName,
+      originalName: args.originalName,
+      fileType: args.fileType,
+      fileSize: args.fileSize,
+      uploadedBy: currentUserId,
+      uploadedAt: Date.now(),
+    });
+  },
+});
+
+export const renameFile = mutation({
+  args: {
+    fileId: v.id("files"),
+    newName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can rename files");
+    }
+    
+    // Check if file exists
+    const file = await ctx.db.get(args.fileId);
+    if (!file) {
+      throw new Error("File not found");
+    }
+    
+    await ctx.db.patch(args.fileId, {
+      fileName: args.newName,
+    });
+  },
+});
+
+export const deleteFile = mutation({
+  args: { fileId: v.id("files") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if current user is admin
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can delete files");
+    }
+    
+    // Check if file exists
+    const file = await ctx.db.get(args.fileId);
+    if (!file) {
+      throw new Error("File not found");
+    }
+    
+    // Delete from storage
+    await ctx.storage.delete(file.storageId);
+    
+    // Delete from database
+    await ctx.db.delete(args.fileId);
+  },
+});
