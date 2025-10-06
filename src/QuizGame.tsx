@@ -42,12 +42,12 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     if (matchCompletion?.isCompleted) {
       console.log("Match completed, redirecting to results...");
       onGameComplete();
-    } else if (matchCompletion?.allCompleted === false && currentQuestionIndex >= matchDetails?.questions.length - 1) {
-      // If user finished all questions but others haven't, show waiting
-      console.log("Waiting for other players to complete...");
+    } else if (matchCompletion?.allCompleted === false && matchCompletion?.participants?.some(p => p.userId === userProfile?.userId && p.completedAt)) {
+      // If current user has completed all questions but others haven't, show waiting
+      console.log("Current user completed all questions, waiting for other players...");
       setIsWaitingForOthers(true);
     }
-  }, [matchCompletion?.isCompleted, matchCompletion?.allCompleted, currentQuestionIndex, matchDetails?.questions.length, onGameComplete]);
+  }, [matchCompletion?.isCompleted, matchCompletion?.allCompleted, matchCompletion?.participants, userProfile?.userId, currentQuestionIndex, matchDetails?.questions.length, onGameComplete]);
 
   // Initialize timer when question changes
   useEffect(() => {
