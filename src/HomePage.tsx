@@ -18,7 +18,6 @@ export function HomePage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
   const navigate = useNavigate();
-  const cancelMatch = useMutation(api.auth.cancelMatch);
   
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const saved = localStorage.getItem('activeTab');

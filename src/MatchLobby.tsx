@@ -15,16 +15,13 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const activeMatch = useQuery(api.auth.getUserActiveMatch);
-  const availableMatch = useQuery(api.auth.findAvailableMatch);
   const matchDetails = useQuery(
     api.auth.getMatchDetails,
     activeMatch ? { matchId: activeMatch } : "skip"
   );
   
   const createMatch = useMutation(api.auth.createMatch);
-  const joinMatch = useMutation(api.auth.joinMatch);
   const leaveMatch = useMutation(api.auth.leaveMatch);
-  const cancelMatch = useMutation(api.auth.cancelMatch);
 
   // Don't auto-join - let user manually start the game
   // useEffect(() => {
@@ -83,17 +80,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
     }
   };
 
-  const handleJoinMatch = async (matchId: Id<"matches">) => {
-    try {
-      setIsSearching(true);
-      await joinMatch({ matchId });
-      toast.success("به مسابقه پیوستید!");
-      onMatchFound(matchId);
-    } catch (error) {
-      toast.error("خطا در پیوستن به مسابقه: " + (error as Error).message);
-      setIsSearching(false);
-    }
-  };
+  // handleJoinMatch removed - createMatch now handles both creation and joining automatically
 
   const handleLeaveMatch = async (matchId: Id<"matches">) => {
     try {
@@ -108,7 +95,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const handleCancelSearch = async () => {
     try {
       if (activeMatch) {
-        await cancelMatch({ matchId: activeMatch });
+        await leaveMatch({ matchId: activeMatch });
       }
       setIsSearching(false);
       toast.success("مسابقه لغو شد");

@@ -120,26 +120,7 @@ export function AdminPage() {
     setEditingQuestion(null);
   };
 
-  const handleDuplicateQuestion = async (question: any) => {
-    try {
-      await createQuestion({
-        mediaPath: question.mediaPath,
-        mediaStorageId: question.mediaStorageId,
-        questionText: question.questionText + " (کپی)",
-        option1Text: question.option1Text,
-        option2Text: question.option2Text,
-        option3Text: question.option3Text,
-        option4Text: question.option4Text,
-        rightAnswer: question.rightAnswer || 1,
-        timeToRespond: question.timeToRespond,
-        grade: question.grade,
-        category: question.category,
-      });
-      toast.success("سؤال با موفقیت کپی شد");
-    } catch (error) {
-      toast.error("خطا در کپی کردن سؤال");
-    }
-  };
+  // handleDuplicateQuestion removed - users can manually create questions instead
 
   return (
     <div className="min-h-screen bg-background">
@@ -637,15 +618,6 @@ export function AdminPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                   </svg>
                                   ویرایش
-                                </button>
-                                <button
-                                  onClick={() => handleDuplicateQuestion(question)}
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 rounded-lg text-xs font-medium transition-all duration-200 border border-green-800/30 hover:border-green-700/50"
-                                >
-                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                  </svg>
-                                  کپی
                                 </button>
                                 <button
                                   onClick={() => handleDeleteQuestion(question._id)}

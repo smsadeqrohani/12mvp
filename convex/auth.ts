@@ -3,6 +3,48 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// Utility functions to reduce code duplication
+const requireAuth = async (ctx: any) => {
+  const userId = await getAuthUserId(ctx);
+  if (!userId) throw new Error("Not authenticated");
+  return userId;
+};
+
+const requireAdmin = async (ctx: any) => {
+  const userId = await requireAuth(ctx);
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+  if (!profile?.isAdmin) throw new Error("Admin access required");
+  return { userId, profile };
+};
+
+const validateQuestion = (args: any) => {
+  if (args.grade < 1 || args.grade > 5) throw new Error("Grade must be between 1 and 5");
+  if (args.timeToRespond <= 0) throw new Error("Time to respond must be positive");
+  if (args.rightAnswer < 1 || args.rightAnswer > 4) throw new Error("Right answer must be between 1 and 4");
+};
+
+const getRandomQuestions = async (ctx: any) => {
+  const allQuestions = await ctx.db.query("questions").collect();
+  if (allQuestions.length < 5) {
+    throw new Error("Not enough questions in database");
+  }
+  const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 5).map(q => q._id);
+};
+
+// Admin-only wrapper for mutations and queries
+const adminOnly = <T extends any[]>(
+  handler: (ctx: any, ...args: T) => Promise<any>
+) => {
+  return async (ctx: any, ...args: T) => {
+    await requireAdmin(ctx);
+    return handler(ctx, ...args);
+  };
+};
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Password],
 });
@@ -61,22 +103,7 @@ export const createProfile = mutation({
 });
 
 export const getAllUsers = query({
-  handler: async (ctx) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Check if current user is admin
-    const currentProfile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-      .unique();
-    
-    if (!currentProfile?.isAdmin) {
-      throw new Error("Only admins can view all users");
-    }
-    
+  handler: adminOnly(async (ctx) => {
     // Get all profiles with user data
     const profiles = await ctx.db.query("profiles").collect();
     const usersWithProfiles = await Promise.all(
@@ -93,7 +120,7 @@ export const getAllUsers = query({
     );
     
     return usersWithProfiles;
-  },
+  }),
 });
 
 export const makeUserAdmin = mutation({
@@ -225,36 +252,8 @@ export const createQuestion = mutation({
     grade: v.number(),
     category: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Check if current user is admin
-    const currentProfile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-      .unique();
-    
-    if (!currentProfile?.isAdmin) {
-      throw new Error("Only admins can create questions");
-    }
-    
-    // Validate grade is between 1 and 5
-    if (args.grade < 1 || args.grade > 5) {
-      throw new Error("Grade must be between 1 and 5");
-    }
-    
-    // Validate time to respond is positive
-    if (args.timeToRespond <= 0) {
-      throw new Error("Time to respond must be positive");
-    }
-    
-    // Validate rightAnswer is between 1 and 4
-    if (args.rightAnswer < 1 || args.rightAnswer > 4) {
-      throw new Error("Right answer must be between 1 and 4");
-    }
+  handler: adminOnly(async (ctx, args) => {
+    validateQuestion(args);
     
     return await ctx.db.insert("questions", {
       mediaPath: args.mediaPath,
@@ -269,7 +268,7 @@ export const createQuestion = mutation({
       grade: args.grade,
       category: args.category,
     });
-  },
+  }),
 });
 
 export const updateQuestion = mutation({
@@ -287,36 +286,8 @@ export const updateQuestion = mutation({
     grade: v.number(),
     category: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Check if current user is admin
-    const currentProfile = await ctx.db
-      .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-      .unique();
-    
-    if (!currentProfile?.isAdmin) {
-      throw new Error("Only admins can update questions");
-    }
-    
-    // Validate grade is between 1 and 5
-    if (args.grade < 1 || args.grade > 5) {
-      throw new Error("Grade must be between 1 and 5");
-    }
-    
-    // Validate time to respond is positive
-    if (args.timeToRespond <= 0) {
-      throw new Error("Time to respond must be positive");
-    }
-    
-    // Validate rightAnswer is between 1 and 4
-    if (args.rightAnswer < 1 || args.rightAnswer > 4) {
-      throw new Error("Right answer must be between 1 and 4");
-    }
+  handler: adminOnly(async (ctx, args) => {
+    validateQuestion(args);
     
     // Check if question exists
     const question = await ctx.db.get(args.questionId);
@@ -337,7 +308,7 @@ export const updateQuestion = mutation({
       grade: args.grade,
       category: args.category,
     });
-  },
+  }),
 });
 
 export const deleteQuestion = mutation({
@@ -556,20 +527,16 @@ export const deleteFile = mutation({
 export const createMatch = mutation({
   args: {},
   handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
+    const currentUserId = await requireAuth(ctx);
     
     // Check if user already has an active match
-    const existingMatch = await ctx.db
+    const existingMatches = await ctx.db
       .query("matchParticipants")
       .withIndex("by_user", (q) => q.eq("userId", currentUserId))
-      .filter((q) => q.eq(q.field("matchId"), q.field("matchId")))
       .collect();
     
     // Check if any of these matches are still active
-    for (const participant of existingMatch) {
+    for (const participant of existingMatches) {
       const match = await ctx.db.get(participant.matchId);
       if (match && (match.status === "waiting" || match.status === "active")) {
         throw new Error("You already have an active match");
@@ -594,7 +561,7 @@ export const createMatch = mutation({
         continue;
       }
       
-      // If match has only one participant, join it
+      // If match has only one participant, join it and start the match
       if (participants.length === 1) {
         await ctx.db.insert("matchParticipants", {
           matchId: match._id,
@@ -614,15 +581,7 @@ export const createMatch = mutation({
     }
     
     // If no waiting match found, create a new one
-    // Get 5 random questions
-    const allQuestions = await ctx.db.query("questions").collect();
-    if (allQuestions.length < 5) {
-      throw new Error("Not enough questions in database");
-    }
-    
-    // Shuffle and take 5 questions
-    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-    const selectedQuestions = shuffled.slice(0, 5).map(q => q._id);
+    const selectedQuestions = await getRandomQuestions(ctx);
     
     // Create match
     const matchId = await ctx.db.insert("matches", {
@@ -642,100 +601,9 @@ export const createMatch = mutation({
   },
 });
 
-export const joinMatch = mutation({
-  args: { matchId: v.id("matches") },
-  handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Get match
-    const match = await ctx.db.get(args.matchId);
-    if (!match) {
-      throw new Error("Match not found");
-    }
-    
-    if (match.status !== "waiting") {
-      throw new Error("Match is not available for joining");
-    }
-    
-    // Check if user is already in this match
-    const existingParticipant = await ctx.db
-      .query("matchParticipants")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-      .filter((q) => q.eq(q.field("userId"), currentUserId))
-      .unique();
-    
-    if (existingParticipant) {
-      throw new Error("You are already in this match");
-    }
-    
-    // Check if match is full (2 players max)
-    const participants = await ctx.db
-      .query("matchParticipants")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-      .collect();
-    
-    if (participants.length >= 2) {
-      throw new Error("Match is full");
-    }
-    
-    // Add user as participant
-    await ctx.db.insert("matchParticipants", {
-      matchId: args.matchId,
-      userId: currentUserId,
-      joinedAt: Date.now(),
-    });
-    
-    // If this is the second player, start the match
-    if (participants.length === 1) {
-      // This is the second player, start the match
-      await ctx.db.patch(args.matchId, {
-        status: "active",
-        startedAt: Date.now(),
-        currentQuestionIndex: 0,
-      });
-    }
-    
-    return args.matchId;
-  },
-});
+// joinMatch function removed - createMatch now handles both creation and joining automatically
 
-export const findAvailableMatch = query({
-  handler: async (ctx) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Find matches that are waiting and have only one participant
-    const waitingMatches = await ctx.db
-      .query("matches")
-      .withIndex("by_status", (q) => q.eq("status", "waiting"))
-      .collect();
-    
-    for (const match of waitingMatches) {
-      const participants = await ctx.db
-        .query("matchParticipants")
-        .withIndex("by_match", (q) => q.eq("matchId", match._id))
-        .collect();
-      
-      // Check if current user is already in this match
-      const isAlreadyParticipant = participants.some(p => p.userId === currentUserId);
-      if (isAlreadyParticipant) {
-        continue;
-      }
-      
-      // If match has only one participant, it's available
-      if (participants.length === 1) {
-        return match._id;
-      }
-    }
-    
-    return null;
-  },
-});
+// findAvailableMatch function removed - createMatch now handles matchmaking automatically
 
 export const getMatchDetails = query({
   args: { matchId: v.id("matches") },
@@ -823,10 +691,7 @@ export const getUserActiveMatch = query({
 export const leaveMatch = mutation({
   args: { matchId: v.id("matches") },
   handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
+    const currentUserId = await requireAuth(ctx);
     
     // Get match
     const match = await ctx.db.get(args.matchId);
@@ -874,54 +739,7 @@ export const leaveMatch = mutation({
   },
 });
 
-export const cancelMatch = mutation({
-  args: { matchId: v.id("matches") },
-  handler: async (ctx, args) => {
-    const currentUserId = await getAuthUserId(ctx);
-    if (!currentUserId) {
-      throw new Error("Not authenticated");
-    }
-    
-    // Get match
-    const match = await ctx.db.get(args.matchId);
-    if (!match) {
-      throw new Error("Match not found");
-    }
-    
-    if (match.status === "completed") {
-      throw new Error("Cannot cancel completed match");
-    }
-    
-    // Check if user is participant
-    const participant = await ctx.db
-      .query("matchParticipants")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-      .filter((q) => q.eq(q.field("userId"), currentUserId))
-      .unique();
-    
-    if (!participant) {
-      throw new Error("You are not a participant in this match");
-    }
-    
-    // Cancel the match
-    await ctx.db.patch(args.matchId, {
-      status: "cancelled",
-      completedAt: Date.now(),
-    });
-    
-    // Delete all participants
-    const allParticipants = await ctx.db
-      .query("matchParticipants")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
-      .collect();
-    
-    for (const participant of allParticipants) {
-      await ctx.db.delete(participant._id);
-    }
-    
-    return true;
-  },
-});
+// cancelMatch function removed - leaveMatch now handles both leaving and cancelling
 
 // Quiz logic functions
 export const submitAnswer = mutation({
