@@ -76,6 +76,11 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     
     if (!isAnswered && currentQuestion) {
       // Auto-submit with no answer (answer 0 means no answer)
+      // Use full time as time spent when time runs out
+      const timeSpent = Date.now() - questionStartTime;
+      const timeSpentSeconds = Math.round(timeSpent / 1000);
+      
+      console.log("Time up! Auto-submitting with time spent:", timeSpentSeconds);
       await handleAnswerSubmit(0);
     }
   };
@@ -90,7 +95,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       clearInterval(timerRef.current);
     }
     
-    const timeSpent = timePerQuestion - timeLeft;
+    // Calculate actual time spent more accurately
+    const timeSpent = Date.now() - questionStartTime;
+    const timeSpentSeconds = Math.round(timeSpent / 1000);
     const actualAnswer = answer === 0 ? 0 : answer; // Keep 0 as "no answer"
     
     try {
@@ -98,23 +105,29 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         matchId,
         questionId: currentQuestion._id,
         selectedAnswer: actualAnswer,
-        timeSpent,
+        timeSpent: timeSpentSeconds,
+        timeSpentMs: timeSpent,
       });
       
       const result = await submitAnswer({
         matchId,
         questionId: currentQuestion._id,
         selectedAnswer: actualAnswer,
-        timeSpent,
+        timeSpent: timeSpentSeconds,
       });
       
       console.log("Answer submitted successfully:", result);
       
+      // Don't show result immediately - wait for user to see their choice
       setIsCorrect(result.isCorrect);
       setCorrectAnswer(result.correctAnswer);
-      setShowResult(true);
       
-      // Show result for 3 seconds before moving to next question
+      // Show result after a brief delay to let user see their selection
+      setTimeout(() => {
+        setShowResult(true);
+      }, 500);
+      
+      // Show result for 2 seconds before moving to next question (faster transition)
       setTimeout(() => {
         if (currentQuestionIndex < matchDetails!.questions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
@@ -124,7 +137,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
           // Game completed
           onGameComplete();
         }
-      }, 3000);
+      }, 2000);
       
     } catch (error) {
       toast.error("خطا در ارسال پاسخ: " + (error as Error).message);
@@ -323,6 +336,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                 ? "پاسخ شما صحیح است" 
                 : `پاسخ صحیح گزینه ${correctAnswer} بود`
               }
+            </p>
+            <p className="text-gray-400 text-sm mt-2">
+              زمان پاسخ: {Math.round((Date.now() - questionStartTime) / 1000)} ثانیه
             </p>
           </div>
         )}
