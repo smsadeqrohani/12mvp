@@ -19,6 +19,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [isWaitingForOthers, setIsWaitingForOthers] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -39,9 +40,14 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   // Check if match is completed
   useEffect(() => {
     if (matchCompletion?.isCompleted) {
+      console.log("Match completed, redirecting to results...");
       onGameComplete();
+    } else if (matchCompletion?.allCompleted === false && currentQuestionIndex >= matchDetails?.questions.length - 1) {
+      // If user finished all questions but others haven't, show waiting
+      console.log("Waiting for other players to complete...");
+      setIsWaitingForOthers(true);
     }
-  }, [matchCompletion?.isCompleted, onGameComplete]);
+  }, [matchCompletion?.isCompleted, matchCompletion?.allCompleted, currentQuestionIndex, matchDetails?.questions.length, onGameComplete]);
 
   // Initialize timer when question changes
   useEffect(() => {
@@ -50,6 +56,8 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       setQuestionStartTime(Date.now());
       setSelectedAnswer(null);
       setShowResult(false);
+      setIsCorrect(false); // Reset correct state
+      setCorrectAnswer(0); // Reset correct answer
       
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -171,6 +179,30 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
+
+  // Show waiting screen if user finished but others haven't
+  if (isWaitingForOthers) {
+    return (
+      <div className="w-full max-w-none px-6 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              منتظر سایر بازیکنان...
+            </h2>
+            <p className="text-gray-300 mb-6">
+              شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
+            </p>
+            <div className="bg-accent/20 rounded-lg p-4 border border-accent/30">
+              <p className="text-accent font-semibold">
+                نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

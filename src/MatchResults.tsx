@@ -28,8 +28,7 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
   const isWinner = result.winnerId === userProfile.userId;
   const isDraw = result.isDraw;
   
-  const formatTime = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -123,13 +122,13 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-300">زمان کل:</span>
                   <span className="text-white font-semibold">
-                    {formatTime(currentUserParticipant?.totalTime || 0)}
+                    {currentUserParticipant?.totalTime ? formatTime(currentUserParticipant.totalTime) : "محاسبه نشده"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">میانگین زمان:</span>
                   <span className="text-white font-semibold">
-                    {formatTime((currentUserParticipant?.totalTime || 0) / 5)}
+                    {currentUserParticipant?.totalTime ? formatTime(Math.round(currentUserParticipant.totalTime / 5)) : "محاسبه نشده"}
                   </span>
                 </div>
               </div>
@@ -168,13 +167,13 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                 <div className="flex justify-between">
                   <span className="text-gray-300">زمان کل:</span>
                   <span className="text-white font-semibold">
-                    {formatTime(opponentParticipant?.totalTime || 0)}
+                    {opponentParticipant?.totalTime ? formatTime(opponentParticipant.totalTime) : "محاسبه نشده"}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">میانگین زمان:</span>
                   <span className="text-white font-semibold">
-                    {formatTime((opponentParticipant?.totalTime || 0) / 5)}
+                    {opponentParticipant?.totalTime ? formatTime(Math.round(opponentParticipant.totalTime / 5)) : "محاسبه نشده"}
                   </span>
                 </div>
               </div>
@@ -236,7 +235,7 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                             </span>
                           </div>
                           <p className="text-gray-300 text-sm">
-                            زمان: {formatTime(userAnswer?.timeSpent || 0)}
+                            زمان: {userAnswer?.timeSpent ? formatTime(userAnswer.timeSpent) : "ثبت نشده"}
                           </p>
                         </div>
                       </div>
@@ -266,7 +265,7 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                             </span>
                           </div>
                           <p className="text-gray-300 text-sm">
-                            زمان: {formatTime(opponentAnswer?.timeSpent || 0)}
+                            زمان: {opponentAnswer?.timeSpent ? formatTime(opponentAnswer.timeSpent) : "ثبت نشده"}
                           </p>
                         </div>
                       </div>
