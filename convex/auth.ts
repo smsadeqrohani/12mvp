@@ -551,3 +551,643 @@ export const deleteFile = mutation({
     await ctx.db.delete(args.fileId);
   },
 });
+
+// Match management functions
+export const createMatch = mutation({
+  args: {},
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Check if user already has an active match
+    const existingMatch = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .filter((q) => q.eq(q.field("matchId"), q.field("matchId")))
+      .collect();
+    
+    // Check if any of these matches are still active
+    for (const participant of existingMatch) {
+      const match = await ctx.db.get(participant.matchId);
+      if (match && (match.status === "waiting" || match.status === "active")) {
+        throw new Error("You already have an active match");
+      }
+    }
+    
+    // Get 5 random questions
+    const allQuestions = await ctx.db.query("questions").collect();
+    if (allQuestions.length < 5) {
+      throw new Error("Not enough questions in database");
+    }
+    
+    // Shuffle and take 5 questions
+    const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+    const selectedQuestions = shuffled.slice(0, 5).map(q => q._id);
+    
+    // Create match
+    const matchId = await ctx.db.insert("matches", {
+      status: "waiting",
+      createdAt: Date.now(),
+      questions: selectedQuestions,
+    });
+    
+    // Add current user as participant
+    await ctx.db.insert("matchParticipants", {
+      matchId,
+      userId: currentUserId,
+      joinedAt: Date.now(),
+    });
+    
+    return matchId;
+  },
+});
+
+export const joinMatch = mutation({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    if (match.status !== "waiting") {
+      throw new Error("Match is not available for joining");
+    }
+    
+    // Check if user is already in this match
+    const existingParticipant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (existingParticipant) {
+      throw new Error("You are already in this match");
+    }
+    
+    // Check if match is full (2 players max)
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    if (participants.length >= 2) {
+      throw new Error("Match is full");
+    }
+    
+    // Add user as participant
+    await ctx.db.insert("matchParticipants", {
+      matchId: args.matchId,
+      userId: currentUserId,
+      joinedAt: Date.now(),
+    });
+    
+    // If this is the second player, start the match
+    if (participants.length === 1) {
+      // This is the second player, start the match
+      await ctx.db.patch(args.matchId, {
+        status: "active",
+        startedAt: Date.now(),
+        currentQuestionIndex: 0,
+      });
+    }
+    
+    return args.matchId;
+  },
+});
+
+export const findAvailableMatch = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Find matches that are waiting and have only one participant
+    const waitingMatches = await ctx.db
+      .query("matches")
+      .withIndex("by_status", (q) => q.eq("status", "waiting"))
+      .collect();
+    
+    for (const match of waitingMatches) {
+      const participants = await ctx.db
+        .query("matchParticipants")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .collect();
+      
+      // Check if current user is already in this match
+      const isAlreadyParticipant = participants.some(p => p.userId === currentUserId);
+      if (isAlreadyParticipant) {
+        continue;
+      }
+      
+      // If match has only one participant, it's available
+      if (participants.length === 1) {
+        return match._id;
+      }
+    }
+    
+    return null;
+  },
+});
+
+export const getMatchDetails = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    // Check if user is participant
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Get all participants with their profiles
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    const participantsWithProfiles = await Promise.all(
+      participants.map(async (p) => {
+        const profile = await ctx.db
+          .query("profiles")
+          .withIndex("by_user", (q) => q.eq("userId", p.userId))
+          .unique();
+        return {
+          ...p,
+          profile,
+        };
+      })
+    );
+    
+    // Get questions
+    const questions = await Promise.all(
+      match.questions.map(async (questionId) => {
+        return await ctx.db.get(questionId);
+      })
+    );
+    
+    return {
+      match,
+      participants: participantsWithProfiles,
+      questions,
+    };
+  },
+});
+
+export const getUserActiveMatch = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Find user's active matches
+    const userMatches = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .collect();
+    
+    for (const participant of userMatches) {
+      const match = await ctx.db.get(participant.matchId);
+      if (match && (match.status === "waiting" || match.status === "active")) {
+        return participant.matchId;
+      }
+    }
+    
+    return null;
+  },
+});
+
+export const leaveMatch = mutation({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    if (match.status === "completed") {
+      throw new Error("Cannot leave completed match");
+    }
+    
+    // Find user's participation
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Remove participant
+    await ctx.db.delete(participant._id);
+    
+    // If match becomes empty or has only one participant, cancel it
+    const remainingParticipants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    if (remainingParticipants.length <= 1) {
+      await ctx.db.patch(args.matchId, {
+        status: "cancelled",
+        completedAt: Date.now(),
+      });
+      
+      // Also delete all remaining participants
+      for (const participant of remainingParticipants) {
+        await ctx.db.delete(participant._id);
+      }
+    }
+    
+    return true;
+  },
+});
+
+export const cancelMatch = mutation({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    if (match.status === "completed") {
+      throw new Error("Cannot cancel completed match");
+    }
+    
+    // Check if user is participant
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Cancel the match
+    await ctx.db.patch(args.matchId, {
+      status: "cancelled",
+      completedAt: Date.now(),
+    });
+    
+    // Delete all participants
+    const allParticipants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    for (const participant of allParticipants) {
+      await ctx.db.delete(participant._id);
+    }
+    
+    return true;
+  },
+});
+
+// Quiz logic functions
+export const submitAnswer = mutation({
+  args: {
+    matchId: v.id("matches"),
+    questionId: v.id("questions"),
+    selectedAnswer: v.number(),
+    timeSpent: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    if (match.status !== "active") {
+      throw new Error("Match is not active");
+    }
+    
+    // Get question
+    const question = await ctx.db.get(args.questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    
+    // Check if question is part of this match
+    if (!match.questions.includes(args.questionId)) {
+      throw new Error("Question is not part of this match");
+    }
+    
+    // Find user's participation
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Check if user already answered this question
+    const existingAnswer = participant.answers?.find(
+      (answer) => answer.questionId === args.questionId
+    );
+    
+    if (existingAnswer) {
+      throw new Error("You have already answered this question");
+    }
+    
+    // Check if answer is valid (0-4, where 0 means no answer)
+    if (args.selectedAnswer < 0 || args.selectedAnswer > 4) {
+      throw new Error("Invalid answer selection");
+    }
+    
+    // Check if answer is correct (0 means no answer, so always incorrect)
+    const isCorrect = args.selectedAnswer === question.rightAnswer && args.selectedAnswer !== 0;
+    
+    // Add answer to participant's answers
+    const newAnswer = {
+      questionId: args.questionId,
+      selectedAnswer: args.selectedAnswer,
+      timeSpent: args.timeSpent,
+      isCorrect,
+    };
+    
+    const updatedAnswers = [...(participant.answers || []), newAnswer];
+    
+    // Update participant
+    await ctx.db.patch(participant._id, {
+      answers: updatedAnswers,
+    });
+    
+    // Check if this was the last question for this user
+    if (updatedAnswers.length === match.questions.length) {
+      // Calculate total score and time
+      const totalScore = updatedAnswers.filter(a => a.isCorrect).length;
+      const totalTime = updatedAnswers.reduce((sum, a) => sum + a.timeSpent, 0);
+      
+      await ctx.db.patch(participant._id, {
+        totalScore,
+        totalTime,
+        completedAt: Date.now(),
+      });
+      
+      // Check if both players have completed
+      const allParticipants = await ctx.db
+        .query("matchParticipants")
+        .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+        .collect();
+      
+      const allCompleted = allParticipants.every(p => p.completedAt);
+      
+      if (allCompleted && allParticipants.length === 2) {
+        // Calculate match results
+        const [player1, player2] = allParticipants;
+        
+        let winnerId = null;
+        let isDraw = false;
+        
+        if (player1.totalScore! > player2.totalScore!) {
+          winnerId = player1.userId;
+        } else if (player2.totalScore! > player1.totalScore!) {
+          winnerId = player2.userId;
+        } else {
+          // Tie on score, check time
+          if (player1.totalTime! < player2.totalTime!) {
+            winnerId = player1.userId;
+          } else if (player2.totalTime! < player1.totalTime!) {
+            winnerId = player2.userId;
+          } else {
+            isDraw = true;
+          }
+        }
+        
+        // Create match result
+        await ctx.db.insert("matchResults", {
+          matchId: args.matchId,
+          winnerId: winnerId || undefined,
+          isDraw,
+          player1Id: player1.userId,
+          player2Id: player2.userId,
+          player1Score: player1.totalScore!,
+          player2Score: player2.totalScore!,
+          player1Time: player1.totalTime!,
+          player2Time: player2.totalTime!,
+          completedAt: Date.now(),
+        });
+        
+        // Mark match as completed
+        await ctx.db.patch(args.matchId, {
+          status: "completed",
+          completedAt: Date.now(),
+        });
+      }
+    }
+    
+    return { isCorrect, correctAnswer: question.rightAnswer };
+  },
+});
+
+export const getMatchResults = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    if (match.status !== "completed") {
+      throw new Error("Match is not completed yet");
+    }
+    
+    // Get match result
+    const result = await ctx.db
+      .query("matchResults")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .unique();
+    
+    if (!result) {
+      throw new Error("Match result not found");
+    }
+    
+    // Get participants with profiles
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    const participantsWithProfiles = await Promise.all(
+      participants.map(async (p) => {
+        const profile = await ctx.db
+          .query("profiles")
+          .withIndex("by_user", (q) => q.eq("userId", p.userId))
+          .unique();
+        return {
+          ...p,
+          profile,
+        };
+      })
+    );
+    
+    // Get questions with answers
+    const questions = await Promise.all(
+      match.questions.map(async (questionId) => {
+        const question = await ctx.db.get(questionId);
+        return question;
+      })
+    );
+    
+    return {
+      match,
+      result,
+      participants: participantsWithProfiles,
+      questions,
+    };
+  },
+});
+
+export const getUserMatchHistory = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get user's completed matches
+    const userMatches = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .collect();
+    
+    const completedMatches = [];
+    
+    for (const participant of userMatches) {
+      const match = await ctx.db.get(participant.matchId);
+      if (match && match.status === "completed") {
+        const result = await ctx.db
+          .query("matchResults")
+          .withIndex("by_match", (q) => q.eq("matchId", participant.matchId))
+          .unique();
+        
+        if (result) {
+          // Get opponent info
+          const opponentId = result.player1Id === currentUserId ? result.player2Id : result.player1Id;
+          const opponentProfile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q) => q.eq("userId", opponentId))
+            .unique();
+          
+          completedMatches.push({
+            match,
+            result,
+            participant,
+            opponent: opponentProfile,
+            isWinner: result.winnerId === currentUserId,
+            isDraw: result.isDraw,
+          });
+        }
+      }
+    }
+    
+    // Sort by completion time (newest first)
+    completedMatches.sort((a, b) => b.match.completedAt! - a.match.completedAt!);
+    
+    // Apply limit
+    const limit = args.limit || 20;
+    return completedMatches.slice(0, limit);
+  },
+});
+
+export const checkMatchCompletion = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    // Get all participants
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    // Check if all participants have completed
+    const allCompleted = participants.every(p => p.completedAt);
+    
+    return {
+      match,
+      participants,
+      allCompleted,
+      isCompleted: match.status === "completed",
+    };
+  },
+});
+
+export const getQuestionMediaUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});

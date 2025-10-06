@@ -37,13 +37,7 @@ function AppContent() {
       </header>
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={
-            <div className="flex items-center justify-center p-8">
-              <div className="w-full max-w-md mx-auto">
-                <HomePage />
-              </div>
-            </div>
-          } />
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={
             <div className="flex items-center justify-center p-8">
               <div className="w-full max-w-md mx-auto">
