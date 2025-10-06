@@ -75,7 +75,7 @@ export function HomePage() {
     }
   }, [userMatchStatus?.status, userMatchStatus?.matchId, gameState, isResetting]);
 
-  // Initialize state from existing match on page load
+  // Initialize state from existing match on page load (only once)
   useEffect(() => {
     if (userMatchStatus && gameState === "lobby") {
       console.log("HomePage: Initializing state from existing match:", userMatchStatus);
@@ -89,7 +89,7 @@ export function HomePage() {
         setActiveTab("new-match");
       }
     }
-  }, [userMatchStatus, gameState]);
+  }, [userMatchStatus?.status, userMatchStatus?.matchId]); // Removed gameState from dependencies
 
   // Show loading while checking authentication
   if (loggedInUser === undefined || userProfile === undefined) {
