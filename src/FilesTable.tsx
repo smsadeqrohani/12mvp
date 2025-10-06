@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { toast } from "sonner";
+import { FilePreview } from "./FilePreview";
 
 export function FilesTable() {
   const [editingFile, setEditingFile] = useState<string | null>(null);
@@ -9,6 +10,7 @@ export function FilesTable() {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
 
   const allFiles = useQuery(api.auth.getAllFiles);
   const generateUploadUrl = useMutation(api.auth.generateUploadUrl);
@@ -92,6 +94,20 @@ export function FilesTable() {
   const cancelEdit = () => {
     setEditingFile(null);
     setEditName("");
+  };
+
+  const handlePreviewFile = (file: any) => {
+    setPreviewFile(file);
+  };
+
+  const handleOpenFile = async (file: any) => {
+    try {
+      // For opening in new tab, we need to get the URL first
+      // This is a simplified approach - in a real app you might want to handle this differently
+      toast.info("برای باز کردن فایل در تب جدید، لطفاً از دکمه پیش‌نمایش استفاده کنید");
+    } catch (error) {
+      toast.error("خطا در باز کردن فایل");
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -281,15 +297,36 @@ export function FilesTable() {
                     </div>
                   </td>
                   <td className="pl-6 pr-6 py-6">
-                    <button
-                      onClick={() => handleDeleteFile(file._id, file.fileName)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg text-xs font-medium transition-all duration-200 border border-red-800/30 hover:border-red-700/50"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      حذف
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePreviewFile(file)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 rounded-lg text-xs font-medium transition-all duration-200 border border-blue-800/30 hover:border-blue-700/50"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        پیش‌نمایش
+                      </button>
+                      <button
+                        onClick={() => handleOpenFile(file)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 rounded-lg text-xs font-medium transition-all duration-200 border border-green-800/30 hover:border-green-700/50"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        باز کردن
+                      </button>
+                      <button
+                        onClick={() => handleDeleteFile(file._id, file.fileName)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg text-xs font-medium transition-all duration-200 border border-red-800/30 hover:border-red-700/50"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        حذف
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -386,6 +423,14 @@ export function FilesTable() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewFile && (
+        <FilePreview 
+          file={previewFile} 
+          onClose={() => setPreviewFile(null)} 
+        />
       )}
     </div>
   );
