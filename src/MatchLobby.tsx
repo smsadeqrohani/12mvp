@@ -33,8 +33,17 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   //   }
   // }, [availableMatch]);
 
-  // No need to check for available matches periodically
-  // Users will manually start the game when they want to
+  // Real-time match status monitoring
+  useEffect(() => {
+    if (activeMatch && matchDetails && !isSearching && !isResetting) {
+      // Convex queries are real-time, so this will automatically update
+      // when the match status changes in the database
+      if (matchDetails.match.status === "active") {
+        toast.success("حریف پیدا شد! مسابقه شروع شد");
+        onMatchFound(activeMatch);
+      }
+    }
+  }, [matchDetails?.match.status, activeMatch, onMatchFound, isSearching, isResetting]);
 
   // Check for active match - only redirect if match is actually active
   useEffect(() => {
