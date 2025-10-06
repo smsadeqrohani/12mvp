@@ -23,6 +23,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
+  const userProfile = useQuery(api.auth.getUserProfile);
   const matchDetails = useQuery(api.auth.getMatchDetails, { matchId });
   const matchCompletion = useQuery(api.auth.checkMatchCompletion, { matchId });
   const submitAnswer = useMutation(api.auth.submitAnswer);
@@ -175,7 +176,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     }
   };
 
-  if (!matchDetails || !currentQuestion) {
+  if (!userProfile || !matchDetails || !currentQuestion) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
