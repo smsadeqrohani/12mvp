@@ -668,7 +668,7 @@ export const getUserActiveMatch = query({
   handler: async (ctx) => {
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) {
-      throw new Error("Not authenticated");
+      return null; // Return null instead of throwing error for unauthenticated users
     }
     
     // Find user's active matches - this query will be reactive to changes in matchParticipants
@@ -693,7 +693,7 @@ export const getUserActiveMatchStatus = query({
   handler: async (ctx) => {
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) {
-      throw new Error("Not authenticated");
+      return null; // Return null instead of throwing error for unauthenticated users
     }
     
     // Get all user's match participants - this query is reactive to matchParticipants table

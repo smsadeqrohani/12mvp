@@ -18,6 +18,7 @@ export function HomePage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
   const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
+  const leaveMatch = useMutation(api.auth.leaveMatch);
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState<TabType>(() => {
@@ -139,8 +140,6 @@ export function HomePage() {
       setIsResetting(false);
     }, 500);
   };
-
-  const leaveMatch = useMutation(api.auth.leaveMatch);
 
   const handleCancelMatch = async () => {
     try {
