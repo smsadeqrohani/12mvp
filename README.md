@@ -5,8 +5,8 @@ A modern Persian (Farsi) application built with React, TypeScript, and Convex ba
 ## 🎨 Design System
 
 ### Color Palette
-- **Primary Background**: `#0a3651` (Dark Blue)
-- **Secondary Background**: `#0f4a6b` (Lighter Blue)
+- **Primary Background**: `#06202F` (Dark Blue)
+- **Secondary Background**: `#0a2840` (Lighter Blue)
 - **Accent Color**: `#ff701a` (Orange)
 - **Accent Hover**: `#e55a00` (Darker Orange)
 - **Text Colors**: White and light gray variants for contrast
@@ -135,7 +135,7 @@ The toast system is configured in `src/App.tsx` with RTL support and custom styl
 ### Styling
 
 Custom styles are defined in `src/index.css` to match the application's design system with:
-- Dark theme colors (`#0f4a6b` background)
+- Dark theme colors (`#06202F` background)
 - RTL text direction
 - Persian font family (Vazirmatn)
 - Color-coded borders for different toast types
@@ -170,8 +170,8 @@ When adding new components or features, follow these design system guidelines:
 #### Colors
 ```css
 /* Use these Tailwind classes */
-bg-background        /* #0a3651 - Main background */
-bg-background-light  /* #0f4a6b - Secondary background */
+bg-background        /* #06202F - Main background */
+bg-background-light  /* #0a2840 - Secondary background */
 text-accent          /* #ff701a - Orange text/buttons */
 bg-accent            /* #ff701a - Orange background */
 text-gray-300        /* Light gray text */

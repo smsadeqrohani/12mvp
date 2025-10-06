@@ -20,20 +20,20 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "#0a3651",
-          hover: "#0a2d42",
+          DEFAULT: "#06202F",
+          hover: "#051a26",
         },
         secondary: {
-          DEFAULT: "#0a3651",
-          hover: "#0a2d42",
+          DEFAULT: "#06202F",
+          hover: "#051a26",
         },
         accent: {
           DEFAULT: "#ff701a",
           hover: "#e55a00",
         },
         background: {
-          DEFAULT: "#0a3651",
-          light: "#0f4a6b",
+          DEFAULT: "#06202F",
+          light: "#0a2840",
         },
       },
       spacing: {

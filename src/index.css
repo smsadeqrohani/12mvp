@@ -31,7 +31,7 @@ body {
     "Segoe UI Symbol",
     "Noto Color Emoji";
   color: #e5e7eb;
-  background: #0a3651;
+  background: #06202F;
   direction: rtl;
 }
 
@@ -64,25 +64,25 @@ body {
 
 /* Custom toast styling to match design system */
 [data-sonner-toaster] {
-  --normal-bg: #0f4a6b;
+  --normal-bg: #0a2840;
   --normal-border: #374151;
   --normal-text: #e5e7eb;
-  --success-bg: #0f4a6b;
+  --success-bg: #0a2840;
   --success-border: #10b981;
   --success-text: #e5e7eb;
-  --error-bg: #0f4a6b;
+  --error-bg: #0a2840;
   --error-border: #ef4444;
   --error-text: #e5e7eb;
-  --warning-bg: #0f4a6b;
+  --warning-bg: #0a2840;
   --warning-border: #f59e0b;
   --warning-text: #e5e7eb;
-  --info-bg: #0f4a6b;
+  --info-bg: #0a2840;
   --info-border: #3b82f6;
   --info-text: #e5e7eb;
 }
 
 [data-sonner-toast] {
-  background: #0f4a6b !important;
+  background: #0a2840 !important;
   border: 1px solid #374151 !important;
   color: #e5e7eb !important;
   direction: rtl !important;
@@ -153,7 +153,7 @@ body {
 /* Custom scrollbar styles */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
+  scrollbar-color: #4b5563 #06202F;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -161,7 +161,7 @@ body {
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: #06202F;
   border-radius: 3px;
 }
 
