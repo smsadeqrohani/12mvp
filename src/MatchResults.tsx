@@ -19,8 +19,8 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
     );
   }
 
-  // Show waiting message if match is not completed yet
-  if (!matchResults.isCompleted) {
+  // Show waiting message if match is not completed yet or result is not available
+  if (!matchResults.isCompleted || !matchResults.result) {
     return (
       <div className="w-full max-w-none px-6 py-8">
         <div className="max-w-2xl mx-auto">
