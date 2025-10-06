@@ -33,31 +33,22 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   //   }
   // }, [availableMatch]);
 
-  // Real-time match status monitoring
+  // Real-time match status monitoring using Convex live queries
   useEffect(() => {
-    if (activeMatch && matchDetails && !isSearching && !isResetting) {
-      // Convex queries are real-time, so this will automatically update
-      // when the match status changes in the database
+    if (activeMatch && matchDetails && !isResetting) {
+      console.log("Match status changed:", matchDetails.match.status, "isSearching:", isSearching);
+      
       if (matchDetails.match.status === "active") {
         console.log("Match became active, redirecting to game...");
         setIsSearching(false); // Reset searching state
         toast.success("حریف پیدا شد! مسابقه شروع شد");
         onMatchFound(activeMatch);
-      }
-    }
-  }, [matchDetails?.match.status, activeMatch, onMatchFound, isSearching, isResetting]);
-
-  // Check for active match - only redirect if match is actually active
-  useEffect(() => {
-    if (activeMatch && matchDetails && !isSearching && !isResetting) {
-      if (matchDetails.match.status === "active") {
-        toast.success("حریف پیدا شد! مسابقه شروع شد");
-        onMatchFound(activeMatch);
       } else if (matchDetails.match.status === "waiting") {
+        console.log("Match is waiting for opponent...");
         onMatchStart(activeMatch);
       }
     }
-  }, [activeMatch, matchDetails, onMatchFound, onMatchStart, isSearching, isResetting]);
+  }, [matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting, isSearching]);
 
   const handleCreateMatch = async () => {
     try {
@@ -69,10 +60,12 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       // The createMatch function now handles matchmaking automatically
       // It will either join an existing waiting match or create a new one
       // We'll let the useEffect handle the status check
+      console.log("Match created/joined with ID:", matchId);
       toast.success("مسابقه ایجاد شد! منتظر حریف...");
       onMatchStart(matchId);
       
     } catch (error) {
+      console.error("Error creating match:", error);
       toast.error("خطا در ایجاد مسابقه: " + (error as Error).message);
       setIsSearching(false);
     }
