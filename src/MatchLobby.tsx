@@ -36,7 +36,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
     console.log("MatchLobby: activeMatch =", activeMatch, "userMatchStatus =", userMatchStatus, "matchDetails =", matchDetails, "isSearching =", isSearching);
     
     // Use userMatchStatus for direct status monitoring
-    if (userMatchStatus && !isResetting && isSearching) {
+    if (userMatchStatus && !isResetting) {
       console.log("Match status from userMatchStatus:", userMatchStatus.status, "isSearching:", isSearching);
       
       if (userMatchStatus.status === "active") {
@@ -45,7 +45,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
         toast.success("حریف پیدا شد! مسابقه شروع شد");
         // Immediate redirect without timeout for faster response
         onMatchFound(userMatchStatus.matchId);
-      } else if (userMatchStatus.status === "waiting") {
+      } else if (userMatchStatus.status === "waiting" && isSearching) {
         console.log("Match is waiting for opponent...");
         onMatchStart(userMatchStatus.matchId);
       }
@@ -59,6 +59,21 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       // The matchDetails query will trigger once it loads, which will then trigger the above effect
     }
   }, [activeMatch, matchDetails, isResetting, isSearching]);
+
+  // Fallback effect to ensure we don't get stuck in searching state
+  useEffect(() => {
+    if (isSearching && !userMatchStatus && !isResetting) {
+      console.log("No match status found while searching, this might indicate an issue");
+      // Reset searching state after a timeout to prevent infinite loading
+      const timeout = setTimeout(() => {
+        console.log("Resetting search state due to timeout");
+        setIsSearching(false);
+        toast.error("خطا در اتصال. لطفاً دوباره تلاش کنید");
+      }, 30000); // 30 second timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isSearching, userMatchStatus, isResetting]);
 
   // Monitor activeMatch changes
   useEffect(() => {

@@ -124,6 +124,9 @@ export function HomePage() {
             <p className="text-gray-300 mb-6">
               منتظر بمانید تا حریف دیگری به مسابقه بپیوندد
             </p>
+            <p className="text-gray-400 mb-6 text-sm">
+              وقتی حریف پیدا شد، مسابقه به طور خودکار شروع می‌شود
+            </p>
             <button
               onClick={handlePlayAgain}
               className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition-colors"
