@@ -26,17 +26,21 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const leaveMatch = useMutation(api.auth.leaveMatch);
   const cancelMatch = useMutation(api.auth.cancelMatch);
 
-  // Auto-join available match when found
-  useEffect(() => {
-    if (availableMatch && !isSearching) {
-      handleJoinMatch(availableMatch);
-    }
-  }, [availableMatch]);
+  // Don't auto-join - let user manually start the game
+  // useEffect(() => {
+  //   if (availableMatch && !isSearching) {
+  //     handleJoinMatch(availableMatch);
+  //   }
+  // }, [availableMatch]);
+
+  // No need to check for available matches periodically
+  // Users will manually start the game when they want to
 
   // Check for active match - only redirect if match is actually active
   useEffect(() => {
     if (activeMatch && matchDetails && !isSearching && !isResetting) {
       if (matchDetails.match.status === "active") {
+        toast.success("حریف پیدا شد! مسابقه شروع شد");
         onMatchFound(activeMatch);
       } else if (matchDetails.match.status === "waiting") {
         onMatchStart(activeMatch);
@@ -53,18 +57,9 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       
       // The createMatch function now handles matchmaking automatically
       // It will either join an existing waiting match or create a new one
-      // Check match status immediately
-      const matchDetails = await api.auth.getMatchDetails({ matchId });
-      
-      if (matchDetails?.match.status === "active") {
-        // Match was found and started immediately
-        toast.success("حریف پیدا شد! مسابقه شروع شد");
-        onMatchFound(matchId);
-      } else {
-        // Match was created and waiting for opponent
-        toast.success("مسابقه ایجاد شد! منتظر حریف...");
-        onMatchStart(matchId);
-      }
+      // We'll let the useEffect handle the status check
+      toast.success("مسابقه ایجاد شد! منتظر حریف...");
+      onMatchStart(matchId);
       
     } catch (error) {
       toast.error("خطا در ایجاد مسابقه: " + (error as Error).message);
@@ -142,7 +137,8 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
           
           <div className="space-y-4">
               <div className="text-gray-300 text-right">
-                <p className="mb-2">• با کلیک روی "شروع مسابقه" حریف پیدا می‌شود</p>
+                <p className="mb-2">• با کلیک روی "شروع مسابقه" مسابقه ایجاد می‌شود</p>
+                <p className="mb-2">• اگر مسابقه‌ای در انتظار باشد، به آن می‌پیوندید</p>
                 <p className="mb-2">• هر سؤال زمان مخصوص خودش را دارد</p>
                 <p className="mb-2">• زمان هر سؤال در پایین سؤال نمایش داده می‌شود</p>
                 <p>• 5 سؤال تصادفی از بانک سؤالات انتخاب می‌شود</p>
@@ -209,7 +205,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
             
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5">2</div>
-              <p>سیستم به صورت خودکار حریف پیدا می‌کند</p>
+              <p>اگر مسابقه‌ای در انتظار باشد، به آن می‌پیوندید</p>
             </div>
             
             <div className="flex items-start gap-3">
