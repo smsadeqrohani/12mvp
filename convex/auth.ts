@@ -1110,8 +1110,18 @@ export const getMatchResultsPartial = query({
       })
     );
     
+    // Get match result if completed
+    let result = null;
+    if (match.status === "completed") {
+      result = await ctx.db
+        .query("matchResults")
+        .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+        .unique();
+    }
+    
     return {
       match,
+      result,
       participants: participantsWithProfiles,
       questions,
       isCompleted: match.status === "completed",

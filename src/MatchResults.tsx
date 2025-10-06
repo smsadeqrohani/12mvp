@@ -49,8 +49,8 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
   const currentUserParticipant = participants.find(p => p.userId === userProfile.userId);
   const opponentParticipant = participants.find(p => p.userId !== userProfile.userId);
   
-  const isWinner = result.winnerId === userProfile.userId;
-  const isDraw = result.isDraw;
+  const isWinner = result?.winnerId === userProfile.userId;
+  const isDraw = result?.isDraw;
   
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
