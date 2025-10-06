@@ -576,6 +576,44 @@ export const createMatch = mutation({
       }
     }
     
+    // First, try to find an existing waiting match to join
+    const waitingMatches = await ctx.db
+      .query("matches")
+      .withIndex("by_status", (q) => q.eq("status", "waiting"))
+      .collect();
+    
+    for (const match of waitingMatches) {
+      const participants = await ctx.db
+        .query("matchParticipants")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .collect();
+      
+      // Check if current user is already in this match
+      const isAlreadyParticipant = participants.some(p => p.userId === currentUserId);
+      if (isAlreadyParticipant) {
+        continue;
+      }
+      
+      // If match has only one participant, join it
+      if (participants.length === 1) {
+        await ctx.db.insert("matchParticipants", {
+          matchId: match._id,
+          userId: currentUserId,
+          joinedAt: Date.now(),
+        });
+        
+        // Start the match (make it active)
+        await ctx.db.patch(match._id, {
+          status: "active",
+          startedAt: Date.now(),
+          currentQuestionIndex: 0,
+        });
+        
+        return match._id;
+      }
+    }
+    
+    // If no waiting match found, create a new one
     // Get 5 random questions
     const allQuestions = await ctx.db.query("questions").collect();
     if (allQuestions.length < 5) {

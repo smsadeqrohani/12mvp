@@ -94,12 +94,21 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     const actualAnswer = answer === 0 ? 0 : answer; // Keep 0 as "no answer"
     
     try {
+      console.log("Submitting answer:", {
+        matchId,
+        questionId: currentQuestion._id,
+        selectedAnswer: actualAnswer,
+        timeSpent,
+      });
+      
       const result = await submitAnswer({
         matchId,
         questionId: currentQuestion._id,
         selectedAnswer: actualAnswer,
         timeSpent,
       });
+      
+      console.log("Answer submitted successfully:", result);
       
       setIsCorrect(result.isCorrect);
       setCorrectAnswer(result.correctAnswer);

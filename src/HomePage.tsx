@@ -22,7 +22,7 @@ export function HomePage() {
   
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const saved = localStorage.getItem('activeTab');
-    return (saved as TabType) || "new-match";
+    return (saved as TabType) || "dashboard";
   });
   const [gameState, setGameState] = useState<GameState>("lobby");
   const [currentMatchId, setCurrentMatchId] = useState<Id<"matches"> | null>(null);
@@ -84,8 +84,8 @@ export function HomePage() {
       setIsResetting(true);
       setCurrentMatchId(null);
       setGameState("lobby");
-      setActiveTab("new-match");
-      localStorage.setItem('activeTab', 'new-match');
+      setActiveTab("dashboard");
+      localStorage.setItem('activeTab', 'dashboard');
       setTimeout(() => {
         setIsResetting(false);
       }, 1000);
@@ -96,8 +96,8 @@ export function HomePage() {
       setIsResetting(true);
       setCurrentMatchId(null);
       setGameState("lobby");
-      setActiveTab("new-match");
-      localStorage.setItem('activeTab', 'new-match');
+      setActiveTab("dashboard");
+      localStorage.setItem('activeTab', 'dashboard');
       setTimeout(() => {
         setIsResetting(false);
       }, 1000);

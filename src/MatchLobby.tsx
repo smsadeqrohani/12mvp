@@ -48,8 +48,26 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
     try {
       setIsSearching(true);
       const matchId = await createMatch();
-      toast.success("مسابقه ایجاد شد! منتظر حریف باشید...");
-      onMatchStart(matchId);
+      
+      // The createMatch function now handles matchmaking automatically
+      // It will either join an existing waiting match or create a new one
+      toast.success("در حال جستجو برای حریف...");
+      
+      // Check match status after a short delay
+      setTimeout(async () => {
+        try {
+          const matchDetails = await api.auth.getMatchDetails({ matchId });
+          if (matchDetails?.match.status === "active") {
+            onMatchFound(matchId);
+          } else {
+            onMatchStart(matchId);
+          }
+        } catch (error) {
+          console.error("Error checking match status:", error);
+          onMatchStart(matchId);
+        }
+      }, 1000);
+      
     } catch (error) {
       toast.error("خطا در ایجاد مسابقه: " + (error as Error).message);
       setIsSearching(false);
@@ -86,7 +104,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       setIsSearching(false);
       toast.success("مسابقه لغو شد");
       // Clear localStorage and reload
-      localStorage.setItem('activeTab', 'new-match');
+      localStorage.setItem('activeTab', 'dashboard');
       setTimeout(() => {
         window.location.reload();
       }, 500);

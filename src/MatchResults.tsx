@@ -291,7 +291,7 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
           onClick={onPlayAgain}
           className="px-8 py-4 bg-accent hover:bg-accent-hover text-white rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
         >
-          مسابقه جدید
+          بازگشت به خانه
         </button>
       </div>
     </div>
