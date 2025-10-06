@@ -1066,6 +1066,59 @@ export const checkMatchCompletion = query({
   },
 });
 
+export const getMatchResultsPartial = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    // Allow partial results even if match is not completed yet
+    // This is for when one player finishes early
+    
+    // Get participants with profiles
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .collect();
+    
+    const participantsWithProfiles = await Promise.all(
+      participants.map(async (p) => {
+        const profile = await ctx.db
+          .query("profiles")
+          .withIndex("by_user", (q: any) => q.eq("userId", p.userId))
+          .unique();
+        return {
+          ...p,
+          profile,
+        };
+      })
+    );
+    
+    // Get questions with answers
+    const questions = await Promise.all(
+      match.questions.map(async (questionId) => {
+        const question = await ctx.db.get(questionId);
+        return question;
+      })
+    );
+    
+    return {
+      match,
+      participants: participantsWithProfiles,
+      questions,
+      isCompleted: match.status === "completed",
+    };
+  },
+});
+
 export const getQuestionMediaUrl = query({
   args: { storageId: v.id("_storage") },
   handler: async (ctx, args) => {

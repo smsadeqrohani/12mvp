@@ -8,13 +8,37 @@ interface MatchResultsProps {
 }
 
 export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
-  const matchResults = useQuery(api.auth.getMatchResults, { matchId });
+  const matchResults = useQuery(api.auth.getMatchResultsPartial, { matchId });
   const userProfile = useQuery(api.auth.getUserProfile);
 
   if (!matchResults || !userProfile) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
+
+  // Show waiting message if match is not completed yet
+  if (!matchResults.isCompleted) {
+    return (
+      <div className="w-full max-w-none px-6 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-white mb-4">
+              منتظر سایر بازیکنان...
+            </h2>
+            <p className="text-gray-300 mb-6">
+              شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
+            </p>
+            <div className="bg-accent/20 rounded-lg p-4 border border-accent/30">
+              <p className="text-accent font-semibold">
+                نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
