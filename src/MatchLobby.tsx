@@ -47,26 +47,24 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const handleCreateMatch = async () => {
     try {
       setIsSearching(true);
+      toast.success("در حال جستجو برای حریف...");
+      
       const matchId = await createMatch();
       
       // The createMatch function now handles matchmaking automatically
       // It will either join an existing waiting match or create a new one
-      toast.success("در حال جستجو برای حریف...");
+      // Check match status immediately
+      const matchDetails = await api.auth.getMatchDetails({ matchId });
       
-      // Check match status after a short delay
-      setTimeout(async () => {
-        try {
-          const matchDetails = await api.auth.getMatchDetails({ matchId });
-          if (matchDetails?.match.status === "active") {
-            onMatchFound(matchId);
-          } else {
-            onMatchStart(matchId);
-          }
-        } catch (error) {
-          console.error("Error checking match status:", error);
-          onMatchStart(matchId);
-        }
-      }, 1000);
+      if (matchDetails?.match.status === "active") {
+        // Match was found and started immediately
+        toast.success("حریف پیدا شد! مسابقه شروع شد");
+        onMatchFound(matchId);
+      } else {
+        // Match was created and waiting for opponent
+        toast.success("مسابقه ایجاد شد! منتظر حریف...");
+        onMatchStart(matchId);
+      }
       
     } catch (error) {
       toast.error("خطا در ایجاد مسابقه: " + (error as Error).message);
@@ -143,11 +141,12 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
           </h2>
           
           <div className="space-y-4">
-            <div className="text-gray-300 text-right">
-              <p className="mb-2">• هر سؤال زمان مخصوص خودش را دارد</p>
-              <p className="mb-2">• زمان هر سؤال در پایین سؤال نمایش داده می‌شود</p>
-              <p>• 5 سؤال تصادفی از بانک سؤالات انتخاب می‌شود</p>
-            </div>
+              <div className="text-gray-300 text-right">
+                <p className="mb-2">• با کلیک روی "شروع مسابقه" حریف پیدا می‌شود</p>
+                <p className="mb-2">• هر سؤال زمان مخصوص خودش را دارد</p>
+                <p className="mb-2">• زمان هر سؤال در پایین سؤال نمایش داده می‌شود</p>
+                <p>• 5 سؤال تصادفی از بانک سؤالات انتخاب می‌شود</p>
+              </div>
           </div>
         </div>
 
@@ -167,19 +166,9 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                ایجاد مسابقه جدید
+                شروع مسابقه
               </button>
               
-              <button
-                onClick={() => availableMatch && handleJoinMatch(availableMatch)}
-                disabled={isSearching || !availableMatch}
-                className="flex items-center justify-center gap-3 px-6 py-4 bg-green-600 hover:bg-green-500 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                {availableMatch ? "پیوستن به مسابقه موجود" : "مسابقه‌ای یافت نشد"}
-              </button>
             </div>
           </div>
         </div>
@@ -215,12 +204,12 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
           <div className="space-y-3 text-right text-gray-300">
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5">1</div>
-              <p>مسابقه جدید ایجاد کنید یا به مسابقه موجود بپیوندید</p>
+              <p>روی "شروع مسابقه" کلیک کنید</p>
             </div>
             
             <div className="flex items-start gap-3">
               <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-0.5">2</div>
-              <p>منتظر بمانید تا حریف پیدا شود</p>
+              <p>سیستم به صورت خودکار حریف پیدا می‌کند</p>
             </div>
             
             <div className="flex items-start gap-3">
