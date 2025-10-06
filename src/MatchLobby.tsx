@@ -42,13 +42,24 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
         console.log("Match became active, redirecting to game...");
         setIsSearching(false); // Reset searching state
         toast.success("حریف پیدا شد! مسابقه شروع شد");
-        onMatchFound(activeMatch);
+        // Use setTimeout to ensure state is updated before redirect
+        setTimeout(() => {
+          onMatchFound(activeMatch);
+        }, 100);
       } else if (matchDetails.match.status === "waiting") {
         console.log("Match is waiting for opponent...");
         onMatchStart(activeMatch);
       }
     }
-  }, [matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting, isSearching]);
+  }, [matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting]);
+
+  // Monitor activeMatch changes
+  useEffect(() => {
+    if (activeMatch && !isResetting) {
+      console.log("Active match detected:", activeMatch);
+      // This will trigger the matchDetails query to fetch the match details
+    }
+  }, [activeMatch, isResetting]);
 
   const handleCreateMatch = async () => {
     try {
@@ -61,8 +72,9 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       // It will either join an existing waiting match or create a new one
       // We'll let the useEffect handle the status check
       console.log("Match created/joined with ID:", matchId);
-      toast.success("مسابقه ایجاد شد! منتظر حریف...");
-      onMatchStart(matchId);
+      
+      // Don't call onMatchStart here - let the useEffect handle it
+      // This prevents conflicts with the real-time status monitoring
       
     } catch (error) {
       console.error("Error creating match:", error);
