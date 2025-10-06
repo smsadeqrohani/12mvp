@@ -15,6 +15,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const activeMatch = useQuery(api.auth.getUserActiveMatch);
+  const userMatchWithStatus = useQuery(api.auth.getUserMatchWithStatus);
   const matchDetails = useQuery(
     api.auth.getMatchDetails,
     activeMatch ? { matchId: activeMatch } : "skip"
@@ -32,8 +33,28 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
 
   // Real-time match status monitoring using Convex live queries
   useEffect(() => {
-    if (activeMatch && matchDetails && !isResetting) {
-      console.log("Match status changed:", matchDetails.match.status, "isSearching:", isSearching);
+    console.log("MatchLobby: activeMatch =", activeMatch, "userMatchWithStatus =", userMatchWithStatus, "matchDetails =", matchDetails, "isSearching =", isSearching);
+    
+    // Use userMatchWithStatus for more direct status monitoring
+    if (userMatchWithStatus && !isResetting) {
+      console.log("Match status from userMatchWithStatus:", userMatchWithStatus.status, "isSearching:", isSearching);
+      
+      if (userMatchWithStatus.status === "active") {
+        console.log("Match became active, redirecting to game...");
+        setIsSearching(false); // Reset searching state
+        toast.success("حریف پیدا شد! مسابقه شروع شد");
+        // Use setTimeout to ensure state is updated before redirect
+        setTimeout(() => {
+          onMatchFound(userMatchWithStatus.matchId);
+        }, 100);
+      } else if (userMatchWithStatus.status === "waiting") {
+        console.log("Match is waiting for opponent...");
+        onMatchStart(userMatchWithStatus.matchId);
+      }
+    }
+    // Fallback to matchDetails for backward compatibility
+    else if (activeMatch && matchDetails && !isResetting) {
+      console.log("Match status from matchDetails:", matchDetails.match.status, "isSearching:", isSearching);
       
       if (matchDetails.match.status === "active") {
         console.log("Match became active, redirecting to game...");
@@ -48,7 +69,15 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
         onMatchStart(activeMatch);
       }
     }
-  }, [matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting]);
+  }, [userMatchWithStatus?.status, userMatchWithStatus?.matchId, matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting]);
+
+  // Additional effect to handle the case when activeMatch is set but matchDetails is still loading
+  useEffect(() => {
+    if (activeMatch && !matchDetails && !isResetting && isSearching) {
+      console.log("Waiting for match details to load for match:", activeMatch);
+      // The matchDetails query will trigger once it loads, which will then trigger the above effect
+    }
+  }, [activeMatch, matchDetails, isResetting, isSearching]);
 
   // Monitor activeMatch changes
   useEffect(() => {
@@ -63,15 +92,13 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       setIsSearching(true);
       toast.success("در حال جستجو برای حریف...");
       
+      console.log("Creating match...");
       const matchId = await createMatch();
+      console.log("Match created/joined with ID:", matchId);
       
       // The createMatch function now handles matchmaking automatically
       // It will either join an existing waiting match or create a new one
-      // We'll let the useEffect handle the status check
-      console.log("Match created/joined with ID:", matchId);
-      
-      // Don't call onMatchStart here - let the useEffect handle it
-      // This prevents conflicts with the real-time status monitoring
+      // The useEffect will handle the status check when activeMatch updates
       
     } catch (error) {
       console.error("Error creating match:", error);

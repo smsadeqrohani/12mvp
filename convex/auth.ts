@@ -14,7 +14,7 @@ const requireAdmin = async (ctx: any) => {
   const userId = await requireAuth(ctx);
   const profile = await ctx.db
     .query("profiles")
-    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
     .unique();
   if (!profile?.isAdmin) throw new Error("Admin access required");
   return { userId, profile };
@@ -32,7 +32,7 @@ const getRandomQuestions = async (ctx: any) => {
     throw new Error("Not enough questions in database");
   }
   const shuffled = allQuestions.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 5).map(q => q._id);
+  return shuffled.slice(0, 5).map((q: any) => q._id);
 };
 
 // Admin-only wrapper for mutations and queries
@@ -107,7 +107,7 @@ export const getAllUsers = query({
     // Get all profiles with user data
     const profiles = await ctx.db.query("profiles").collect();
     const usersWithProfiles = await Promise.all(
-      profiles.map(async (profile) => {
+      profiles.map(async (profile: any) => {
         const user = await ctx.db.get(profile.userId);
         return {
           ...profile,
@@ -671,16 +671,45 @@ export const getUserActiveMatch = query({
       throw new Error("Not authenticated");
     }
     
-    // Find user's active matches
+    // Find user's active matches - this query will be reactive to changes in matchParticipants
     const userMatches = await ctx.db
       .query("matchParticipants")
-      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
       .collect();
     
     for (const participant of userMatches) {
       const match = await ctx.db.get(participant.matchId);
       if (match && (match.status === "waiting" || match.status === "active")) {
         return participant.matchId;
+      }
+    }
+    
+    return null;
+  },
+});
+
+// Add a new query that returns the match with its status for better reactivity
+export const getUserMatchWithStatus = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Find user's active matches
+    const userMatches = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    for (const participant of userMatches) {
+      const match = await ctx.db.get(participant.matchId);
+      if (match && (match.status === "waiting" || match.status === "active")) {
+        return {
+          matchId: participant.matchId,
+          status: match.status,
+          match: match
+        };
       }
     }
     
