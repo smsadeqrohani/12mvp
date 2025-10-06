@@ -39,6 +39,8 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       // Convex queries are real-time, so this will automatically update
       // when the match status changes in the database
       if (matchDetails.match.status === "active") {
+        console.log("Match became active, redirecting to game...");
+        setIsSearching(false); // Reset searching state
         toast.success("حریف پیدا شد! مسابقه شروع شد");
         onMatchFound(activeMatch);
       }

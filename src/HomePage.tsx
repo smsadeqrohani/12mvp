@@ -66,6 +66,7 @@ export function HomePage() {
   };
 
   const handleMatchFound = (matchId: Id<"matches">) => {
+    console.log("handleMatchFound called with matchId:", matchId);
     setCurrentMatchId(matchId);
     setGameState("playing");
     setActiveTab("new-match");
@@ -77,10 +78,8 @@ export function HomePage() {
 
   const handlePlayAgain = async () => {
     try {
-      if (currentMatchId) {
-        await cancelMatch({ matchId: currentMatchId });
-        toast.success("مسابقه لغو شد");
-      }
+      // Don't try to cancel completed matches
+      // Just reset the UI state
       setIsResetting(true);
       setCurrentMatchId(null);
       setGameState("lobby");
@@ -90,9 +89,9 @@ export function HomePage() {
         setIsResetting(false);
       }, 1000);
     } catch (error) {
-      console.error("Error cancelling match:", error);
-      toast.error("خطا در لغو مسابقه: " + (error as Error).message);
-      // Still reset the UI even if cancel fails
+      console.error("Error resetting state:", error);
+      toast.error("خطا در بازگشت به خانه: " + (error as Error).message);
+      // Still reset the UI even if there's an error
       setIsResetting(true);
       setCurrentMatchId(null);
       setGameState("lobby");
