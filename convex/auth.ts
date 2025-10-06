@@ -71,7 +71,7 @@ export const getUserProfile = query({
     }
     const profile = await ctx.db
       .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
       .unique();
     return profile;
   },
@@ -87,7 +87,7 @@ export const createProfile = mutation({
     
     const existingProfile = await ctx.db
       .query("profiles")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
       .unique();
     
     if (existingProfile) {
@@ -640,7 +640,7 @@ export const getMatchDetails = query({
       participants.map(async (p) => {
         const profile = await ctx.db
           .query("profiles")
-          .withIndex("by_user", (q) => q.eq("userId", p.userId))
+          .withIndex("by_user", (q: any) => q.eq("userId", p.userId))
           .unique();
         return {
           ...p,
@@ -688,27 +688,28 @@ export const getUserActiveMatch = query({
   },
 });
 
-// Add a new query that returns the match with its status for better reactivity
-export const getUserMatchWithStatus = query({
+// Simplified query that directly monitors match status changes
+export const getUserActiveMatchStatus = query({
   handler: async (ctx) => {
     const currentUserId = await getAuthUserId(ctx);
     if (!currentUserId) {
       throw new Error("Not authenticated");
     }
     
-    // Find user's active matches
+    // Get all user's match participants - this query is reactive to matchParticipants table
     const userMatches = await ctx.db
       .query("matchParticipants")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
       .collect();
     
+    // For each participant, get the match and check if it's active/waiting
     for (const participant of userMatches) {
       const match = await ctx.db.get(participant.matchId);
       if (match && (match.status === "waiting" || match.status === "active")) {
+        // Return just the status and matchId for maximum reactivity
         return {
           matchId: participant.matchId,
-          status: match.status,
-          match: match
+          status: match.status
         };
       }
     }
@@ -954,7 +955,7 @@ export const getMatchResults = query({
       participants.map(async (p) => {
         const profile = await ctx.db
           .query("profiles")
-          .withIndex("by_user", (q) => q.eq("userId", p.userId))
+          .withIndex("by_user", (q: any) => q.eq("userId", p.userId))
           .unique();
         return {
           ...p,
@@ -1009,7 +1010,7 @@ export const getUserMatchHistory = query({
           const opponentId = result.player1Id === currentUserId ? result.player2Id : result.player1Id;
           const opponentProfile = await ctx.db
             .query("profiles")
-            .withIndex("by_user", (q) => q.eq("userId", opponentId))
+            .withIndex("by_user", (q: any) => q.eq("userId", opponentId))
             .unique();
           
           completedMatches.push({

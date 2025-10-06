@@ -15,7 +15,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const activeMatch = useQuery(api.auth.getUserActiveMatch);
-  const userMatchWithStatus = useQuery(api.auth.getUserMatchWithStatus);
+  const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
   const matchDetails = useQuery(
     api.auth.getMatchDetails,
     activeMatch ? { matchId: activeMatch } : "skip"
@@ -33,43 +33,24 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
 
   // Real-time match status monitoring using Convex live queries
   useEffect(() => {
-    console.log("MatchLobby: activeMatch =", activeMatch, "userMatchWithStatus =", userMatchWithStatus, "matchDetails =", matchDetails, "isSearching =", isSearching);
+    console.log("MatchLobby: activeMatch =", activeMatch, "userMatchStatus =", userMatchStatus, "matchDetails =", matchDetails, "isSearching =", isSearching);
     
-    // Use userMatchWithStatus for more direct status monitoring
-    if (userMatchWithStatus && !isResetting) {
-      console.log("Match status from userMatchWithStatus:", userMatchWithStatus.status, "isSearching:", isSearching);
+    // Use userMatchStatus for direct status monitoring
+    if (userMatchStatus && !isResetting && isSearching) {
+      console.log("Match status from userMatchStatus:", userMatchStatus.status, "isSearching:", isSearching);
       
-      if (userMatchWithStatus.status === "active") {
+      if (userMatchStatus.status === "active") {
         console.log("Match became active, redirecting to game...");
         setIsSearching(false); // Reset searching state
         toast.success("حریف پیدا شد! مسابقه شروع شد");
-        // Use setTimeout to ensure state is updated before redirect
-        setTimeout(() => {
-          onMatchFound(userMatchWithStatus.matchId);
-        }, 100);
-      } else if (userMatchWithStatus.status === "waiting") {
+        // Immediate redirect without timeout for faster response
+        onMatchFound(userMatchStatus.matchId);
+      } else if (userMatchStatus.status === "waiting") {
         console.log("Match is waiting for opponent...");
-        onMatchStart(userMatchWithStatus.matchId);
+        onMatchStart(userMatchStatus.matchId);
       }
     }
-    // Fallback to matchDetails for backward compatibility
-    else if (activeMatch && matchDetails && !isResetting) {
-      console.log("Match status from matchDetails:", matchDetails.match.status, "isSearching:", isSearching);
-      
-      if (matchDetails.match.status === "active") {
-        console.log("Match became active, redirecting to game...");
-        setIsSearching(false); // Reset searching state
-        toast.success("حریف پیدا شد! مسابقه شروع شد");
-        // Use setTimeout to ensure state is updated before redirect
-        setTimeout(() => {
-          onMatchFound(activeMatch);
-        }, 100);
-      } else if (matchDetails.match.status === "waiting") {
-        console.log("Match is waiting for opponent...");
-        onMatchStart(activeMatch);
-      }
-    }
-  }, [userMatchWithStatus?.status, userMatchWithStatus?.matchId, matchDetails?.match.status, activeMatch, onMatchFound, onMatchStart, isResetting]);
+  }, [userMatchStatus?.status, userMatchStatus?.matchId, onMatchFound, onMatchStart, isResetting, isSearching]);
 
   // Additional effect to handle the case when activeMatch is set but matchDetails is still loading
   useEffect(() => {
