@@ -17,6 +17,7 @@ type GameState = "lobby" | "waiting" | "playing" | "results";
 export function HomePage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
+  const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState<TabType>(() => {
@@ -34,6 +35,61 @@ export function HomePage() {
       navigate("/login", { replace: true });
     }
   }, [loggedInUser, navigate]);
+
+  // UNIFIED MATCH STATUS MONITORING - Single source of truth for all auto-join scenarios
+  useEffect(() => {
+    if (!userMatchStatus || isResetting) return;
+    
+    console.log("HomePage: Match status changed:", userMatchStatus.status, "Current gameState:", gameState);
+    
+    // Handle all match status transitions
+    if (userMatchStatus.status === "active") {
+      // Match became active - BOTH players should join automatically
+      if (gameState === "waiting" || gameState === "lobby") {
+        console.log("HomePage: Match became active, auto-joining to game...");
+        // Small delay to ensure smooth transition
+        setTimeout(() => {
+          setGameState("playing");
+          setCurrentMatchId(userMatchStatus.matchId);
+          setActiveTab("new-match");
+          toast.success("حریف پیدا شد! مسابقه شروع شد");
+        }, 100);
+      }
+    } else if (userMatchStatus.status === "waiting") {
+      // Match is waiting for opponent
+      if (gameState === "lobby") {
+        console.log("HomePage: Match is waiting, transitioning to waiting state...");
+        setGameState("waiting");
+        setCurrentMatchId(userMatchStatus.matchId);
+        setActiveTab("new-match");
+      }
+    } else if (userMatchStatus.status === "cancelled") {
+      // Match was cancelled
+      if (gameState === "waiting" || gameState === "playing") {
+        console.log("HomePage: Match was cancelled, resetting to lobby...");
+        setGameState("lobby");
+        setCurrentMatchId(null);
+        setActiveTab("dashboard");
+        toast.info("مسابقه لغو شد");
+      }
+    }
+  }, [userMatchStatus?.status, userMatchStatus?.matchId, gameState, isResetting]);
+
+  // Initialize state from existing match on page load
+  useEffect(() => {
+    if (userMatchStatus && gameState === "lobby") {
+      console.log("HomePage: Initializing state from existing match:", userMatchStatus);
+      if (userMatchStatus.status === "waiting") {
+        setGameState("waiting");
+        setCurrentMatchId(userMatchStatus.matchId);
+        setActiveTab("new-match");
+      } else if (userMatchStatus.status === "active") {
+        setGameState("playing");
+        setCurrentMatchId(userMatchStatus.matchId);
+        setActiveTab("new-match");
+      }
+    }
+  }, [userMatchStatus, gameState]);
 
   // Show loading while checking authentication
   if (loggedInUser === undefined || userProfile === undefined) {
@@ -59,16 +115,13 @@ export function HomePage() {
   }
 
   const handleMatchStart = (matchId: Id<"matches">) => {
-    setCurrentMatchId(matchId);
-    setGameState("waiting");
-    setActiveTab("new-match");
+    // This is now handled automatically by the unified monitoring
+    console.log("handleMatchStart called with matchId:", matchId);
   };
 
   const handleMatchFound = (matchId: Id<"matches">) => {
+    // This is now handled automatically by the unified monitoring
     console.log("handleMatchFound called with matchId:", matchId);
-    setCurrentMatchId(matchId);
-    setGameState("playing");
-    setActiveTab("new-match");
   };
 
   const handleGameComplete = () => {
@@ -85,6 +138,21 @@ export function HomePage() {
     setTimeout(() => {
       setIsResetting(false);
     }, 500);
+  };
+
+  const leaveMatch = useMutation(api.auth.leaveMatch);
+
+  const handleCancelMatch = async () => {
+    try {
+      if (userMatchStatus?.matchId) {
+        await leaveMatch({ matchId: userMatchStatus.matchId });
+      }
+      toast.success("مسابقه لغو شد");
+      handlePlayAgain();
+    } catch (error) {
+      toast.error("خطا در لغو مسابقه: " + (error as Error).message);
+      handlePlayAgain(); // Reset UI even if there's an error
+    }
   };
 
   const handleViewMatch = (matchId: string) => {
@@ -113,7 +181,7 @@ export function HomePage() {
               وقتی حریف پیدا شد، مسابقه به طور خودکار شروع می‌شود
             </p>
             <button
-              onClick={handlePlayAgain}
+              onClick={handleCancelMatch}
               className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition-colors"
             >
               لغو مسابقه

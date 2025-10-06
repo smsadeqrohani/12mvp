@@ -14,43 +14,24 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const [isSearching, setIsSearching] = useState(false);
   
   const userProfile = useQuery(api.auth.getUserProfile);
-  const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
   const createMatch = useMutation(api.auth.createMatch);
   const leaveMatch = useMutation(api.auth.leaveMatch);
 
-  // Single, simplified effect for match status monitoring
-  useEffect(() => {
-    if (!userMatchStatus || isResetting) return;
-    
-    console.log("Match status changed:", userMatchStatus.status);
-    
-    if (userMatchStatus.status === "active") {
-      console.log("Match became active, redirecting to game...");
-      setIsSearching(false);
-      toast.success("حریف پیدا شد! مسابقه شروع شد");
-      onMatchFound(userMatchStatus.matchId);
-    } else if (userMatchStatus.status === "waiting" && isSearching) {
-      console.log("Match is waiting for opponent...");
-      onMatchStart(userMatchStatus.matchId);
-    } else if (userMatchStatus.status === "cancelled" && isSearching) {
-      console.log("Match was cancelled, resetting state...");
-      setIsSearching(false);
-      toast.info("مسابقه لغو شد");
-    }
-  }, [userMatchStatus?.status, userMatchStatus?.matchId, onMatchFound, onMatchStart, isResetting, isSearching]);
+  // MatchLobby no longer monitors match status - that's handled by HomePage
+  // This component only handles match creation and UI feedback
 
   const handleCreateMatch = async () => {
     try {
       setIsSearching(true);
       toast.success("در حال جستجو برای حریف...");
       
-      console.log("Creating match...");
+      console.log("MatchLobby: Creating match...");
       const matchId = await createMatch();
-      console.log("Match created/joined with ID:", matchId);
+      console.log("MatchLobby: Match created/joined with ID:", matchId);
       
-      // The createMatch function now handles matchmaking automatically
-      // It will either join an existing waiting match or create a new one
-      // The useEffect will handle the status check when activeMatch updates
+      // The createMatch function handles matchmaking automatically
+      // HomePage will monitor the status change and handle the transition
+      // We just need to show the searching state briefly
       
     } catch (error) {
       console.error("Error creating match:", error);
@@ -73,13 +54,12 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
 
   const handleCancelSearch = async () => {
     try {
-      if (userMatchStatus?.matchId) {
-        await leaveMatch({ matchId: userMatchStatus.matchId });
-      }
+      // Cancel search - just reset the UI state
+      // HomePage will handle the actual match leaving if needed
       setIsSearching(false);
-      toast.success("مسابقه لغو شد");
+      toast.success("جستجو لغو شد");
     } catch (error) {
-      toast.error("خطا در لغو مسابقه: " + (error as Error).message);
+      toast.error("خطا در لغو جستجو: " + (error as Error).message);
       setIsSearching(false);
     }
   };
