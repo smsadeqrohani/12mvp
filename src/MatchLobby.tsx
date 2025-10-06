@@ -14,74 +14,30 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const [isSearching, setIsSearching] = useState(false);
   
   const userProfile = useQuery(api.auth.getUserProfile);
-  const activeMatch = useQuery(api.auth.getUserActiveMatch);
   const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
-  const matchDetails = useQuery(
-    api.auth.getMatchDetails,
-    activeMatch ? { matchId: activeMatch } : "skip"
-  );
-  
   const createMatch = useMutation(api.auth.createMatch);
   const leaveMatch = useMutation(api.auth.leaveMatch);
 
-  // Don't auto-join - let user manually start the game
-  // useEffect(() => {
-  //   if (availableMatch && !isSearching) {
-  //     handleJoinMatch(availableMatch);
-  //   }
-  // }, [availableMatch]);
-
-  // Real-time match status monitoring using Convex live queries
+  // Single, simplified effect for match status monitoring
   useEffect(() => {
-    console.log("MatchLobby: activeMatch =", activeMatch, "userMatchStatus =", userMatchStatus, "matchDetails =", matchDetails, "isSearching =", isSearching);
+    if (!userMatchStatus || isResetting) return;
     
-    // Use userMatchStatus for direct status monitoring
-    if (userMatchStatus && !isResetting) {
-      console.log("Match status from userMatchStatus:", userMatchStatus.status, "isSearching:", isSearching);
-      
-      if (userMatchStatus.status === "active") {
-        console.log("Match became active, redirecting to game...");
-        setIsSearching(false); // Reset searching state
-        toast.success("حریف پیدا شد! مسابقه شروع شد");
-        // Immediate redirect without timeout for faster response
-        onMatchFound(userMatchStatus.matchId);
-      } else if (userMatchStatus.status === "waiting" && isSearching) {
-        console.log("Match is waiting for opponent...");
-        onMatchStart(userMatchStatus.matchId);
-      }
+    console.log("Match status changed:", userMatchStatus.status);
+    
+    if (userMatchStatus.status === "active") {
+      console.log("Match became active, redirecting to game...");
+      setIsSearching(false);
+      toast.success("حریف پیدا شد! مسابقه شروع شد");
+      onMatchFound(userMatchStatus.matchId);
+    } else if (userMatchStatus.status === "waiting" && isSearching) {
+      console.log("Match is waiting for opponent...");
+      onMatchStart(userMatchStatus.matchId);
+    } else if (userMatchStatus.status === "cancelled" && isSearching) {
+      console.log("Match was cancelled, resetting state...");
+      setIsSearching(false);
+      toast.info("مسابقه لغو شد");
     }
   }, [userMatchStatus?.status, userMatchStatus?.matchId, onMatchFound, onMatchStart, isResetting, isSearching]);
-
-  // Additional effect to handle the case when activeMatch is set but matchDetails is still loading
-  useEffect(() => {
-    if (activeMatch && !matchDetails && !isResetting && isSearching) {
-      console.log("Waiting for match details to load for match:", activeMatch);
-      // The matchDetails query will trigger once it loads, which will then trigger the above effect
-    }
-  }, [activeMatch, matchDetails, isResetting, isSearching]);
-
-  // Fallback effect to ensure we don't get stuck in searching state
-  useEffect(() => {
-    if (isSearching && !userMatchStatus && !isResetting) {
-      console.log("No match status found while searching, this might indicate an issue");
-      // Reset searching state after a timeout to prevent infinite loading
-      const timeout = setTimeout(() => {
-        console.log("Resetting search state due to timeout");
-        setIsSearching(false);
-        toast.error("خطا در اتصال. لطفاً دوباره تلاش کنید");
-      }, 30000); // 30 second timeout
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isSearching, userMatchStatus, isResetting]);
-
-  // Monitor activeMatch changes
-  useEffect(() => {
-    if (activeMatch && !isResetting) {
-      console.log("Active match detected:", activeMatch);
-      // This will trigger the matchDetails query to fetch the match details
-    }
-  }, [activeMatch, isResetting]);
 
   const handleCreateMatch = async () => {
     try {
@@ -117,16 +73,11 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
 
   const handleCancelSearch = async () => {
     try {
-      if (activeMatch) {
-        await leaveMatch({ matchId: activeMatch });
+      if (userMatchStatus?.matchId) {
+        await leaveMatch({ matchId: userMatchStatus.matchId });
       }
       setIsSearching(false);
       toast.success("مسابقه لغو شد");
-      // Clear localStorage and reload
-      localStorage.setItem('activeTab', 'dashboard');
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       toast.error("خطا در لغو مسابقه: " + (error as Error).message);
       setIsSearching(false);

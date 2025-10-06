@@ -75,31 +75,16 @@ export function HomePage() {
     setGameState("results");
   };
 
-  const handlePlayAgain = async () => {
-    try {
-      // Don't try to cancel completed matches
-      // Just reset the UI state
-      setIsResetting(true);
-      setCurrentMatchId(null);
-      setGameState("lobby");
-      setActiveTab("dashboard");
-      localStorage.setItem('activeTab', 'dashboard');
-      setTimeout(() => {
-        setIsResetting(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error resetting state:", error);
-      toast.error("خطا در بازگشت به خانه: " + (error as Error).message);
-      // Still reset the UI even if there's an error
-      setIsResetting(true);
-      setCurrentMatchId(null);
-      setGameState("lobby");
-      setActiveTab("dashboard");
-      localStorage.setItem('activeTab', 'dashboard');
-      setTimeout(() => {
-        setIsResetting(false);
-      }, 1000);
-    }
+  const handlePlayAgain = () => {
+    setIsResetting(true);
+    setCurrentMatchId(null);
+    setGameState("lobby");
+    setActiveTab("dashboard");
+    localStorage.setItem('activeTab', 'dashboard');
+    // Short reset delay to prevent race conditions
+    setTimeout(() => {
+      setIsResetting(false);
+    }, 500);
   };
 
   const handleViewMatch = (matchId: string) => {
