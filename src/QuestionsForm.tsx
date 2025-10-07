@@ -32,7 +32,10 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
   const updateQuestion = useMutation(api.questions.updateQuestion);
   const generateUploadUrl = useMutation(api.questions.generateUploadUrl);
   const uploadFile = useMutation(api.files.uploadFile);
-  const allFiles = useQuery(api.files.getAllFiles);
+  const allFilesResult = useQuery(api.files.getAllFiles, {
+    paginationOpts: { numItems: 100, cursor: null },
+  });
+  const allFiles = allFilesResult?.page || [];
   const getMediaUrl = useQuery(api.questions.getMediaUrl, 
     formData.mediaStorageId ? { storageId: formData.mediaStorageId as any } : "skip"
   );
