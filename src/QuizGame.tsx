@@ -18,18 +18,17 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const [questionStartTime, setQuestionStartTime] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [correctAnswer, setCorrectAnswer] = useState(0);
   const [isWaitingForOthers, setIsWaitingForOthers] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   const userProfile = useQuery(api.auth.getUserProfile);
-  const matchDetails = useQuery(api.auth.getMatchDetails, { matchId });
-  const matchCompletion = useQuery(api.auth.checkMatchCompletion, { matchId });
-  const submitAnswer = useMutation(api.auth.submitAnswer);
-  const leaveMatch = useMutation(api.auth.leaveMatch);
+  const matchDetails = useQuery(api.matches.getMatchDetails, { matchId });
+  const matchCompletion = useQuery(api.matches.checkMatchCompletion, { matchId });
+  const submitAnswer = useMutation(api.matches.submitAnswer);
+  const leaveMatch = useMutation(api.matches.leaveMatch);
   const mediaUrl = useQuery(
-    api.auth.getQuestionMediaUrl,
+    api.questions.getQuestionMediaUrl,
     matchDetails?.questions[currentQuestionIndex]?.mediaStorageId
       ? { storageId: matchDetails.questions[currentQuestionIndex].mediaStorageId! }
       : "skip"
@@ -58,7 +57,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       setSelectedAnswer(null);
       setShowResult(false);
       setIsCorrect(false); // Reset correct state
-      setCorrectAnswer(0); // Reset correct answer
       
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -127,14 +125,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       
       console.log("Answer submitted successfully:", result);
       
-      // Don't show result immediately - wait for user to see their choice
+      // Show result immediately - backend determines correctness securely
       setIsCorrect(result.isCorrect);
-      setCorrectAnswer(result.correctAnswer);
-      
-      // Show result after a brief delay to let user see their selection
-      setTimeout(() => {
-        setShowResult(true);
-      }, 500);
+      setShowResult(true);
       
       // Show result for 2 seconds before moving to next question (faster transition)
       setTimeout(() => {
@@ -314,11 +307,11 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               onClick={() => !isAnswered && handleAnswerSubmit(option.key)}
               disabled={isAnswered}
               className={`p-4 rounded-xl text-right transition-all duration-200 ${
-                isAnswered
-                  ? option.key === correctAnswer
-                    ? "bg-green-600/30 border-2 border-green-500 text-green-300"
-                    : option.key === selectedAnswer
-                    ? "bg-red-600/30 border-2 border-red-500 text-red-300"
+                isAnswered && showResult
+                  ? option.key === selectedAnswer
+                    ? isCorrect
+                      ? "bg-green-600/30 border-2 border-green-500 text-green-300"
+                      : "bg-red-600/30 border-2 border-red-500 text-red-300"
                     : "bg-gray-700/50 border border-gray-600 text-gray-400"
                   : selectedAnswer === option.key
                   ? "bg-accent/20 border-2 border-accent text-accent"
@@ -327,11 +320,11 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             >
               <div className="flex items-center gap-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-                  isAnswered
-                    ? option.key === correctAnswer
-                      ? "bg-green-500 text-white"
-                      : option.key === selectedAnswer
-                      ? "bg-red-500 text-white"
+                  isAnswered && showResult
+                    ? option.key === selectedAnswer
+                      ? isCorrect
+                        ? "bg-green-500 text-white"
+                        : "bg-red-500 text-white"
                       : "bg-gray-600 text-gray-400"
                     : selectedAnswer === option.key
                     ? "bg-accent text-white"
@@ -367,7 +360,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             <p className="text-gray-300">
               {isCorrect 
                 ? "پاسخ شما صحیح است" 
-                : `پاسخ صحیح گزینه ${correctAnswer} بود`
+                : "پاسخ شما اشتباه بود"
               }
             </p>
             <p className="text-gray-400 text-sm mt-2">

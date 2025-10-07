@@ -28,12 +28,12 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
     category: question?.category || "",
   });
 
-  const createQuestion = useMutation(api.auth.createQuestion);
-  const updateQuestion = useMutation(api.auth.updateQuestion);
-  const generateUploadUrl = useMutation(api.auth.generateUploadUrl);
-  const uploadFile = useMutation(api.auth.uploadFile);
-  const allFiles = useQuery(api.auth.getAllFiles);
-  const getMediaUrl = useQuery(api.auth.getMediaUrl, 
+  const createQuestion = useMutation(api.questions.createQuestion);
+  const updateQuestion = useMutation(api.questions.updateQuestion);
+  const generateUploadUrl = useMutation(api.questions.generateUploadUrl);
+  const uploadFile = useMutation(api.files.uploadFile);
+  const allFiles = useQuery(api.files.getAllFiles);
+  const getMediaUrl = useQuery(api.questions.getMediaUrl, 
     formData.mediaStorageId ? { storageId: formData.mediaStorageId as any } : "skip"
   );
 

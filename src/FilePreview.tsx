@@ -13,7 +13,7 @@ interface FilePreviewProps {
 }
 
 export function FilePreview({ file, onClose }: FilePreviewProps) {
-  const fileUrl = useQuery(api.auth.getMediaUrl, { storageId: file.storageId });
+  const fileUrl = useQuery(api.questions.getMediaUrl, { storageId: file.storageId });
 
   if (!fileUrl) {
     return (

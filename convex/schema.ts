@@ -17,11 +17,15 @@ const applicationTables = {
     option2Text: v.string(),
     option3Text: v.string(),
     option4Text: v.string(),
-    rightAnswer: v.number(),
     timeToRespond: v.number(),
     grade: v.number(),
     category: v.optional(v.string()),
   }),
+  
+  questionAnswers: defineTable({
+    questionId: v.id("questions"),
+    correctOption: v.number(), // 1, 2, 3, or 4
+  }).index("by_question", ["questionId"]),
   
   files: defineTable({
     storageId: v.id("_storage"),
@@ -40,6 +44,7 @@ const applicationTables = {
     completedAt: v.optional(v.number()),
     questions: v.array(v.id("questions")),
     currentQuestionIndex: v.optional(v.number()),
+    creatorId: v.optional(v.id("users")),
   }).index("by_status", ["status"]),
   
   matchParticipants: defineTable({

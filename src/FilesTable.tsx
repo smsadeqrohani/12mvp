@@ -11,12 +11,20 @@ export function FilesTable() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
+  
+  // Pagination state - track cursor history for back navigation
+  const [filesCursor, setFilesCursor] = useState<string | null>(null);
+  const [filesCursorHistory, setFilesCursorHistory] = useState<(string | null)[]>([null]);
+  const [filesPage, setFilesPage] = useState(1);
+  const PAGE_SIZE = 5;
 
-  const allFiles = useQuery(api.auth.getAllFiles);
-  const generateUploadUrl = useMutation(api.auth.generateUploadUrl);
-  const uploadFile = useMutation(api.auth.uploadFile);
-  const renameFile = useMutation(api.auth.renameFile);
-  const deleteFile = useMutation(api.auth.deleteFile);
+  const allFiles = useQuery(api.files.getAllFiles, {
+    paginationOpts: { numItems: PAGE_SIZE, cursor: filesCursor },
+  });
+  const generateUploadUrl = useMutation(api.questions.generateUploadUrl);
+  const uploadFile = useMutation(api.files.uploadFile);
+  const renameFile = useMutation(api.files.renameFile);
+  const deleteFile = useMutation(api.files.deleteFile);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -129,6 +137,25 @@ export function FilesTable() {
     return type.split("/")[1]?.toUpperCase() || "فایل";
   };
 
+  // Pagination handlers with proper back navigation
+  const handleNextFiles = () => {
+    if (allFiles && !allFiles.isDone) {
+      const newCursor = allFiles.continueCursor;
+      setFilesCursorHistory(prev => [...prev, newCursor]);
+      setFilesCursor(newCursor);
+      setFilesPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevFiles = () => {
+    if (filesPage > 1) {
+      const newHistory = filesCursorHistory.slice(0, -1);
+      setFilesCursorHistory(newHistory);
+      setFilesCursor(newHistory[newHistory.length - 1]);
+      setFilesPage(prev => prev - 1);
+    }
+  };
+
   const getFileIcon = (type: string) => {
     if (type.startsWith("image/")) {
       return (
@@ -172,8 +199,8 @@ export function FilesTable() {
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-background-light/50 backdrop-blur-sm rounded-lg pl-4 pr-4 py-2 border border-gray-700/30">
-              <span className="text-gray-400 text-sm">تعداد کل:</span>
-              <span className="text-white font-semibold mr-2">{allFiles?.length || 0}</span>
+              <span className="text-gray-400 text-sm">صفحه:</span>
+              <span className="text-white font-semibold mr-2">{filesPage}</span>
             </div>
             <button
               onClick={() => setShowUploadForm(true)}
@@ -229,7 +256,7 @@ export function FilesTable() {
               </tr>
             </thead>
             <tbody>
-              {allFiles?.map((file, index) => (
+              {allFiles?.page?.map((file, index) => (
                 <tr
                   key={file._id}
                   className={`group border-b border-gray-700/30 hover:bg-gradient-to-r hover:from-gray-800/30 hover:to-gray-700/20 transition-all duration-300 ${
@@ -333,7 +360,35 @@ export function FilesTable() {
             </tbody>
           </table>
         </div>
-        {allFiles?.length === 0 && (
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700/30 bg-gray-800/20">
+          <div className="text-sm text-gray-400">
+            صفحه {filesPage}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevFiles}
+              disabled={filesPage === 1}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600 disabled:bg-gray-800/50 disabled:cursor-not-allowed text-white disabled:text-gray-600 rounded-lg text-sm font-medium transition-all duration-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              قبلی
+            </button>
+            <button
+              onClick={handleNextFiles}
+              disabled={allFiles?.isDone ?? true}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover disabled:bg-gray-800/50 disabled:cursor-not-allowed text-white disabled:text-gray-600 rounded-lg text-sm font-medium transition-all duration-200"
+            >
+              بعدی
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        {allFiles?.page?.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

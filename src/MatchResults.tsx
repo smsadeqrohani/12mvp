@@ -8,7 +8,7 @@ interface MatchResultsProps {
 }
 
 export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
-  const matchResults = useQuery(api.auth.getMatchResultsPartial, { matchId });
+  const matchResults = useQuery(api.matches.getMatchResultsPartial, { matchId });
   const userProfile = useQuery(api.auth.getUserProfile);
 
   if (!matchResults || !userProfile) {

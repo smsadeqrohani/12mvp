@@ -14,8 +14,8 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   const [isSearching, setIsSearching] = useState(false);
   
   const userProfile = useQuery(api.auth.getUserProfile);
-  const createMatch = useMutation(api.auth.createMatch);
-  const leaveMatch = useMutation(api.auth.leaveMatch);
+  const createMatch = useMutation(api.matches.createMatch);
+  const leaveMatch = useMutation(api.matches.leaveMatch);
 
   // MatchLobby no longer monitors match status - that's handled by HomePage
   // This component only handles match creation and UI feedback

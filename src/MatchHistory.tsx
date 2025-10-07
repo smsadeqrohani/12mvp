@@ -6,7 +6,7 @@ interface MatchHistoryProps {
 }
 
 export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
-  const matchHistory = useQuery(api.auth.getUserMatchHistory, { limit: 50 });
+  const matchHistory = useQuery(api.matches.getUserMatchHistory, { limit: 50 });
 
   if (!matchHistory) {
     return (

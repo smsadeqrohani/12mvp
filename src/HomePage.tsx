@@ -17,8 +17,8 @@ type GameState = "lobby" | "waiting" | "playing" | "results";
 export function HomePage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
-  const userMatchStatus = useQuery(api.auth.getUserActiveMatchStatus);
-  const leaveMatch = useMutation(api.auth.leaveMatch);
+  const userMatchStatus = useQuery(api.matches.getUserActiveMatchStatus);
+  const leaveMatch = useMutation(api.matches.leaveMatch);
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState<TabType>(() => {
