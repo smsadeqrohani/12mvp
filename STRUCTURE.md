@@ -86,7 +86,10 @@ src/
 │   │   ├── Badge.tsx             # Status badges
 │   │   ├── Button.tsx            # Button variants
 │   │   ├── FormField.tsx         # Form input components
-│   │   └── LoadingSpinner.tsx    # Loading states
+│   │   ├── LoadingSpinner.tsx    # Loading states
+│   │   ├── PageLoader.tsx        # Full page loading (NEW!)
+│   │   ├── Skeleton.tsx          # Loading placeholders (NEW!)
+│   │   └── ErrorBoundary.tsx     # Error handling (NEW!)
 │   │
 │   ├── match/                     # Match-specific shared components
 │   │   ├── index.ts              # Barrel export
@@ -634,6 +637,165 @@ unique(array);
 groupBy(array, (item) => item.category);
 ```
 
+## ⚡ Performance Optimization
+
+### Code Splitting & Lazy Loading
+
+**Route-based Code Splitting:**
+
+The application implements route-based code splitting to reduce initial bundle size and improve load times.
+
+**Implementation in App.tsx:**
+```typescript
+// IMPORTANT: Import lazy and Suspense from 'react', not 'react-router-dom'
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import { PageLoader } from "./components/ui";
+
+// Lazy load route components
+const HomePage = lazy(() => 
+  import("./pages/HomePage").then(m => ({ default: m.HomePage }))
+);
+const LoginPage = lazy(() => 
+  import("./pages/LoginPage").then(m => ({ default: m.LoginPage }))
+);
+const AdminPage = lazy(() => 
+  import("./pages/AdminPage").then(m => ({ default: m.AdminPage }))
+);
+
+// Wrap routes with Suspense
+<Suspense fallback={<PageLoader message="در حال بارگذاری صفحه..." />}>
+  <Routes>
+    <Route path="/" element={<HomePage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/admin" element={<AdminPage />} />
+  </Routes>
+</Suspense>
+```
+
+**Benefits:**
+- ✅ **Smaller Initial Bundle**: Only load code for the current route
+- ✅ **Faster First Paint**: Reduced JavaScript parse time
+- ✅ **Better Caching**: Routes cached separately by browser
+- ✅ **Improved Performance**: Especially on slow networks
+- ✅ **On-Demand Loading**: Features loaded when needed
+
+**Bundle Organization:**
+```
+dist/
+├── index.html
+├── assets/
+│   ├── index-[hash].js          # Main app bundle (small)
+│   ├── HomePage-[hash].js        # Home page chunk
+│   ├── AdminPage-[hash].js       # Admin page chunk
+│   ├── LoginPage-[hash].js       # Login page chunk
+│   └── vendor-[hash].js          # Third-party dependencies
+```
+
+**Loading Flow:**
+1. User visits app → Loads main bundle (small)
+2. Navigates to /admin → Lazy loads AdminPage chunk
+3. Suspense shows PageLoader during load
+4. Chunk loads → Component renders
+5. Subsequent visits use cached chunk
+
+## 🛡️ Error Handling & Loading States
+
+### Error Boundary Architecture
+
+**Implementation:**
+```typescript
+// ErrorBoundary component (Class-based for error catching)
+class ErrorBoundary extends Component {
+  state = { hasError: false, error: null };
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error("Error caught:", error, errorInfo);
+    // Optional: Send to error tracking service
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallbackUI error={this.state.error} />;
+    }
+    return this.props.children;
+  }
+}
+```
+
+**Usage Pattern:**
+```typescript
+// App.tsx - Route-level error boundaries
+<ErrorBoundary>
+  <Routes>
+    <Route path="/" element={
+      <ErrorBoundary>
+        <HomePage />
+      </ErrorBoundary>
+    } />
+    <Route path="/admin" element={
+      <ErrorBoundary>
+        <AdminPage />
+      </ErrorBoundary>
+    } />
+  </Routes>
+</ErrorBoundary>
+```
+
+**Benefits:**
+- ✅ Prevents entire app crashes
+- ✅ Shows user-friendly error messages
+- ✅ Allows retry functionality
+- ✅ Can log errors for debugging
+- ✅ Isolated error boundaries per route
+
+### Loading State Patterns
+
+**Page-level Loading:**
+```typescript
+// Pages show PageLoader while data loads
+if (userProfile === undefined) {
+  return <PageLoader message="در حال بارگذاری..." />;
+}
+```
+
+**Component-level Loading:**
+```typescript
+// Use skeleton screens for better UX
+{isLoading ? (
+  <SkeletonTable />
+) : (
+  <DataTable data={data} />
+)}
+```
+
+**Button Loading States:**
+```typescript
+// Visual feedback on form submission
+<button disabled={isSubmitting}>
+  {isSubmitting ? (
+    <div className="flex items-center gap-2">
+      <Spinner />
+      <span>در حال پردازش...</span>
+    </div>
+  ) : (
+    "ذخیره"
+  )}
+</button>
+```
+
+**Loading Components:**
+- `<PageLoader />` - Full page loading with message
+- `<LoadingSpinner />` - Basic spinner
+- `<Skeleton />` - Customizable skeleton
+- `<SkeletonCard />` - Pre-built card skeleton
+- `<SkeletonTable />` - Pre-built table skeleton
+- `<SkeletonForm />` - Pre-built form skeleton
+
 ## 🔒 Security Patterns
 
 ### Frontend Security
@@ -814,14 +976,14 @@ import { PaginationControls } from "../components/ui";
 ## 📊 Statistics
 
 ### Frontend
-- **Total Components**: 45+ files
+- **Total Components**: 48+ files
 - **Pages**: 3 route components
 - **Features**: 3 modules (auth, game, admin)
-- **Shared UI Components**: 8 reusable components
-- **Layout Components**: 4 layout components (NEW!)
+- **Shared UI Components**: 11 reusable components (NEW!)
+- **Layout Components**: 4 layout components
 - **Match Components**: 3 specialized components
 - **Custom Hooks**: 2 state management hooks
-- **Utility Files**: 5 utility modules (NEW!)
+- **Utility Files**: 5 utility modules
 - **Barrel Exports**: 8 index files
 
 ### Backend (Convex)
@@ -854,6 +1016,19 @@ import { PaginationControls } from "../components/ui";
 4. **Use in pages:**
    ```typescript
    import { Component1 } from "../features/[feature-name]";
+   ```
+
+5. **Add lazy loading (if new page):**
+   ```typescript
+   // App.tsx
+   // Ensure you have: import { lazy } from "react";
+   
+   const NewPage = lazy(() => 
+     import("./pages/NewPage").then(m => ({ default: m.NewPage }))
+   );
+   
+   // Add to routes (already wrapped in Suspense)
+   <Route path="/new" element={<NewPage />} />
    ```
 
 ### Backend Feature
@@ -899,22 +1074,38 @@ import { PaginationControls } from "../components/ui";
    - Better code organization
 
 2. **✅ Reusable Components**
-   - Created 8 shared UI components (DataTable, Modal, Badge, etc.)
+   - Created 11 shared UI components (DataTable, Modal, Badge, etc.)
    - 3 specialized match components
    - Reduced code duplication across admin tabs
    - Consistent design patterns
 
-3. **✅ Custom Hooks**
+3. **✅ Performance Optimization** (NEW!)
+   - Implemented route-based code splitting with React.lazy()
+   - Added Suspense boundaries for smooth loading
+   - Reduced initial bundle size significantly
+   - Faster page load times and better caching
+   - On-demand loading for better performance
+
+4. **✅ Error Handling & Loading States**
+   - Added ErrorBoundary for graceful error handling
+   - Implemented PageLoader for better loading UX
+   - Created skeleton components for perceived performance
+   - Enhanced all forms with loading indicators
+   - Route-level error isolation
+
+5. **✅ Custom Hooks**
    - Extracted complex game state logic to `useGameState`
    - Centralized match status monitoring in `useMatchStatusMonitor`
    - Simplified HomePage component
    - Reusable state management patterns
 
-4. **✅ Better Developer Experience**
+6. **✅ Better Developer Experience**
    - Clearer file organization
    - Easier to find and modify code
    - Better type safety with TypeScript
    - Improved documentation
+   - Production-ready error handling
+   - Optimized bundle sizes with code splitting
 
 ### File Size Improvements
 
@@ -924,6 +1115,8 @@ import { PaginationControls } from "../components/ui";
 - Duplicated table code across admin tabs
 - Limited utility functions
 - No layout components
+- No error handling components
+- Basic loading states
 
 **After:**
 - `HomePage.tsx`: 211 lines (31% reduction!)
@@ -932,8 +1125,10 @@ import { PaginationControls } from "../components/ui";
 - `matchResults.ts`: 137 lines
 - `matchAdmin.ts`: 83 lines
 - Reusable DataTable component used everywhere
-- **4 new layout components** for consistent UI
+- **4 layout components** for consistent UI
 - **5 utility modules** with 40+ helper functions
+- **3 new UX components** (ErrorBoundary, PageLoader, Skeleton)
+- **Enhanced loading states** across all forms and pages
 
 ---
 

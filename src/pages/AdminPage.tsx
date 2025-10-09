@@ -5,7 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { QuestionsForm, FilesTable, MatchDetailsAdmin } from "../features/admin";
-import { PaginationControls } from "../components/ui";
+import { PaginationControls, PageLoader } from "../components/ui";
 
 type TabType = "users" | "questions" | "files" | "matches";
 
@@ -84,20 +84,12 @@ export function AdminPage() {
 
   // Show loading while checking authentication and admin status
   if (loggedInUser === undefined || userProfile === undefined) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <PageLoader message="در حال بررسی دسترسی مدیریت..." />;
   }
 
   // Don't render anything while redirecting
   if (loggedInUser === null || (userProfile && !userProfile.isAdmin)) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
+    return <PageLoader message="در حال انتقال..." />;
   }
 
   // Restrict admin panel to large screens only (≥1024px - desktop/tablet)

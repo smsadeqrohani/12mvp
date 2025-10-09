@@ -45,7 +45,14 @@ export function ProfileSetup() {
           disabled={loading}
         />
         <button type="submit" className="auth-button" disabled={loading}>
-          {loading ? "در حال ایجاد پروفایل..." : "ادامه"}
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>در حال ایجاد پروفایل...</span>
+            </div>
+          ) : (
+            "ادامه"
+          )}
         </button>
       </form>
     </div>

@@ -37,6 +37,9 @@ A modern Persian (Farsi) quiz game application built with React, TypeScript, and
 - **Dark Theme**: Custom dark blue and orange color scheme
 - **Responsive Design**: Mobile-first responsive layout
 - **Toast Notifications**: Persian notification system for user feedback
+- **Loading States**: Enhanced loading indicators with skeleton screens
+- **Error Boundaries**: Graceful error handling with user-friendly fallbacks
+- **Code Splitting**: Route-based lazy loading for faster initial loads
 
 ## 🛠️ Technology Stack
 
@@ -135,16 +138,16 @@ This project follows a clear documentation pattern. All documentation is organiz
 │   ├── pages/             # Route pages (3 pages)
 │   ├── features/          # Feature modules (auth, game, admin)
 │   ├── components/        # Shared components
-│   │   ├── ui/           # UI components (8 components)
+│   │   ├── ui/           # UI components (11 components - NEW!)
 │   │   ├── match/        # Match components (3 components)
-│   │   └── layout/       # Layout components (4 components - NEW!)
+│   │   └── layout/       # Layout components (4 components)
 │   ├── hooks/            # Custom React hooks (2 hooks)
 │   └── lib/              # Utilities and constants
 │       ├── utils.ts      # Main utilities
-│       ├── validation.ts # Validation helpers (NEW!)
-│       ├── formatting.ts # Formatting helpers (NEW!)
-│       ├── storage.ts    # LocalStorage helpers (NEW!)
-│       └── helpers.ts    # General helpers (NEW!)
+│       ├── validation.ts # Validation helpers
+│       ├── formatting.ts # Formatting helpers
+│       ├── storage.ts    # LocalStorage helpers
+│       └── helpers.ts    # General helpers
 │
 ├── convex/                # Backend (Convex)
 │   ├── schema.ts         # Database schema
@@ -163,6 +166,16 @@ This project follows a clear documentation pattern. All documentation is organiz
 **For detailed architecture**, see **[STRUCTURE.md](./STRUCTURE.md)**
 
 ### Recent Improvements ✨
+
+**Performance & UX Enhancements (Oct 2025):**
+- ✅ **Code Splitting**: Route-based lazy loading for optimal bundle sizes
+- ✅ **Error Boundaries**: Added React error boundaries for graceful error handling
+- ✅ **Loading States**: Enhanced loading indicators with contextual messages
+- ✅ **Skeleton Screens**: Added skeleton components for better perceived performance
+- ✅ **Page Loader**: Created centralized loading component with custom messages
+- ✅ **Form Loading**: Added visual loading indicators to all form submissions
+- ✅ **Error UI**: User-friendly error fallbacks with retry functionality
+- ✅ **Lazy Loading**: React.lazy() and Suspense for on-demand component loading
 
 **Refactored Architecture (Oct 2025):**
 - ✅ Split large backend files into focused modules
@@ -225,6 +238,13 @@ This project is connected to Convex deployment: [`precious-horse-758`](https://d
 - **Modern browsers** with ES2020+ support
 - **Mobile browsers** with touch support
 - **RTL support** required
+
+## ⚡ Performance
+
+- **Code Splitting**: Routes are lazy-loaded to reduce initial bundle size
+- **Optimized Loading**: Only load code needed for current page
+- **Fast Initial Load**: Smaller JavaScript bundles for faster startup
+- **Suspense Boundaries**: Smooth loading transitions between routes
 
 ## 🤝 Contributing
 

@@ -116,7 +116,14 @@ export function SignInForm() {
           </div>
         )}
         <button className="auth-button" type="submit" disabled={submitting}>
-          {flow === "signIn" ? "ورود" : "ثبت نام"}
+          {submitting ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <span>در حال پردازش...</span>
+            </div>
+          ) : (
+            flow === "signIn" ? "ورود" : "ثبت نام"
+          )}
         </button>
       </form>
     </div>

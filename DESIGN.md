@@ -297,6 +297,48 @@ import { LoadingSpinner } from "../components/ui";
 <LoadingSpinner />
 ```
 
+#### PageLoader
+Full-page loading state with custom message:
+```tsx
+import { PageLoader } from "../components/ui";
+
+<PageLoader message="در حال بارگذاری..." />
+```
+
+#### Skeleton Components
+Loading placeholders for better UX:
+```tsx
+import { Skeleton, SkeletonCard, SkeletonTable, SkeletonForm } from "../components/ui";
+
+// Basic skeleton
+<Skeleton className="h-4 w-32" />
+
+// Pre-built skeleton cards
+<SkeletonCard />
+<SkeletonTable />
+<SkeletonForm />
+```
+
+#### ErrorBoundary
+Graceful error handling component:
+```tsx
+import { ErrorBoundary } from "../components/ui";
+
+<ErrorBoundary>
+  {/* Your components */}
+</ErrorBoundary>
+
+// With custom fallback
+<ErrorBoundary fallback={<CustomErrorUI />}>
+  {/* Your components */}
+</ErrorBoundary>
+
+// With error callback
+<ErrorBoundary onError={(error, errorInfo) => logError(error)}>
+  {/* Your components */}
+</ErrorBoundary>
+```
+
 #### WaitingScreen
 Match waiting screen component:
 ```tsx
@@ -473,13 +515,16 @@ useEffect(() => {
 - `TabNavigation` - Tab interface
 - `Section` - Content sections
 
-### UI Components (8)
+### UI Components (11)
 - `DataTable` - Generic tables
 - `Modal` - Dialogs
 - `Badge` - Status indicators
 - `Button` - Action buttons
 - `FormField` - Form inputs
 - `LoadingSpinner` - Loading states
+- `PageLoader` - Full page loading
+- `Skeleton` - Loading placeholders
+- `ErrorBoundary` - Error handling
 - `PaginationControls` - Pagination
 
 ### Match Components (3)
@@ -552,6 +597,104 @@ duration-300        /* 300ms - Default */
 <div className="bg-accent/20 border-accent">  // Active state
 ```
 
+### Loading States
+
+**Page-level loading:**
+```tsx
+// Full page loading
+if (isLoading) {
+  return <PageLoader message="در حال بارگذاری..." />;
+}
+```
+
+**Component-level loading:**
+```tsx
+// Skeleton placeholders
+{isLoading ? <SkeletonCard /> : <ActualCard data={data} />}
+```
+
+**Button loading states:**
+```tsx
+<button disabled={isSubmitting}>
+  {isSubmitting ? (
+    <div className="flex items-center justify-center gap-2">
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+      <span>در حال پردازش...</span>
+    </div>
+  ) : (
+    "ذخیره"
+  )}
+</button>
+```
+
+### Error States
+
+**Error boundaries:**
+```tsx
+// Wrap routes with error boundaries
+<ErrorBoundary>
+  <YourComponent />
+</ErrorBoundary>
+```
+
+**Form errors:**
+```tsx
+// Validation errors
+{errors.length > 0 && (
+  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+    <p className="text-red-400 text-sm font-semibold">خطا:</p>
+    <ul className="text-red-300 text-sm">
+      {errors.map(error => <li key={error}>• {error}</li>)}
+    </ul>
+  </div>
+)}
+```
+
+### Code Splitting & Lazy Loading
+
+**Route-based code splitting:**
+```tsx
+// IMPORTANT: Import lazy and Suspense from 'react', not 'react-router-dom'
+import { lazy, Suspense } from "react";
+import { Routes, Route } from "react-router-dom";
+import { PageLoader } from "../components/ui";
+
+// Lazy load route components
+const HomePage = lazy(() => 
+  import("./pages/HomePage").then(m => ({ default: m.HomePage }))
+);
+
+// Wrap with Suspense for loading state
+<Suspense fallback={<PageLoader message="در حال بارگذاری صفحه..." />}>
+  <Routes>
+    <Route path="/" element={<HomePage />} />
+  </Routes>
+</Suspense>
+```
+
+**Component-level lazy loading:**
+```tsx
+// For heavy components that aren't needed initially
+const HeavyChart = lazy(() => import("./HeavyChart"));
+
+function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+        <HeavyChart />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- ✅ Smaller initial bundle size
+- ✅ Faster page load times
+- ✅ Load only what's needed
+- ✅ Better performance on slow networks
+
 ## 🔧 Configuration Files
 
 ### Tailwind Config (`tailwind.config.js`)
@@ -608,6 +751,11 @@ body {
 - ✅ Test on mobile devices
 - ✅ Use layout components (PageContainer, PageHeader, etc.)
 - ✅ Import utilities from `lib/utils` for validation/formatting
+- ✅ Add loading states to all async operations
+- ✅ Wrap components with ErrorBoundary for error handling
+- ✅ Use skeleton screens for better perceived performance
+- ✅ Use lazy loading for routes to optimize bundle size
+- ✅ Wrap lazy components with Suspense boundaries
 
 ### DON'Ts ❌
 
@@ -620,6 +768,8 @@ body {
 - ❌ Use generic `margin` or `padding`
 - ❌ Duplicate layout code (use layout components)
 - ❌ Write custom validation/formatting (use utilities)
+- ❌ Show blank screens during loading (use PageLoader/Skeleton)
+- ❌ Let errors crash the app (use ErrorBoundary)
 
 ## 🎨 Design Examples
 

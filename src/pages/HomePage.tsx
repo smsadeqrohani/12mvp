@@ -7,7 +7,7 @@ import { ProfileSetup } from "../features/auth";
 import { HelloPage, MatchLobby, QuizGame, MatchResults, MatchHistory } from "../features/game";
 import { PageContainer, PageHeader, TabNavigation, Tab } from "../components/layout";
 import { WaitingScreen } from "../components/match";
-import { LoadingSpinner } from "../components/ui";
+import { LoadingSpinner, PageLoader } from "../components/ui";
 import { getStorageItem, setStorageItem } from "../lib/storage";
 import { STORAGE_KEYS, MESSAGES } from "../lib/constants";
 import { toast } from "sonner";
@@ -141,12 +141,12 @@ export function HomePage() {
 
   // Loading state
   if (loggedInUser === undefined || userProfile === undefined) {
-    return <LoadingSpinner />;
+    return <PageLoader message="در حال بارگذاری اطلاعات کاربر..." />;
   }
 
   // Redirecting state
   if (loggedInUser === null) {
-    return <LoadingSpinner />;
+    return <PageLoader message="در حال انتقال به صفحه ورود..." />;
   }
 
   // User setup required

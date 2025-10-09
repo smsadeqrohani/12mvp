@@ -1,11 +1,15 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignOutButton } from "./features/auth";
-import { LoginPage } from "./pages/LoginPage";
-import { HomePage } from "./pages/HomePage";
-import { AdminPage } from "./pages/AdminPage";
 import { Toaster } from "sonner";
+import { ErrorBoundary, PageLoader } from "./components/ui";
+
+// Lazy load route components for code splitting
+const HomePage = lazy(() => import("./pages/HomePage").then(module => ({ default: module.HomePage })));
+const LoginPage = lazy(() => import("./pages/LoginPage").then(module => ({ default: module.LoginPage })));
+const AdminPage = lazy(() => import("./pages/AdminPage").then(module => ({ default: module.AdminPage })));
 
 function AppContent() {
   const location = useLocation();
@@ -36,17 +40,31 @@ function AppContent() {
         </div>
       </header>
       <main className="flex-1">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={
-            <div className="flex items-center justify-center p-8">
-              <div className="w-full max-w-md mx-auto">
-                <LoginPage />
-              </div>
-            </div>
-          } />
-          <Route path="/admin" element={<AdminPage />} />
-        </Routes>
+        <ErrorBoundary>
+          <Suspense fallback={<PageLoader message="در حال بارگذاری صفحه..." />}>
+            <Routes>
+              <Route path="/" element={
+                <ErrorBoundary>
+                  <HomePage />
+                </ErrorBoundary>
+              } />
+              <Route path="/login" element={
+                <ErrorBoundary>
+                  <div className="flex items-center justify-center p-8">
+                    <div className="w-full max-w-md mx-auto">
+                      <LoginPage />
+                    </div>
+                  </div>
+                </ErrorBoundary>
+              } />
+              <Route path="/admin" element={
+                <ErrorBoundary>
+                  <AdminPage />
+                </ErrorBoundary>
+              } />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
       </main>
       <Toaster
         position="top-center"
