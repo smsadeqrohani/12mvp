@@ -10,6 +10,7 @@ Complete guide to the project's architecture, file organization, and code patter
 - [Import Patterns](#-import-patterns)
 - [Code Conventions](#-code-conventions)
 - [Security Patterns](#-security-patterns)
+- [Pagination Patterns](#-pagination-patterns)
 
 ## 🎯 Architecture Principles
 
@@ -79,12 +80,39 @@ src/
 ├── components/                     # 🧩 Shared components
 │   ├── ui/                        # Reusable UI components
 │   │   ├── index.ts              # Barrel export
-│   │   └── PaginationControls.tsx
-│   └── layout/                    # Layout components (future)
+│   │   ├── PaginationControls.tsx # Pagination component
+│   │   ├── DataTable.tsx         # Generic data table
+│   │   ├── Modal.tsx             # Modal/Dialog component
+│   │   ├── Badge.tsx             # Status badges
+│   │   ├── Button.tsx            # Button variants
+│   │   ├── FormField.tsx         # Form input components
+│   │   └── LoadingSpinner.tsx    # Loading states
+│   │
+│   ├── match/                     # Match-specific shared components
+│   │   ├── index.ts              # Barrel export
+│   │   ├── WaitingScreen.tsx     # Waiting for opponent screen
+│   │   ├── PlayerCard.tsx        # Player display card
+│   │   └── MatchStatusBadge.tsx  # Match status indicator
+│   │
+│   └── layout/                    # Layout components
+│       ├── index.ts              # Barrel export
+│       ├── PageContainer.tsx     # Page wrapper with padding
+│       ├── PageHeader.tsx        # Page title/subtitle component
+│       ├── TabNavigation.tsx     # Reusable tab navigation
+│       └── Section.tsx           # Content section wrapper
+│
+├── hooks/                         # 🪝 Custom React hooks
+│   ├── index.ts                  # Barrel export
+│   ├── useGameState.ts           # Game state machine hook
+│   └── useMatchStatusMonitor.ts  # Match status monitoring
 │
 └── lib/                           # 🔧 Utilities
-    ├── utils.ts                   # Helper functions (cn, etc.)
-    └── constants.ts               # App-wide constants
+    ├── utils.ts                   # Main utilities (cn, re-exports)
+    ├── constants.ts               # App-wide constants
+    ├── validation.ts              # Input validation utilities
+    ├── formatting.ts              # Display formatting utilities
+    ├── storage.ts                 # LocalStorage utilities
+    └── helpers.ts                 # General helper functions
 ```
 
 ### Feature Module Structure
@@ -145,17 +173,26 @@ convex/
 │   ├── generateUploadUrl() [admin] # Get upload URL
 │   └── getQuestionMediaUrl()     # Get media URL
 │
-├── matches.ts                      # 🎮 Match/Game API
+├── matches.ts                      # 🎮 Match API (Barrel export)
+│   └── Re-exports from specialized modules
+│
+├── matchCore.ts                    # 🎯 Core Match Operations
 │   ├── createMatch()             # Create/join match
 │   ├── getMatchDetails()         # Get match info (no answers)
 │   ├── getUserActiveMatch()      # Check active match
 │   ├── getUserActiveMatchStatus() # Match status
-│   ├── leaveMatch()              # Leave match
+│   └── leaveMatch()              # Leave match
+│
+├── matchGameplay.ts                # 🎲 Gameplay Operations
 │   ├── submitAnswer()            # Submit answer (validates)
+│   └── checkMatchCompletion()    # Check if completed
+│
+├── matchResults.ts                 # 🏆 Results & History
 │   ├── getMatchResults()         # Get results (with answers)
 │   ├── getUserMatchHistory()     # User's match history
-│   ├── checkMatchCompletion()    # Check if completed
-│   ├── getMatchResultsPartial()  # Partial results
+│   └── getMatchResultsPartial()  # Partial results
+│
+├── matchAdmin.ts                   # ⚙️ Admin Match Operations
 │   ├── getAllMatches() [admin]   # List all matches
 │   └── cancelMatch() [admin]     # Cancel match
 │
@@ -344,6 +381,18 @@ const matches = useQuery(api.matches.getAllMatches);
 
 // ✅ Form state
 const [formData, setFormData] = useState({ name: "" });
+
+// ✅ Custom hooks for complex state
+import { useGameState, useMatchStatusMonitor } from "../hooks";
+
+const { gameState, currentMatchId, setToPlaying } = useGameState();
+const matchStatus = useMatchStatusMonitor({
+  gameState,
+  isResetting: false,
+  onMatchActive: setToPlaying,
+  onMatchWaiting: setToWaiting,
+  onMatchCancelled: resetGame,
+});
 ```
 
 ### TypeScript Patterns
@@ -360,6 +409,229 @@ interface Props {
 
 // Discriminated unions for state
 type GameState = "lobby" | "waiting" | "playing" | "results";
+```
+
+## 🧩 Shared Components Library
+
+### UI Components (`src/components/ui/`)
+
+**DataTable** - Generic table component for admin panels:
+```typescript
+<DataTable
+  columns={[
+    {
+      key: "name",
+      header: "نام",
+      icon: <UserIcon />,
+      render: (item) => <span>{item.name}</span>
+    }
+  ]}
+  data={users}
+  keyExtractor={(user) => user._id}
+  emptyState={{
+    title: "کاربری یافت نشد",
+    description: "هنوز کاربری ثبت نشده",
+    action: <Button>افزودن کاربر</Button>
+  }}
+/>
+```
+
+**Modal** - Reusable modal/dialog:
+```typescript
+<Modal
+  isOpen={showModal}
+  onClose={() => setShowModal(false)}
+  title="عنوان مودال"
+  description="توضیحات"
+  size="md"
+  icon={<QuestionIcon />}
+>
+  {/* Modal content */}
+</Modal>
+```
+
+**Badge** - Status indicators:
+```typescript
+<Badge variant="success" dot>تکمیل شده</Badge>
+<Badge variant="warning" icon={<ClockIcon />}>در انتظار</Badge>
+```
+
+**Button** - Consistent button variants:
+```typescript
+<Button variant="primary" size="lg" icon={<PlusIcon />}>
+  افزودن
+</Button>
+<Button variant="danger" loading={isDeleting}>
+  حذف
+</Button>
+```
+
+**Form Components** - Input, TextArea, Select with consistent styling:
+```typescript
+<FormField label="نام کاربر" required>
+  <Input placeholder="نام را وارد کنید" />
+</FormField>
+
+<FormField label="توضیحات">
+  <TextArea rows={4} />
+</FormField>
+
+<FormField label="دسته‌بندی">
+  <Select>
+    <option>انتخاب کنید</option>
+  </Select>
+</FormField>
+```
+
+### Layout Components (`src/components/layout/`)
+
+**PageContainer** - Consistent page wrapper:
+```typescript
+<PageContainer maxWidth="2xl">
+  {/* Page content */}
+</PageContainer>
+```
+
+**PageHeader** - Page title and subtitle:
+```typescript
+<PageHeader 
+  title="سلام، کاربر!"
+  subtitle="توضیحات صفحه"
+  icon="👋"
+/>
+```
+
+**TabNavigation** - Reusable tabs:
+```typescript
+const tabs = [
+  { id: "dashboard", label: "داشبورد" },
+  { id: "settings", label: "تنظیمات" },
+];
+
+<TabNavigation 
+  tabs={tabs}
+  activeTab={activeTab}
+  onTabChange={setActiveTab}
+/>
+```
+
+**Section** - Content section wrapper:
+```typescript
+<Section variant="glass" padding="lg">
+  {/* Section content */}
+</Section>
+```
+
+### Match Components (`src/components/match/`)
+
+**WaitingScreen** - Waiting for opponent:
+```typescript
+<WaitingScreen onCancel={handleCancel} />
+```
+
+**PlayerCard** - Display player information:
+```typescript
+<PlayerCard
+  name="علی"
+  score={5}
+  time={120}
+  isWinner={true}
+  isCurrentUser={true}
+/>
+```
+
+**MatchStatusBadge** - Match status indicator:
+```typescript
+<MatchStatusBadge status="active" />
+```
+
+### Custom Hooks (`src/hooks/`)
+
+**useGameState** - Game state machine:
+```typescript
+const {
+  gameState,        // "lobby" | "waiting" | "playing" | "results"
+  currentMatchId,
+  isResetting,
+  setToLobby,
+  setToWaiting,
+  setToPlaying,
+  setToResults,
+  resetGame,
+} = useGameState();
+```
+
+**useMatchStatusMonitor** - Monitor match status changes:
+```typescript
+const matchStatus = useMatchStatusMonitor({
+  gameState,
+  isResetting,
+  onMatchWaiting: (matchId) => setToWaiting(matchId),
+  onMatchActive: (matchId) => setToPlaying(matchId),
+  onMatchCancelled: () => resetGame(),
+});
+```
+
+### Utility Functions (`src/lib/`)
+
+**Validation** (`validation.ts`):
+```typescript
+// Password validation
+const result = validatePassword(password);
+if (!result.isValid) {
+  console.error(result.errors);
+}
+
+// Email validation
+validateEmail(email);
+
+// File validation
+validateFileSize(file.size, 10); // 10 MB max
+validateFileType(file.type, ALLOWED_TYPES);
+```
+
+**Formatting** (`formatting.ts`):
+```typescript
+// File size
+formatFileSize(1024000); // "۱.۰۲ مگابایت"
+
+// Persian numbers
+toPersianNumber(123); // "۱۲۳"
+
+// Time formatting
+formatTime(90); // "۰۱:۳۰"
+
+// Date formatting
+formatDate(Date.now()); // "۱۴ دی ۱۴۰۳"
+formatRelativeTime(timestamp); // "۵ دقیقه پیش"
+```
+
+**Storage** (`storage.ts`):
+```typescript
+// Safe localStorage access
+const value = getStorageItem('key', defaultValue);
+setStorageItem('key', value);
+removeStorageItem('key');
+
+// Check availability
+if (isStorageAvailable()) {
+  // Use localStorage
+}
+```
+
+**Helpers** (`helpers.ts`):
+```typescript
+// Delay
+await delay(1000);
+
+// Debounce/Throttle
+const debouncedFn = debounce(fn, 300);
+const throttledFn = throttle(fn, 1000);
+
+// Array helpers
+shuffle(array);
+unique(array);
+groupBy(array, (item) => item.category);
 ```
 
 ## 🔒 Security Patterns
@@ -434,6 +706,98 @@ const isCorrect = selectedAnswer === answerEntry.correctOption;
 // Return only boolean, not the correct answer
 ```
 
+## 📄 Pagination Patterns
+
+### Backend Pagination (Convex)
+
+All list queries use **cursor-based pagination** for optimal performance:
+
+```typescript
+// Standard pagination query pattern
+export const getItems = query({
+  args: {
+    paginationOpts: v.object({
+      numItems: v.number(),
+      cursor: v.union(v.string(), v.null()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const paginatedResult = await ctx.db
+      .query("tableName")
+      .order("desc")
+      .paginate(args.paginationOpts);
+    
+    return {
+      page: paginatedResult.page,
+      isDone: paginatedResult.isDone,
+      continueCursor: paginatedResult.continueCursor,
+    };
+  },
+});
+```
+
+**Paginated Queries:**
+- `auth.getAllUsers` - User list (5 per page)
+- `questions.getAllQuestions` - Questions list (5 per page)
+- `files.getAllFiles` - Files list (5 per page)
+- `matchAdmin.getAllMatches` - All matches (5 per page)
+- `matchResults.getUserMatchHistory` - Match history (10 per page)
+
+### Frontend Pagination
+
+**State management pattern:**
+```typescript
+// Cursor history for back navigation
+const [cursor, setCursor] = useState<string | null>(null);
+const [cursorHistory, setCursorHistory] = useState<(string | null)[]>([null]);
+const [currentPage, setCurrentPage] = useState(1);
+const PAGE_SIZE = 10;
+
+// Query with pagination
+const result = useQuery(api.module.queryName, {
+  paginationOpts: { numItems: PAGE_SIZE, cursor },
+});
+
+// Next page handler
+const handleNext = () => {
+  if (result && !result.isDone) {
+    const newCursor = result.continueCursor;
+    setCursorHistory(prev => [...prev, newCursor]);
+    setCursor(newCursor);
+    setCurrentPage(prev => prev + 1);
+  }
+};
+
+// Previous page handler
+const handlePrev = () => {
+  if (currentPage > 1) {
+    const newHistory = cursorHistory.slice(0, -1);
+    setCursorHistory(newHistory);
+    setCursor(newHistory[newHistory.length - 1]);
+    setCurrentPage(prev => prev - 1);
+  }
+};
+```
+
+**Shared UI component:**
+```typescript
+import { PaginationControls } from "../components/ui";
+
+<PaginationControls 
+  currentPage={currentPage}
+  isDone={result?.isDone ?? true}
+  onNext={handleNext}
+  onPrev={handlePrev}
+/>
+```
+
+**Benefits:**
+- ✅ Efficient for any dataset size (O(1) navigation)
+- ✅ Maintains exact previous page state
+- ✅ Consistent UI across all paginated views
+- ✅ Real-time data updates preserved
+- ✅ No offset-based query issues
+
 ## 🚦 File Size Guidelines
 
 - **Small**: < 200 lines (ideal for most components)
@@ -450,17 +814,22 @@ const isCorrect = selectedAnswer === answerEntry.correctOption;
 ## 📊 Statistics
 
 ### Frontend
-- **Total Components**: 26 files
+- **Total Components**: 45+ files
 - **Pages**: 3 route components
 - **Features**: 3 modules (auth, game, admin)
-- **Shared Components**: 1 (expandable)
-- **Barrel Exports**: 4 index files
+- **Shared UI Components**: 8 reusable components
+- **Layout Components**: 4 layout components (NEW!)
+- **Match Components**: 3 specialized components
+- **Custom Hooks**: 2 state management hooks
+- **Utility Files**: 5 utility modules (NEW!)
+- **Barrel Exports**: 8 index files
 
 ### Backend (Convex)
-- **API Files**: 6 feature files
+- **API Files**: 10 feature files (modularized)
 - **Database Tables**: 8 tables
 - **Queries**: 15+ read operations
 - **Mutations**: 20+ write operations
+- **Code Organization**: Separated by responsibility
 
 ## 🔄 Adding New Features
 
@@ -516,6 +885,55 @@ const isCorrect = selectedAnswer === answerEntry.correctOption;
 
 - **[README.md](./README.md)** - Overview, features, getting started
 - **[DESIGN.md](./DESIGN.md)** - Design system, styling, components
+
+---
+
+## 🎯 Refactoring Benefits
+
+### What Was Improved
+
+1. **✅ Modular Backend**
+   - Split large `matches.ts` (787 lines) into 4 focused modules
+   - Each module has single responsibility
+   - Easier to maintain and test
+   - Better code organization
+
+2. **✅ Reusable Components**
+   - Created 8 shared UI components (DataTable, Modal, Badge, etc.)
+   - 3 specialized match components
+   - Reduced code duplication across admin tabs
+   - Consistent design patterns
+
+3. **✅ Custom Hooks**
+   - Extracted complex game state logic to `useGameState`
+   - Centralized match status monitoring in `useMatchStatusMonitor`
+   - Simplified HomePage component
+   - Reusable state management patterns
+
+4. **✅ Better Developer Experience**
+   - Clearer file organization
+   - Easier to find and modify code
+   - Better type safety with TypeScript
+   - Improved documentation
+
+### File Size Improvements
+
+**Before:**
+- `HomePage.tsx`: 307 lines
+- `matches.ts`: 787 lines
+- Duplicated table code across admin tabs
+- Limited utility functions
+- No layout components
+
+**After:**
+- `HomePage.tsx`: 211 lines (31% reduction!)
+- `matchCore.ts`: 174 lines
+- `matchGameplay.ts`: 148 lines
+- `matchResults.ts`: 137 lines
+- `matchAdmin.ts`: 83 lines
+- Reusable DataTable component used everywhere
+- **4 new layout components** for consistent UI
+- **5 utility modules** with 40+ helper functions
 
 ---
 

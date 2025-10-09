@@ -132,23 +132,50 @@ This project follows a clear documentation pattern. All documentation is organiz
 ```
 12mvp/
 ├── src/                    # Frontend application
-│   ├── pages/             # Route pages
+│   ├── pages/             # Route pages (3 pages)
 │   ├── features/          # Feature modules (auth, game, admin)
-│   ├── components/        # Shared UI components
+│   ├── components/        # Shared components
+│   │   ├── ui/           # UI components (8 components)
+│   │   ├── match/        # Match components (3 components)
+│   │   └── layout/       # Layout components (4 components - NEW!)
+│   ├── hooks/            # Custom React hooks (2 hooks)
 │   └── lib/              # Utilities and constants
+│       ├── utils.ts      # Main utilities
+│       ├── validation.ts # Validation helpers (NEW!)
+│       ├── formatting.ts # Formatting helpers (NEW!)
+│       ├── storage.ts    # LocalStorage helpers (NEW!)
+│       └── helpers.ts    # General helpers (NEW!)
 │
 ├── convex/                # Backend (Convex)
 │   ├── schema.ts         # Database schema
 │   ├── auth.ts           # Authentication
 │   ├── questions.ts      # Questions API
-│   ├── matches.ts        # Match logic
+│   ├── matchCore.ts      # Core match operations
+│   ├── matchGameplay.ts  # Gameplay logic
+│   ├── matchResults.ts   # Results & history
+│   ├── matchAdmin.ts     # Admin operations
 │   └── files.ts          # File management
 │
 ├── public/               # Static assets
-└── docs/                 # Documentation
+└── [README.md, DESIGN.md, STRUCTURE.md] # Documentation
 ```
 
 **For detailed architecture**, see **[STRUCTURE.md](./STRUCTURE.md)**
+
+### Recent Improvements ✨
+
+**Refactored Architecture (Oct 2025):**
+- ✅ Split large backend files into focused modules
+- ✅ Created 8+ reusable UI components (DataTable, Modal, Badge, etc.)
+- ✅ Added 4 layout components (PageContainer, PageHeader, TabNavigation, Section)
+- ✅ Built comprehensive utility library (validation, formatting, storage, helpers)
+- ✅ Extracted game state logic to custom hooks
+- ✅ Refactored HomePage (31% code reduction - 307 → 211 lines)
+- ✅ Improved code organization and maintainability
+- ✅ Reduced code duplication across the entire codebase
+- ✅ Added 40+ utility functions for common tasks
+
+See [STRUCTURE.md - Refactoring Benefits](./STRUCTURE.md#-refactoring-benefits) for details.
 
 ## 🚀 Deployment
 

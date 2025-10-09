@@ -128,6 +128,57 @@ font-normal             /* 400 - Body text */
 
 ## 🧩 Components
 
+### Layout Components
+
+#### PageContainer
+Provides consistent page layout with standard padding and max-width:
+```tsx
+<PageContainer maxWidth="2xl">
+  {/* Page content */}
+</PageContainer>
+
+// Available max-width options: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none"
+```
+
+#### PageHeader
+Standardized page headers with title, subtitle, and icon:
+```tsx
+<PageHeader 
+  title="سلام، کاربر!"
+  subtitle="به داشبورد خوش آمدید"
+  icon="👋"
+/>
+```
+
+#### TabNavigation
+Reusable tab navigation with active states:
+```tsx
+const tabs = [
+  { id: "dashboard", label: "داشبورد" },
+  { id: "settings", label: "تنظیمات", icon: <SettingsIcon /> },
+];
+
+<TabNavigation 
+  tabs={tabs}
+  activeTab={activeTab}
+  onTabChange={setActiveTab}
+/>
+```
+
+#### Section
+Content section wrapper with variants:
+```tsx
+// Glass morphism variant
+<Section variant="glass" padding="lg">
+  {/* Content */}
+</Section>
+
+// Card variant
+<Section variant="card" padding="md">
+  {/* Content */}
+</Section>
+```
+
 ### Buttons
 
 #### Primary Button (Accent)
@@ -234,6 +285,24 @@ font-normal             /* 400 - Body text */
     </tr>
   </tbody>
 </table>
+```
+
+### Utility Components
+
+#### LoadingSpinner
+Consistent loading state indicator:
+```tsx
+import { LoadingSpinner } from "../components/ui";
+
+<LoadingSpinner />
+```
+
+#### WaitingScreen
+Match waiting screen component:
+```tsx
+import { WaitingScreen } from "../components/match";
+
+<WaitingScreen onCancel={handleCancel} />
 ```
 
 ### Toast Notifications
@@ -396,6 +465,28 @@ useEffect(() => {
 }, []);
 ```
 
+## 📦 Component Library Summary
+
+### Layout Components (4)
+- `PageContainer` - Page wrapper
+- `PageHeader` - Page titles
+- `TabNavigation` - Tab interface
+- `Section` - Content sections
+
+### UI Components (8)
+- `DataTable` - Generic tables
+- `Modal` - Dialogs
+- `Badge` - Status indicators
+- `Button` - Action buttons
+- `FormField` - Form inputs
+- `LoadingSpinner` - Loading states
+- `PaginationControls` - Pagination
+
+### Match Components (3)
+- `WaitingScreen` - Waiting UI
+- `PlayerCard` - Player display
+- `MatchStatusBadge` - Status indicator
+
 ## 🎯 Design Patterns
 
 ### Spacing System
@@ -515,6 +606,8 @@ body {
 - ✅ Add hover and focus states
 - ✅ Use transitions for smooth interactions
 - ✅ Test on mobile devices
+- ✅ Use layout components (PageContainer, PageHeader, etc.)
+- ✅ Import utilities from `lib/utils` for validation/formatting
 
 ### DON'Ts ❌
 
@@ -525,6 +618,8 @@ body {
 - ❌ Use inconsistent spacing
 - ❌ Mix different design patterns
 - ❌ Use generic `margin` or `padding`
+- ❌ Duplicate layout code (use layout components)
+- ❌ Write custom validation/formatting (use utilities)
 
 ## 🎨 Design Examples
 
@@ -549,17 +644,62 @@ body {
 
 ### Dashboard Card
 ```tsx
-<div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-6 hover:bg-background-light/80 transition-all">
+import { Section } from "../components/layout";
+
+<Section variant="glass" padding="md" className="hover:bg-background-light/80 transition-all">
   <h3 className="text-xl font-semibold text-accent mb-3">عنوان کارت</h3>
   <p className="text-gray-300">توضیحات کارت</p>
-</div>
+</Section>
 ```
 
 ### Action Button
 ```tsx
-<button className="px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:scale-105">
+import { Button } from "../components/ui";
+
+<Button 
+  variant="primary" 
+  size="lg"
+  className="shadow-lg hover:shadow-xl transform hover:scale-105"
+>
   شروع مسابقه
-</button>
+</Button>
+```
+
+### Complete Page Example
+```tsx
+import { PageContainer, PageHeader, TabNavigation } from "../components/layout";
+import { LoadingSpinner } from "../components/ui";
+
+function MyPage() {
+  const [activeTab, setActiveTab] = useState("tab1");
+
+  if (loading) return <LoadingSpinner />;
+
+  const tabs = [
+    { id: "tab1", label: "تب اول" },
+    { id: "tab2", label: "تب دوم" },
+  ];
+
+  return (
+    <PageContainer maxWidth="2xl">
+      <PageHeader 
+        title="صفحه من"
+        subtitle="توضیحات صفحه"
+        icon="🎮"
+      />
+
+      <TabNavigation 
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      <div className="min-h-[400px]">
+        {/* Tab content */}
+      </div>
+    </PageContainer>
+  );
+}
 ```
 
 ---

@@ -5,6 +5,11 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { ProfileSetup } from "../features/auth";
 import { HelloPage, MatchLobby, QuizGame, MatchResults, MatchHistory } from "../features/game";
+import { PageContainer, PageHeader, TabNavigation, Tab } from "../components/layout";
+import { WaitingScreen } from "../components/match";
+import { LoadingSpinner } from "../components/ui";
+import { getStorageItem, setStorageItem } from "../lib/storage";
+import { STORAGE_KEYS, MESSAGES } from "../lib/constants";
 import { toast } from "sonner";
 
 type TabType = "dashboard" | "new-match" | "history";
@@ -17,45 +22,42 @@ export function HomePage() {
   const leaveMatch = useMutation(api.matches.leaveMatch);
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
-    const saved = localStorage.getItem('activeTab');
-    return (saved as TabType) || "dashboard";
-  });
+  const [activeTab, setActiveTab] = useState<TabType>(() => 
+    getStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard" as TabType)
+  );
   const [gameState, setGameState] = useState<GameState>("lobby");
   const [currentMatchId, setCurrentMatchId] = useState<Id<"matches"> | null>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Always call useEffect at the top level
+  // Redirect if not authenticated
   useEffect(() => {
     if (loggedInUser === null) {
       navigate("/login", { replace: true });
     }
   }, [loggedInUser, navigate]);
 
-  // UNIFIED MATCH STATUS MONITORING - Single source of truth for all auto-join scenarios
+  // Unified match status monitoring - handles all auto-join scenarios
   useEffect(() => {
     if (!userMatchStatus || isResetting) return;
     
-    console.log("HomePage: Match status changed:", userMatchStatus.status, "Current gameState:", gameState);
+    console.log("Match status changed:", userMatchStatus.status, "Current gameState:", gameState);
     
-    // Handle all match status transitions
     if (userMatchStatus.status === "active") {
-      // Match became active - BOTH players should join automatically
+      // Match became active - both players auto-join
       if (gameState === "waiting" || gameState === "lobby") {
-        console.log("HomePage: Match became active, auto-joining to game...");
-        // Small delay to ensure smooth transition
+        console.log("Match became active, auto-joining game...");
         setTimeout(() => {
           setGameState("playing");
           setCurrentMatchId(userMatchStatus.matchId);
           setActiveTab("new-match");
-          toast.success("حریف پیدا شد! مسابقه شروع شد");
+          toast.success(MESSAGES.MATCH.OPPONENT_FOUND);
         }, 100);
       }
     } else if (userMatchStatus.status === "waiting") {
       // Match is waiting for opponent
       if (gameState === "lobby") {
-        console.log("HomePage: Match is waiting, transitioning to waiting state...");
+        console.log("Match is waiting, transitioning to waiting state...");
         setGameState("waiting");
         setCurrentMatchId(userMatchStatus.matchId);
         setActiveTab("new-match");
@@ -63,19 +65,19 @@ export function HomePage() {
     } else if (userMatchStatus.status === "cancelled") {
       // Match was cancelled
       if (gameState === "waiting" || gameState === "playing") {
-        console.log("HomePage: Match was cancelled, resetting to lobby...");
+        console.log("Match was cancelled, resetting to lobby...");
         setGameState("lobby");
         setCurrentMatchId(null);
         setActiveTab("dashboard");
-        toast.info("مسابقه لغو شد");
+        toast.info(MESSAGES.MATCH.MATCH_CANCELLED);
       }
     }
   }, [userMatchStatus?.status, userMatchStatus?.matchId, gameState, isResetting]);
 
-  // Initialize state from existing match on page load (only once)
+  // Initialize state from existing match on page load
   useEffect(() => {
     if (userMatchStatus && gameState === "lobby") {
-      console.log("HomePage: Initializing state from existing match:", userMatchStatus);
+      console.log("Initializing state from existing match:", userMatchStatus);
       if (userMatchStatus.status === "waiting") {
         setGameState("waiting");
         setCurrentMatchId(userMatchStatus.matchId);
@@ -86,38 +88,14 @@ export function HomePage() {
         setActiveTab("new-match");
       }
     }
-  }, [userMatchStatus?.status, userMatchStatus?.matchId]); // Removed gameState from dependencies
+  }, [userMatchStatus?.status, userMatchStatus?.matchId]);
 
-  // Show loading while checking authentication
-  if (loggedInUser === undefined || userProfile === undefined) {
-    return (
-      <div className="flex justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
-  }
-
-  // Don't render anything while redirecting
-  if (loggedInUser === null) {
-    return (
-      <div className="flex justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
-      </div>
-    );
-  }
-
-  // User is not set up yet
-  if (!userProfile) {
-    return <ProfileSetup />;
-  }
-
+  // Handlers
   const handleMatchStart = (matchId: Id<"matches">) => {
-    // This is now handled automatically by the unified monitoring
     console.log("handleMatchStart called with matchId:", matchId);
   };
 
   const handleMatchFound = (matchId: Id<"matches">) => {
-    // This is now handled automatically by the unified monitoring
     console.log("handleMatchFound called with matchId:", matchId);
   };
 
@@ -130,11 +108,8 @@ export function HomePage() {
     setCurrentMatchId(null);
     setGameState("lobby");
     setActiveTab("dashboard");
-    localStorage.setItem('activeTab', 'dashboard');
-    // Short reset delay to prevent race conditions
-    setTimeout(() => {
-      setIsResetting(false);
-    }, 500);
+    setStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard");
+    setTimeout(() => setIsResetting(false), 500);
   };
 
   const handleCancelMatch = async () => {
@@ -142,11 +117,11 @@ export function HomePage() {
       if (userMatchStatus?.matchId) {
         await leaveMatch({ matchId: userMatchStatus.matchId });
       }
-      toast.success("مسابقه لغو شد");
+      toast.success(MESSAGES.MATCH.MATCH_CANCELLED);
       handlePlayAgain();
     } catch (error) {
       toast.error("خطا در لغو مسابقه: " + (error as Error).message);
-      handlePlayAgain(); // Reset UI even if there's an error
+      handlePlayAgain();
     }
   };
 
@@ -159,32 +134,29 @@ export function HomePage() {
     setViewingMatchId(null);
   };
 
-  // Render game components based on state
+  const handleTabChange = (tabId: TabType) => {
+    setActiveTab(tabId);
+    setStorageItem(STORAGE_KEYS.ACTIVE_TAB, tabId);
+  };
+
+  // Loading state
+  if (loggedInUser === undefined || userProfile === undefined) {
+    return <LoadingSpinner />;
+  }
+
+  // Redirecting state
+  if (loggedInUser === null) {
+    return <LoadingSpinner />;
+  }
+
+  // User setup required
+  if (!userProfile) {
+    return <ProfileSetup />;
+  }
+
+  // Game states with full screen rendering
   if (gameState === "waiting" && currentMatchId) {
-    return (
-      <div className="w-full max-w-none px-6 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              منتظر حریف...
-            </h2>
-            <p className="text-gray-300 mb-6">
-              منتظر بمانید تا حریف دیگری به مسابقه بپیوندد
-            </p>
-            <p className="text-gray-400 mb-6 text-sm">
-              وقتی حریف پیدا شد، مسابقه به طور خودکار شروع می‌شود
-            </p>
-            <button
-              onClick={handleCancelMatch}
-              className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition-colors"
-            >
-              لغو مسابقه
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <WaitingScreen onCancel={handleCancelMatch} />;
   }
 
   if (gameState === "playing" && currentMatchId) {
@@ -206,9 +178,10 @@ export function HomePage() {
     );
   }
 
+  // Match viewer from history
   if (viewingMatchId) {
     return (
-      <div className="w-full max-w-none px-6 py-8">
+      <PageContainer>
         <div className="mb-6">
           <button
             onClick={handleBackToHistory}
@@ -224,71 +197,30 @@ export function HomePage() {
           matchId={viewingMatchId as Id<"matches">} 
           onPlayAgain={handleBackToHistory}
         />
-      </div>
+      </PageContainer>
     );
   }
 
   // Main dashboard with tabs
+  const tabs: Tab<TabType>[] = [
+    { id: "dashboard", label: "داشبورد" },
+    { id: "new-match", label: "مسابقه جدید" },
+    { id: "history", label: "تاریخچه" },
+  ];
+
   return (
-    <div className="w-full max-w-none px-6 py-8">
-      {/* Welcome Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-accent mb-2">
-          سلام، {userProfile.name}! 👋
-        </h1>
-        <p className="text-lg text-gray-300">
-          به داشبورد مسابقات کویز خوش آمدید
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader 
+        title={`سلام، ${userProfile.name}!`}
+        subtitle="به داشبورد مسابقات کویز خوش آمدید"
+      />
 
-      {/* Tabs */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-1">
-          <div className="flex gap-1">
-            <button
-              onClick={() => {
-                setActiveTab("dashboard");
-                localStorage.setItem('activeTab', 'dashboard');
-              }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                activeTab === "dashboard"
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-              }`}
-            >
-              داشبورد
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("new-match");
-                localStorage.setItem('activeTab', 'new-match');
-              }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                activeTab === "new-match"
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-              }`}
-            >
-              مسابقه جدید
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("history");
-                localStorage.setItem('activeTab', 'history');
-              }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                activeTab === "history"
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
-              }`}
-            >
-              تاریخچه
-            </button>
-          </div>
-        </div>
-      </div>
+      <TabNavigation 
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
-      {/* Tab Content */}
       <div className="min-h-[600px]">
         {activeTab === "dashboard" && <HelloPage />}
         {activeTab === "new-match" && (
@@ -302,6 +234,6 @@ export function HomePage() {
           <MatchHistory onViewMatch={handleViewMatch} />
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

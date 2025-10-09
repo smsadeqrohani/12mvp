@@ -1,12 +1,24 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { PaginationControls } from "../../../components/ui";
+import { useState } from "react";
 
 interface MatchHistoryProps {
   onViewMatch: (matchId: string) => void;
 }
 
 export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
-  const matchHistory = useQuery(api.matches.getUserMatchHistory, { limit: 50 });
+  // Pagination state - track cursor history for back navigation
+  const [historyCursor, setHistoryCursor] = useState<string | null>(null);
+  const [historyCursorHistory, setHistoryCursorHistory] = useState<(string | null)[]>([null]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  const matchHistoryResult = useQuery(api.matches.getUserMatchHistory, {
+    paginationOpts: { numItems: PAGE_SIZE, cursor: historyCursor },
+  });
+
+  const matchHistory = matchHistoryResult?.page || [];
 
   if (!matchHistory) {
     return (
@@ -28,6 +40,33 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
     const correct = participant.answers.filter((a: any) => a.isCorrect).length;
     return Math.round((correct / participant.answers.length) * 100);
   };
+
+  // Pagination handlers
+  const handleNextHistory = () => {
+    if (matchHistoryResult && !matchHistoryResult.isDone) {
+      const newCursor = matchHistoryResult.continueCursor;
+      setHistoryCursorHistory(prev => [...prev, newCursor]);
+      setHistoryCursor(newCursor);
+      setHistoryPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevHistory = () => {
+    if (historyPage > 1) {
+      const newHistory = historyCursorHistory.slice(0, -1);
+      setHistoryCursorHistory(newHistory);
+      setHistoryCursor(newHistory[newHistory.length - 1]);
+      setHistoryPage(prev => prev - 1);
+    }
+  };
+
+  if (!matchHistoryResult) {
+    return (
+      <div className="flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
 
   if (matchHistory.length === 0) {
     return (
@@ -59,56 +98,57 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
         </p>
       </div>
 
-      {/* Statistics */}
+      {/* Statistics - Current Page Only */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4 text-center">
           <div className="text-2xl font-bold text-accent mb-1">
             {matchHistory.filter(m => m.isWinner).length}
           </div>
-          <div className="text-gray-300 text-sm">برد</div>
+          <div className="text-gray-300 text-sm">برد (در این صفحه)</div>
         </div>
         
         <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4 text-center">
           <div className="text-2xl font-bold text-red-400 mb-1">
             {matchHistory.filter(m => !m.isWinner && !m.isDraw).length}
           </div>
-          <div className="text-gray-300 text-sm">باخت</div>
+          <div className="text-gray-300 text-sm">باخت (در این صفحه)</div>
         </div>
         
         <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4 text-center">
           <div className="text-2xl font-bold text-yellow-400 mb-1">
             {matchHistory.filter(m => m.isDraw).length}
           </div>
-          <div className="text-gray-300 text-sm">مساوی</div>
+          <div className="text-gray-300 text-sm">مساوی (در این صفحه)</div>
         </div>
         
         <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4 text-center">
-          <div className="text-2xl font-bold text-green-400 mb-1">
-            {Math.round((matchHistory.filter(m => m.isWinner).length / matchHistory.length) * 100)}%
+          <div className="text-2xl font-bold text-gray-400 mb-1">
+            {historyPage}
           </div>
-          <div className="text-gray-300 text-sm">نرخ برد</div>
+          <div className="text-gray-300 text-sm">صفحه فعلی</div>
         </div>
       </div>
 
       {/* Match List */}
-      <div className="space-y-4">
-        {matchHistory.map((matchData, index) => {
-          const { match, result, participant, opponent, isWinner, isDraw } = matchData;
-          
-          return (
-            <div 
-              key={match._id}
-              className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-6 hover:bg-background-light/80 transition-all duration-200 cursor-pointer"
-              onClick={() => onViewMatch(match._id)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {/* Match Number */}
-                  <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
-                      {matchHistory.length - index}
-                    </span>
-                  </div>
+      <div className="bg-gradient-to-br from-background-light/80 to-background-light/40 backdrop-blur-sm rounded-2xl border border-gray-700/30 overflow-hidden shadow-2xl shadow-black/20">
+        <div className="space-y-4 p-6">
+          {matchHistory.map((matchData, index) => {
+            const { match, result, participant, opponent, isWinner, isDraw } = matchData;
+            
+            return (
+              <div 
+                key={match._id}
+                className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-6 hover:bg-background-light/80 transition-all duration-200 cursor-pointer"
+                onClick={() => onViewMatch(match._id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* Match Number */}
+                    <div className="w-12 h-12 bg-gray-700/50 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {(historyPage - 1) * PAGE_SIZE + index + 1}
+                      </span>
+                    </div>
                   
                   {/* Match Info */}
                   <div>
@@ -178,17 +218,17 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
               </div>
             </div>
           );
-        })}
-      </div>
-
-      {/* Load More Button */}
-      {matchHistory.length >= 50 && (
-        <div className="text-center">
-          <button className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-colors">
-            نمایش بیشتر
-          </button>
+          })}
         </div>
-      )}
+
+        {/* Pagination Controls */}
+        <PaginationControls 
+          currentPage={historyPage}
+          isDone={matchHistoryResult?.isDone ?? true}
+          onNext={handleNextHistory}
+          onPrev={handlePrevHistory}
+        />
+      </div>
     </div>
   );
 }
