@@ -1,12 +1,11 @@
 import { useQuery, useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../convex/_generated/api";
-import { Id } from "../convex/_generated/dataModel";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
-import { QuestionsForm } from "./QuestionsForm";
-import { FilesTable } from "./FilesTable";
-import { MatchDetailsAdmin } from "./MatchDetailsAdmin";
+import { QuestionsForm, FilesTable, MatchDetailsAdmin } from "../features/admin";
+import { PaginationControls } from "../components/ui";
 
 type TabType = "users" | "questions" | "files" | "matches";
 
@@ -14,6 +13,20 @@ export function AdminPage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
   const navigate = useNavigate();
+  
+  // Platform detection - restrict admin to desktop/tablet (≥1024px)
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
+  
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+  
   const [activeTab, setActiveTab] = useState<TabType>("users");
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -83,6 +96,26 @@ export function AdminPage() {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
+
+  // Restrict admin panel to large screens only (≥1024px - desktop/tablet)
+  if (!isLargeScreen) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-12 max-w-2xl text-center">
+          <div className="text-6xl mb-6">🖥️</div>
+          <h1 className="text-3xl font-bold text-accent mb-4">
+            پنل مدیریت فقط در دسکتاپ و تبلت قابل دسترسی است
+          </h1>
+          <p className="text-gray-300 text-lg mb-4">
+            برای استفاده از پنل مدیریت، لطفاً از دستگاه با صفحه نمایش بزرگتر استفاده کنید.
+          </p>
+          <p className="text-gray-400">
+            حداقل عرض مورد نیاز: 1024 پیکسل
+          </p>
+        </div>
       </div>
     );
   }
@@ -244,47 +277,6 @@ export function AdminPage() {
       setMatchesPage(prev => prev - 1);
     }
   };
-
-  // Pagination component
-  const PaginationControls = ({ 
-    currentPage, 
-    isDone, 
-    onNext, 
-    onPrev 
-  }: { 
-    currentPage: number; 
-    isDone: boolean; 
-    onNext: () => void; 
-    onPrev: () => void;
-  }) => (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700/30 bg-gray-800/20">
-      <div className="text-sm text-gray-400">
-        صفحه {currentPage}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onPrev}
-          disabled={currentPage === 1}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-600 disabled:bg-gray-800/50 disabled:cursor-not-allowed text-white disabled:text-gray-600 rounded-lg text-sm font-medium transition-all duration-200"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          قبلی
-        </button>
-        <button
-          onClick={onNext}
-          disabled={isDone}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover disabled:bg-gray-800/50 disabled:cursor-not-allowed text-white disabled:text-gray-600 rounded-lg text-sm font-medium transition-all duration-200"
-        >
-          بعدی
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      </div>
-    </div>
-  );
 
   // handleDuplicateQuestion removed - users can manually create questions instead
 

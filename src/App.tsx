@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import { SignOutButton } from "./SignOutButton";
-import { LoginPage } from "./LoginPage";
-import { HomePage } from "./HomePage";
-import { AdminPage } from "./AdminPage";
+import { SignOutButton } from "./features/auth";
+import { LoginPage } from "./pages/LoginPage";
+import { HomePage } from "./pages/HomePage";
+import { AdminPage } from "./pages/AdminPage";
 import { Toaster } from "sonner";
 
 function AppContent() {

@@ -1,14 +1,10 @@
 import { useQuery, useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../convex/_generated/api";
-import { Id } from "../convex/_generated/dataModel";
-import { ProfileSetup } from "./ProfileSetup";
-import { HelloPage } from "./HelloPage";
-import { MatchLobby } from "./MatchLobby";
-import { QuizGame } from "./QuizGame";
-import { MatchResults } from "./MatchResults";
-import { MatchHistory } from "./MatchHistory";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
+import { ProfileSetup } from "../features/auth";
+import { HelloPage, MatchLobby, QuizGame, MatchResults, MatchHistory } from "../features/game";
 import { toast } from "sonner";
 
 type TabType = "dashboard" | "new-match" | "history";

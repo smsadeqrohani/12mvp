@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { SignInForm } from "./SignInForm";
-import { SignUpForm } from "./SignUpForm";
+import { SignInForm, SignUpForm } from "../features/auth";
 
 export function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);

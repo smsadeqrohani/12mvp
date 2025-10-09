@@ -1,261 +1,246 @@
-# 12 MVP - Persian RTL Application
+# 12 MVP - Persian RTL Quiz Application
 
-A modern Persian (Farsi) application built with React, TypeScript, and Convex backend, featuring RTL (Right-to-Left) support and a custom dark theme design system.
+A modern Persian (Farsi) quiz game application built with React, TypeScript, and Convex backend, featuring RTL support, real-time multiplayer matches, and a comprehensive admin panel.
 
-## 🎨 Design System
+## 📋 Table of Contents
 
-### Color Palette
-- **Primary Background**: `#06202F` (Dark Blue)
-- **Secondary Background**: `#0a2840` (Lighter Blue)
-- **Accent Color**: `#ff701a` (Orange)
-- **Accent Hover**: `#e55a00` (Darker Orange)
-- **Text Colors**: White and light gray variants for contrast
+- [Features](#-features)
+- [Technology Stack](#️-technology-stack)
+- [Getting Started](#-getting-started)
+- [Documentation Structure](#-documentation-structure)
+- [Project Structure](#-project-structure)
+- [Deployment](#-deployment)
+- [Contributing](#-contributing)
 
-### Typography
-- **Primary Font**: Vazirmatn (Persian/Farsi optimized)
-- **Fallback Fonts**: Inter Variable, system fonts
-- **Direction**: RTL (Right-to-Left) for Persian text
+## ✨ Features
 
-### Theme
-- **Mode**: Dark theme only
-- **Layout**: RTL-first design
-- **Components**: Custom styled with consistent spacing and shadows
+### 🎮 Quiz & Matchmaking
+- **Real-time Multiplayer**: 1v1 quiz matches with automatic matchmaking
+- **Question Bank**: Admin-managed questions with categories and difficulty levels
+- **Match History**: Complete history of played matches with detailed results
+- **Live Scoring**: Real-time score calculation and winner determination
+
+### 🔐 Authentication & Users
+- **Email/Password Auth**: Secure authentication with password validation
+- **User Profiles**: Customizable user profiles with display names
+- **Admin Panel**: Comprehensive admin dashboard for system management
+- **Role-based Access**: Admin and user role separation
+
+### ⚙️ Admin Features
+- **User Management**: View, edit, and manage user accounts
+- **Question Management**: Create, edit, delete quiz questions
+- **File Management**: Upload and manage media files
+- **Match Monitoring**: View and manage all matches in the system
+
+### 🎨 UI/UX
+- **Persian Language**: Full RTL (Right-to-Left) support
+- **Dark Theme**: Custom dark blue and orange color scheme
+- **Responsive Design**: Mobile-first responsive layout
+- **Toast Notifications**: Persian notification system for user feedback
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS with custom configuration
-- **Backend**: Convex (real-time database and auth)
-- **Authentication**: Convex Auth with Anonymous auth
-- **UI Components**: Custom components with Persian translations
+### Frontend
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling framework
+- **React Router** - Client-side routing
+- **Sonner** - Toast notifications
 
-## 📁 Project Structure
+### Backend
+- **Convex** - Real-time database and backend
+- **Convex Auth** - Authentication system
+- **TypeScript** - Type-safe backend code
 
-```
-src/
-├── App.tsx              # Main application component
-├── main.tsx             # Application entry point
-├── index.css            # Global styles and RTL configuration
-├── SignInForm.tsx       # Persian sign-in form
-├── SignUpForm.tsx       # Persian sign-up form
-├── SignOutButton.tsx    # Persian sign-out button
-├── ProfileSetup.tsx     # Persian profile setup
-├── HelloPage.tsx        # Persian dashboard/welcome page
-└── lib/
-    └── utils.ts         # Utility functions
-```
+### Design
+- **Vazirmatn Font** - Persian-optimized typography
+- **Custom Design System** - Consistent colors and spacing
+- **RTL-first Layout** - Optimized for Persian users
 
 ## 🚀 Getting Started
 
-1. **Install dependencies**:
+### Prerequisites
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd 12mvp
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Start development servers**:
+3. **Start development servers**
    ```bash
    npm run dev
    ```
-   This starts both frontend (Vite) and backend (Convex) servers.
+   This command starts both:
+   - Frontend (Vite): http://localhost:5173
+   - Backend (Convex): Real-time sync
 
-3. **Access the application**:
-   - Frontend: http://localhost:5173
-   - Convex Dashboard: https://dashboard.convex.dev
+4. **Access the application**
+   - **Frontend**: http://localhost:5173
+   - **Convex Dashboard**: https://dashboard.convex.dev
 
-## 🎯 Features
+### Available Scripts
 
-- ✅ **Persian Language Support**: Full RTL text and UI translations
-- ✅ **Dark Theme**: Custom dark blue and orange color scheme
-- ✅ **Authentication**: Sign up, sign in, and anonymous authentication
-- ✅ **Profile Management**: User profile creation and management
-- ✅ **Responsive Design**: Mobile-first responsive layout
-- ✅ **RTL Layout**: Proper right-to-left text and layout support
-- ✅ **Toast Notifications**: Comprehensive notification system with Persian messages
-
-## 🔔 Toast Notification System
-
-The application includes a simple toast notification system built with [Sonner](https://sonner.emilkowal.ski/) that supports Persian (RTL) messages and matches the application's design system.
-
-### Features
-
-- **Persian Language Support**: All messages are in Persian with RTL text direction
-- **Authentication Feedback**: Success and error messages for login/logout operations
-- **Welcome Messages**: Personalized welcome toast when users access their dashboard
-- **Design System Integration**: Matches the app's dark theme and color palette
-
-### Usage
-
-#### Basic Usage
-
-```typescript
-import { toast } from "sonner";
-
-// Success message
-toast.success("با موفقیت وارد شدید");
-
-// Error message
-toast.error("خطا در ورود. لطفاً دوباره تلاش کنید");
-
-// Custom message with description
-toast.success(`سلام، ${userName}! 👋`, {
-  description: "به داشبورد خود خوش آمدید",
-  duration: 4000,
-});
+```bash
+npm run dev          # Start frontend & backend
+npm run dev:frontend # Start only frontend
+npm run dev:backend  # Start only backend (Convex)
+npm run build        # Build for production
+npm run lint         # Run TypeScript & build checks
 ```
 
-#### Current Implementation
+## 📚 Documentation Structure
 
-The toast system is currently used in:
+This project follows a clear documentation pattern. All documentation is organized into specific files:
 
-1. **Welcome Message** (`HelloPage.tsx`): Shows a personalized welcome toast when users first load their dashboard
-2. **Login Success/Error** (`SignInForm.tsx`): Shows success message on successful login/signup and error messages for failed attempts
-3. **Logout Success/Error** (`SignOutButton.tsx`): Shows success message on logout and error message if logout fails
+### Core Documentation Files
 
-### Configuration
+| File | Purpose | Content |
+|------|---------|---------|
+| **[README.md](./README.md)** | Main documentation | Overview, features, getting started |
+| **[DESIGN.md](./DESIGN.md)** | Design system | Colors, typography, components, guidelines |
+| **[STRUCTURE.md](./STRUCTURE.md)** | Architecture | Frontend/backend structure, patterns, conventions |
 
-The toast system is configured in `src/App.tsx` with RTL support and custom styling:
+### Documentation Guidelines
 
-```typescript
-<Toaster
-  position="top-center"
-  expand={true}
-  richColors={true}
-  closeButton={true}
-  duration={4000}
-  toastOptions={{
-    style: {
-      direction: 'rtl',
-      textAlign: 'right',
-    },
-    className: 'toast-rtl',
-  }}
-/>
+**When adding new documentation:**
+
+1. **General info & features** → Add to `README.md`
+2. **Design & styling** → Add to `DESIGN.md`
+3. **Architecture & code structure** → Add to `STRUCTURE.md`
+
+**Keep documentation:**
+- ✅ Up to date with code changes
+- ✅ In the correct file based on content type
+- ✅ Clear and concise with examples
+- ✅ In Persian for user-facing content, English for technical docs
+
+## 📁 Project Structure
+
+### Quick Overview
+
+```
+12mvp/
+├── src/                    # Frontend application
+│   ├── pages/             # Route pages
+│   ├── features/          # Feature modules (auth, game, admin)
+│   ├── components/        # Shared UI components
+│   └── lib/              # Utilities and constants
+│
+├── convex/                # Backend (Convex)
+│   ├── schema.ts         # Database schema
+│   ├── auth.ts           # Authentication
+│   ├── questions.ts      # Questions API
+│   ├── matches.ts        # Match logic
+│   └── files.ts          # File management
+│
+├── public/               # Static assets
+└── docs/                 # Documentation
 ```
 
-### Styling
-
-Custom styles are defined in `src/index.css` to match the application's design system with:
-- Dark theme colors (`#06202F` background)
-- RTL text direction
-- Persian font family (Vazirmatn)
-- Color-coded borders for different toast types
-- Custom action button styling
-
-### Future Usage
-
-To add toast notifications to new features:
-
-```typescript
-import { toast } from "sonner";
-
-// For success operations
-toast.success("عملیات با موفقیت انجام شد");
-
-// For errors
-toast.error("خطا در انجام عملیات");
-
-// For warnings
-toast.warning("توجه: تغییرات ذخیره نشده‌ای دارید");
-
-// For information
-toast.info("اطلاعات جدید موجود است");
-```
-
-## 🎨 Design Guidelines
-
-### For Future Development
-
-When adding new components or features, follow these design system guidelines:
-
-#### Colors
-```css
-/* Use these Tailwind classes */
-bg-background        /* #06202F - Main background */
-bg-background-light  /* #0a2840 - Secondary background */
-text-accent          /* #ff701a - Orange text/buttons */
-bg-accent            /* #ff701a - Orange background */
-text-gray-300        /* Light gray text */
-text-gray-200        /* Lighter gray text */
-```
-
-#### RTL Considerations
-- Use `pl-4 pr-4` instead of `px-4` for padding
-- Use `text-right` for text alignment
-- Consider RTL when positioning elements
-- Test with Persian text content
-
-#### Component Styling
-- Use `.auth-input-field` for form inputs
-- Use `.auth-button` for primary buttons
-- Maintain consistent spacing with `gap-4`, `gap-6`
-- Use `rounded-lg` for containers, `rounded` for buttons
-
-#### Typography
-- Use `text-accent` for headings and important text
-- Use `text-gray-300` for secondary text
-- Use `text-gray-200` for labels
-- Maintain proper font weights: `font-semibold`, `font-bold`
-
-## 🔧 Configuration Files
-
-### Tailwind Config (`tailwind.config.js`)
-- Custom color palette defined
-- Vazirmatn font family configured
-- Dark mode enabled
-- RTL support configured
-
-### CSS (`src/index.css`)
-- Vazirmatn font import
-- RTL direction set
-- Custom component classes
-- Dark theme base styles
-
-### HTML (`index.html`)
-- Persian language attribute (`lang="fa"`)
-- RTL direction (`dir="rtl"`)
-- Custom title
-
-## 📱 Responsive Design
-
-The application is built with mobile-first responsive design:
-- Breakpoints follow Tailwind's default system
-- Components adapt to different screen sizes
-- Touch-friendly button sizes and spacing
-
-## 🌐 Internationalization
-
-- **Language**: Persian (Farsi)
-- **Direction**: RTL (Right-to-Left)
-- **Date Format**: Persian locale (`fa-IR`)
-- **Font**: Vazirmatn for optimal Persian text rendering
+**For detailed architecture**, see **[STRUCTURE.md](./STRUCTURE.md)**
 
 ## 🚀 Deployment
 
-This project is connected to the Convex deployment named [`precious-horse-758`](https://dashboard.convex.dev/d/precious-horse-758).
+This project is connected to Convex deployment: [`precious-horse-758`](https://dashboard.convex.dev/d/precious-horse-758)
 
-For production deployment:
-1. Follow [Convex deployment guide](https://docs.convex.dev/production/)
-2. Ensure environment variables are set
-3. Test RTL functionality in production
-4. Verify Persian font loading
+### Production Deployment
 
-## 📚 Additional Resources
+1. **Build the frontend**
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy to Convex**
+   ```bash
+   npx convex deploy
+   ```
+
+3. **Deploy frontend** to your hosting provider (Vercel, Netlify, etc.)
+
+4. **Environment variables**
+   - Set `VITE_CONVEX_URL` in your hosting environment
+   - Configure authentication providers if needed
+
+### Deployment Checklist
+- [ ] Test RTL functionality in production
+- [ ] Verify Persian font loading
+- [ ] Check real-time features work
+- [ ] Ensure admin panel is accessible
+- [ ] Test authentication flow
+
+## 🌐 Internationalization
+
+- **Language**: Persian (Farsi) - `fa-IR`
+- **Text Direction**: RTL (Right-to-Left)
+- **Font**: Vazirmatn for optimal Persian rendering
+- **Date Format**: Persian calendar support
+
+## 🔒 Security
+
+- **Password Validation**: Enforced strong password requirements
+- **Role-Based Access**: Admin operations protected
+- **Answer Security**: Quiz answers stored separately and securely
+- **Input Validation**: Both client and server-side validation
+
+## 📱 Browser Support
+
+- **Modern browsers** with ES2020+ support
+- **Mobile browsers** with touch support
+- **RTL support** required
+
+## 🤝 Contributing
+
+### Code Style
+1. Follow the established design system (see **[DESIGN.md](./DESIGN.md)**)
+2. Maintain RTL support in all components
+3. Use Persian translations for user-facing text
+4. Follow the feature-based architecture (see **[STRUCTURE.md](./STRUCTURE.md)**)
+
+### Pull Request Process
+1. Update documentation if adding features
+2. Ensure all tests pass (`npm run lint`)
+3. Follow the project's code organization
+4. Test with Persian content
+
+### Adding New Features
+1. Create feature module in `src/features/[feature-name]/`
+2. Add documentation to appropriate file (README/DESIGN/STRUCTURE)
+3. Follow existing patterns and conventions
+4. Update this README if adding user-facing features
+
+## 📖 External Resources
 
 - [Convex Documentation](https://docs.convex.dev/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Vazirmatn Font](https://github.com/rastikerdar/vazirmatn)
-- [React RTL Support](https://reactjs.org/docs/internationalization.html)
+- [React Router](https://reactrouter.com/)
 
-## 🤝 Contributing
+## 📄 License
 
-When contributing to this project:
-1. Follow the established design system
-2. Maintain RTL support
-3. Use Persian translations
-4. Test with Persian content
-5. Follow the color palette guidelines
-6. Ensure responsive design
+This project is for educational/MVP purposes.
 
 ---
 
-**Note**: This application is designed specifically for Persian users with RTL text direction. All new features should maintain this design consistency.
+## 📞 Support
+
+For questions or issues:
+- Check **[STRUCTURE.md](./STRUCTURE.md)** for architecture details
+- Check **[DESIGN.md](./DESIGN.md)** for styling guidelines
+- Review code examples in the documentation
+
+---
+
+**Made with ❤️ for Persian users**
+
+**Last Updated**: October 9, 2025
