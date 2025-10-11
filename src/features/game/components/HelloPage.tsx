@@ -1,5 +1,7 @@
+import { View, Text, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { SignOutButton } from "../../../features/auth";
 
 export function HelloPage() {
   const userProfile = useQuery(api.auth.getUserProfile);
@@ -7,39 +9,53 @@ export function HelloPage() {
 
   if (!userProfile || !loggedInUser) {
     return (
-      <div className="flex justify-center items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <View className="flex justify-center items-center p-8">
+        <ActivityIndicator size="large" color="#ff701a" />
+      </View>
     );
   }
 
   return (
-    <div className="text-center space-y-6">
-      <div>
-        <h1 className="text-4xl font-bold text-accent mb-4">
+    <View className="p-4 space-y-6">
+      <View className="items-center">
+        <Text className="text-4xl font-bold text-accent mb-4">
           سلام، {userProfile.name}! 👋
-        </h1>
-        <p className="text-lg text-gray-300">
+        </Text>
+        <Text className="text-lg text-gray-300">
           به داشبورد خود خوش آمدید
-        </p>
-      </div>
+        </Text>
+      </View>
       
-      <div className="bg-background-light rounded-lg p-6 shadow-sm border border-gray-500">
-        <h2 className="text-xl font-semibold mb-4 text-white">حساب شما</h2>
-        <div className="space-y-2 text-right">
-          <p><span className="font-medium text-gray-300">نام:</span> <span className="text-white">{userProfile.name}</span></p>
-          <p><span className="font-medium text-gray-300">ایمیل:</span> <span className="text-white">{loggedInUser.email}</span></p>
-          <p><span className="font-medium text-gray-300">عضو از:</span> <span className="text-white">{new Date(loggedInUser._creationTime).toLocaleDateString('fa-IR')}</span></p>
-        </div>
-      </div>
+      <View className="bg-background-light rounded-lg p-6 border border-gray-600">
+        <Text className="text-xl font-semibold mb-4 text-white text-right">حساب شما</Text>
+        <View className="space-y-3">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-right flex-1">{userProfile.name}</Text>
+            <Text className="font-medium text-gray-300 ml-3">نام:</Text>
+          </View>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-right flex-1">{loggedInUser.email}</Text>
+            <Text className="font-medium text-gray-300 ml-3">ایمیل:</Text>
+          </View>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-white text-right flex-1">
+              {new Date(loggedInUser._creationTime).toLocaleDateString('fa-IR')}
+            </Text>
+            <Text className="font-medium text-gray-300 ml-3">عضو از:</Text>
+          </View>
+        </View>
+      </View>
 
-      <div className="bg-accent/20 rounded-lg p-6 border border-accent/30">
-        <h3 className="text-lg font-semibold text-accent mb-2">🎉 همه چیز آماده است!</h3>
-        <p className="text-gray-300">
+      <View className="bg-accent/20 rounded-lg p-6 border border-accent/30">
+        <Text className="text-lg font-semibold text-accent mb-2 text-right">🎉 همه چیز آماده است!</Text>
+        <Text className="text-gray-300 text-right leading-6">
           حساب شما با موفقیت ایجاد شد. اکنون می‌توانید از برنامه استفاده کنید.
-        </p>
-      </div>
+        </Text>
+      </View>
 
-    </div>
+      <View className="items-center mt-4">
+        <SignOutButton />
+      </View>
+    </View>
   );
 }

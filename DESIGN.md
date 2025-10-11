@@ -857,5 +857,246 @@ function MyPage() {
 **For implementation details**, see **[STRUCTURE.md](./STRUCTURE.md)**  
 **For general info**, see **[README.md](./README.md)**
 
+## 📱 React Native Design Patterns
+
+### Platform-Specific Components
+
+The app now supports web, iOS, and Android using React Native primitives:
+
+**React Native Component Mapping:**
+```tsx
+// Web → React Native
+div       → View
+span      → Text
+p         → Text
+h1-h6     → Text (with size classes)
+button    → TouchableOpacity + Text
+input     → TextInput
+img       → Image
+```
+
+### NativeWind (Tailwind for React Native)
+
+All Tailwind classes work in React Native with NativeWind:
+
+```tsx
+import { View, Text } from "react-native";
+
+// Same Tailwind classes as web!
+<View className="bg-background flex-1 items-center justify-center">
+  <Text className="text-accent text-2xl font-bold">سلام</Text>
+</View>
+```
+
+### Toast Notifications (React Native)
+
+Custom toast implementation for mobile:
+
+```tsx
+import { toast } from "../lib/toast";
+
+// Usage (same API as web)
+toast.success("عملیات موفق");
+toast.error("خطا رخ داد");
+toast.info("اطلاعات");
+toast.warning("هشدار");
+```
+
+**Configuration in app/_layout.tsx:**
+```tsx
+import Toast from "react-native-toast-message";
+
+<Toast />  // Add at root level
+```
+
+### Button Component (React Native)
+
+```tsx
+import { Button } from "../components/ui";
+
+<Button 
+  variant="primary" 
+  size="lg"
+  onPress={() => console.log("pressed")}  // onPress instead of onClick
+>
+  کلیک کنید
+</Button>
+```
+
+### Form Components (React Native)
+
+```tsx
+import { Input, TextArea, Select } from "../components/ui";
+
+// Text Input
+<Input
+  value={text}
+  onChangeText={setText}  // onChangeText instead of onChange
+  placeholder="متن را وارد کنید"
+  keyboardType="email-address"  // Platform-specific
+/>
+
+// Text Area
+<TextArea
+  value={description}
+  onChangeText={setDescription}
+  rows={4}
+/>
+
+// Select (Picker)
+<Select value={category} onValueChange={setCategory}>
+  <Picker.Item label="انتخاب کنید" value="" />
+  <Picker.Item label="دسته ۱" value="cat1" />
+</Select>
+```
+
+### Navigation (Expo Router)
+
+File-based routing instead of React Router:
+
+```tsx
+// Instead of useNavigate
+import { useRouter } from "expo-router";
+
+const router = useRouter();
+
+// Navigate
+router.push("/admin");
+router.replace("/login");
+router.back();
+```
+
+### Icons (Expo Icons)
+
+```tsx
+import { Ionicons } from "@expo/vector-icons";
+
+<Ionicons name="checkmark" size={24} color="#ff701a" />
+<Ionicons name="close" size={20} color="#fff" />
+```
+
+### Images
+
+```tsx
+import { Image } from "react-native";
+
+// Local image
+<Image 
+  source={require("../assets/logo.png")} 
+  className="w-20 h-20"
+/>
+
+// Remote image
+<Image 
+  source={{ uri: "https://..." }} 
+  className="w-full h-48"
+/>
+```
+
+### RTL Support (React Native)
+
+```tsx
+import { I18nManager } from "react-native";
+
+// Force RTL (done in app/_layout.tsx)
+if (!I18nManager.isRTL) {
+  I18nManager.forceRTL(true);
+}
+
+// Text alignment
+<Text className="text-right">متن فارسی</Text>
+```
+
+### Safe Areas
+
+```tsx
+import { SafeAreaView } from "react-native-safe-area-context";
+
+<SafeAreaView className="flex-1 bg-background">
+  {/* Content */}
+</SafeAreaView>
+```
+
+### ScrollView
+
+```tsx
+import { ScrollView } from "react-native";
+
+<ScrollView 
+  className="flex-1"
+  showsVerticalScrollIndicator={false}
+>
+  {/* Content */}
+</ScrollView>
+```
+
+### Platform-Specific Code
+
+```tsx
+import { Platform } from "react-native";
+
+// Conditional rendering
+{Platform.OS === 'ios' && <IOSComponent />}
+{Platform.OS === 'android' && <AndroidComponent />}
+{Platform.OS === 'web' && <WebComponent />}
+
+// Platform-specific values
+const padding = Platform.select({
+  ios: 20,
+  android: 15,
+  web: 10,
+});
+```
+
+### Dimensions
+
+```tsx
+import { Dimensions } from "react-native";
+
+const { width, height } = Dimensions.get("window");
+
+// Responsive sizing
+const modalWidth = Math.min(width - 32, 600);
+```
+
+### Persian Fonts (React Native)
+
+**Setup in app/_layout.tsx:**
+```tsx
+import { useFonts } from "expo-font";
+
+const [fontsLoaded] = useFonts({
+  "Vazirmatn-Regular": require("../assets/fonts/Vazirmatn-Regular.ttf"),
+  "Vazirmatn-Bold": require("../assets/fonts/Vazirmatn-Bold.ttf"),
+});
+```
+
+**Usage with NativeWind:**
+```tsx
+// Font weights automatically map to font families
+<Text className="font-bold">متن بولد</Text>  // Uses Vazirmatn-Bold
+<Text className="font-normal">متن عادی</Text>  // Uses Vazirmatn-Regular
+```
+
+## 🎯 Cross-Platform Best Practices
+
+### DO's ✅
+- ✅ Use NativeWind classes (work on all platforms)
+- ✅ Use TouchableOpacity for clickable elements
+- ✅ Use TextInput for form inputs
+- ✅ Test on iOS, Android, and web
+- ✅ Use Platform.select for platform-specific code
+- ✅ Use SafeAreaView for safe areas
+- ✅ Use ScrollView for scrollable content
+- ✅ Keep exact same design and functionality
+
+### DON'Ts ❌
+- ❌ Don't use HTML elements (div, span, button)
+- ❌ Don't use onClick (use onPress)
+- ❌ Don't use onChange for TextInput (use onChangeText)
+- ❌ Don't use CSS directly (use NativeWind classes)
+- ❌ Don't use react-router (use expo-router)
+- ❌ Don't use web-only libraries
+
 **Last Updated**: October 9, 2025
 

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 
 export interface Tab<T extends string = string> {
   id: T;
@@ -9,7 +10,7 @@ export interface Tab<T extends string = string> {
 interface TabNavigationProps<T extends string> {
   tabs: Tab<T>[];
   activeTab: T;
-  onTabChange: (tabId: T) => void;
+  onTabChange: (tabId: T) => void | Promise<void>;
   className?: string;
 }
 
@@ -24,26 +25,31 @@ export function TabNavigation<T extends string>({
   className = "" 
 }: TabNavigationProps<T>) {
   return (
-    <div className={`flex justify-center mb-8 ${className}`}>
-      <div className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-1">
-        <div className="flex gap-1">
+    <View className={`items-center mb-8 ${className}`}>
+      <View className="bg-background-light/60 rounded-xl border border-gray-700/30 p-1">
+        <View className="flex-row gap-1">
           {tabs.map((tab) => (
-            <button
+            <TouchableOpacity
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 ${
+              onPress={() => onTabChange(tab.id)}
+              className={`px-6 py-3 rounded-lg flex-row items-center gap-2 ${
                 activeTab === tab.id
-                  ? "bg-accent text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  ? "bg-accent"
+                  : "bg-transparent active:bg-gray-700/50"
               }`}
+              activeOpacity={0.7}
             >
-              {tab.icon && <span>{tab.icon}</span>}
-              <span>{tab.label}</span>
-            </button>
+              {tab.icon && <View>{tab.icon}</View>}
+              <Text className={`font-semibold ${
+                activeTab === tab.id ? "text-white" : "text-gray-400"
+              }`}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
           ))}
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 }
 

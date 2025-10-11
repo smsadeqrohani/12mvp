@@ -1,22 +1,23 @@
-const { fontFamily } = require("tailwindcss/defaultTheme");
-
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  mode: "jit",
-  purge: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
-  darkMode: "class",
+  darkMode: 'class',
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}"
+  ],
+  presets: [require("nativewind/preset")],
   theme: {
+    fontFamily: {
+      sans: ["Vazirmatn-Regular", "system-ui", "sans-serif"],
+      body: ["Vazirmatn-Regular", "system-ui", "sans-serif"],
+    },
     extend: {
       fontFamily: {
-        sans: ["Vazirmatn", "Inter var", ...fontFamily.sans],
-      },
-      borderRadius: {
-        DEFAULT: "8px",
-        secondary: "4px",
-        container: "12px",
-      },
-      boxShadow: {
-        DEFAULT: "0 1px 4px rgba(0, 0, 0, 0.1)",
-        hover: "0 2px 8px rgba(0, 0, 0, 0.12)",
+        regular: ["Vazirmatn-Regular"],
+        medium: ["Vazirmatn-Medium"],
+        semibold: ["Vazirmatn-SemiBold"],
+        bold: ["Vazirmatn-Bold"],
       },
       colors: {
         primary: {
@@ -36,16 +37,16 @@ module.exports = {
           light: "#0a2840",
         },
       },
+      borderRadius: {
+        DEFAULT: "8px",
+        secondary: "4px",
+        container: "12px",
+      },
       spacing: {
         "form-field": "16px",
         section: "32px",
       },
     },
   },
-  variants: {
-    extend: {
-      boxShadow: ["hover", "active"],
-    },
-  },
   plugins: [],
-};
+}

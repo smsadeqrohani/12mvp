@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { GameState } from "./useGameState";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 import { Id } from "../../convex/_generated/dataModel";
 
 interface UseMatchStatusMonitorProps {

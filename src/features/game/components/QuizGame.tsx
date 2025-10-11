@@ -1,8 +1,10 @@
+import { View, Text, TouchableOpacity, Image, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useEffect, useState, useRef } from "react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
-import { toast } from "sonner";
+import { toast } from "../../../lib/toast";
+import { Ionicons } from "@expo/vector-icons";
 
 interface QuizGameProps {
   matchId: Id<"matches">;
@@ -158,229 +160,257 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   };
 
   const handleLeaveGame = async () => {
-    if (window.confirm("آیا مطمئن هستید که می‌خواهید از مسابقه خارج شوید؟")) {
-      try {
-        await leaveMatch({ matchId });
-        toast.success("از مسابقه خارج شدید");
-        onLeaveMatch();
-      } catch (error) {
-        toast.error("خطا در خروج از مسابقه: " + (error as Error).message);
-      }
-    }
+    Alert.alert(
+      "خروج از مسابقه",
+      "آیا مطمئن هستید که می‌خواهید از مسابقه خارج شوید؟",
+      [
+        { text: "لغو", style: "cancel" },
+        {
+          text: "خروج",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await leaveMatch({ matchId });
+              toast.success("از مسابقه خارج شدید");
+              onLeaveMatch();
+            } catch (error) {
+              toast.error("خطا در خروج از مسابقه: " + (error as Error).message);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (!userProfile || !matchDetails || !currentQuestion) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#ff701a" />
+      </View>
     );
   }
 
   // Show waiting screen if user finished but others haven't
   if (isWaitingForOthers) {
     return (
-      <div className="w-full max-w-none px-6 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
-            <h2 className="text-2xl font-bold text-white mb-4">
-              منتظر سایر بازیکنان...
-            </h2>
-            <p className="text-gray-300 mb-6">
-              شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
-            </p>
-            <div className="bg-accent/20 rounded-lg p-4 border border-accent/30">
-              <p className="text-accent font-semibold">
-                نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="w-full px-6 py-8">
+          <View className="max-w-2xl mx-auto">
+            <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-8 items-center">
+              <ActivityIndicator size="large" color="#ff701a" className="mb-6" />
+              <Text className="text-2xl font-bold text-white mb-4">
+                منتظر سایر بازیکنان...
+              </Text>
+              <Text className="text-gray-300 mb-6 text-center">
+                شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
+              </Text>
+              <View className="bg-accent/20 rounded-lg p-4 border border-accent/30">
+                <Text className="text-accent font-semibold text-center">
+                  نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
     );
   }
 
   return (
-    <div className="w-full max-w-none px-6 py-8">
-      {/* Header */}
-      <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-accent mb-1">
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <View className="w-full px-6 py-8">
+        {/* Header */}
+        <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 mb-6">
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
+            <Text className="text-2xl font-bold text-accent mb-1" style={{ fontFamily: 'Vazirmatn-Bold' }}>
               مسابقه کویز
-            </h1>
-            <p className="text-gray-300">
+            </Text>
+            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
               سؤال {currentQuestionIndex + 1} از {matchDetails.questions.length}
-            </p>
-          </div>
+            </Text>
+          </View>
           
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLeaveGame}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-semibold transition-colors"
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity
+              onPress={handleLeaveGame}
+              className="px-4 py-2 bg-red-600 rounded-lg"
             >
-              خروج از مسابقه
-            </button>
+              <Text className="text-white text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>خروج از مسابقه</Text>
+            </TouchableOpacity>
             
-            <div className="text-left">
-              <div className={`text-3xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-accent'}`}>
+            <View>
+              <Text className={`text-3xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-accent'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
                 {formatTime(timeLeft)}
-              </div>
-              <p className="text-gray-400 text-sm">زمان باقی‌مانده</p>
-            </div>
-          </div>
-        </div>
+              </Text>
+              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>زمان باقی‌مانده</Text>
+            </View>
+          </View>
+        </View>
         
         {/* Progress Bar */}
-        <div className="w-full bg-gray-700 rounded-full h-2">
-          <div 
-            className="bg-accent h-2 rounded-full transition-all duration-300"
+        <View className="w-full bg-gray-700 rounded-full h-2">
+          <View 
+            className="bg-accent h-2 rounded-full"
             style={{ width: `${getProgressPercentage()}%` }}
-          ></div>
-        </div>
-      </div>
+          />
+        </View>
+      </View>
 
       {/* Players Info */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {matchDetails.participants.map((participant, index) => (
-          <div key={participant.userId} className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-accent/20 to-accent/10 rounded-full flex items-center justify-center">
-                <span className="text-accent font-bold text-sm">
+      <View className="flex-row gap-4 mb-6">
+        {matchDetails.participants.map((participant) => (
+          <View key={participant.userId} className="flex-1 bg-background-light/60 rounded-xl border border-gray-700/30 p-4">
+            <View className="flex-row items-center gap-3">
+              <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
+                <Text className="text-accent font-bold text-sm">
                   {participant.profile?.name[0] || "?"}
-                </span>
-              </div>
-              <div>
-                <p className="text-white font-semibold">
+                </Text>
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-semibold">
                   {participant.profile?.name || "بازیکن ناشناس"}
-                </p>
-                <p className="text-gray-400 text-sm">
+                </Text>
+                <Text className="text-gray-400 text-sm">
                   {participant.answers?.length || 0} پاسخ داده شده
-                </p>
-              </div>
-            </div>
-          </div>
+                </Text>
+              </View>
+            </View>
+          </View>
         ))}
-      </div>
+      </View>
 
       {/* Question Card */}
-      <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 mb-6">
+      <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-8 mb-6">
         {/* Media */}
         {currentQuestion.mediaStorageId && mediaUrl && (
-          <div className="mb-6">
-            <img 
-              src={mediaUrl} 
-              alt="سؤال" 
-              className="w-full max-h-64 object-contain rounded-lg mx-auto"
+          <View className="mb-6">
+            <Image 
+              source={{ uri: mediaUrl }}
+              className="w-full h-64 rounded-lg"
+              resizeMode="contain"
             />
-          </div>
+          </View>
         )}
         
         {currentQuestion.mediaPath && (
-          <div className="mb-6">
-            <img 
-              src={currentQuestion.mediaPath} 
-              alt="سؤال" 
-              className="w-full max-h-64 object-contain rounded-lg mx-auto"
+          <View className="mb-6">
+            <Image 
+              source={{ uri: currentQuestion.mediaPath }}
+              className="w-full h-64 rounded-lg"
+              resizeMode="contain"
             />
-          </div>
+          </View>
         )}
 
         {/* Question Text */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold text-white leading-relaxed">
+        <View className="items-center mb-8">
+          <Text className="text-2xl font-semibold text-white text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
             {currentQuestion.questionText}
-          </h2>
-        </div>
+          </Text>
+        </View>
 
         {/* Answer Options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <View className="space-y-4">
           {[
             { key: 1, text: currentQuestion.option1Text },
             { key: 2, text: currentQuestion.option2Text },
             { key: 3, text: currentQuestion.option3Text },
             { key: 4, text: currentQuestion.option4Text },
           ].map((option) => (
-            <button
+            <TouchableOpacity
               key={option.key}
-              onClick={() => !isAnswered && handleAnswerSubmit(option.key)}
+              onPress={() => !isAnswered && handleAnswerSubmit(option.key)}
               disabled={isAnswered}
-              className={`p-4 rounded-xl text-right transition-all duration-200 ${
+              className={`p-4 rounded-xl ${
                 isAnswered && showResult
                   ? option.key === selectedAnswer
                     ? isCorrect
-                      ? "bg-green-600/30 border-2 border-green-500 text-green-300"
-                      : "bg-red-600/30 border-2 border-red-500 text-red-300"
-                    : "bg-gray-700/50 border border-gray-600 text-gray-400"
+                      ? "bg-green-600/30 border-2 border-green-500"
+                      : "bg-red-600/30 border-2 border-red-500"
+                    : "bg-gray-700/50 border border-gray-600"
                   : selectedAnswer === option.key
-                  ? "bg-accent/20 border-2 border-accent text-accent"
-                  : "bg-gray-700/50 border border-gray-600 text-white hover:bg-gray-600/50 hover:border-gray-500"
+                  ? "bg-accent/20 border-2 border-accent"
+                  : "bg-gray-700/50 border border-gray-600 active:bg-gray-600/50"
               }`}
+              activeOpacity={0.7}
             >
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+              <View className="flex-row items-center gap-3">
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${
                   isAnswered && showResult
                     ? option.key === selectedAnswer
                       ? isCorrect
-                        ? "bg-green-500 text-white"
-                        : "bg-red-500 text-white"
-                      : "bg-gray-600 text-gray-400"
+                        ? "bg-green-500"
+                        : "bg-red-500"
+                      : "bg-gray-600"
                     : selectedAnswer === option.key
-                    ? "bg-accent text-white"
-                    : "bg-gray-600 text-gray-300"
+                    ? "bg-accent"
+                    : "bg-gray-600"
                 }`}>
-                  {option.key}
-                </div>
-                <span className="flex-1">{option.text}</span>
-              </div>
-            </button>
+                  <Text className={`font-bold ${
+                    isAnswered && showResult
+                      ? option.key === selectedAnswer ? "text-white" : "text-gray-400"
+                      : selectedAnswer === option.key ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    {option.key}
+                  </Text>
+                </View>
+                <Text className={`flex-1 ${
+                  isAnswered && showResult
+                    ? option.key === selectedAnswer
+                      ? isCorrect ? "text-green-300" : "text-red-300"
+                      : "text-gray-400"
+                    : selectedAnswer === option.key
+                    ? "text-accent"
+                    : "text-white"
+                }`} style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  {option.text}
+                </Text>
+              </View>
+            </TouchableOpacity>
           ))}
-        </div>
+        </View>
 
         {/* Result Display */}
         {showResult && (
-          <div className={`mt-6 p-4 rounded-xl text-center ${
+          <View className={`mt-6 p-4 rounded-xl items-center ${
             isCorrect ? "bg-green-600/20 border border-green-500/30" : "bg-red-600/20 border border-red-500/30"
           }`}>
-            <div className="flex items-center justify-center gap-2 mb-2">
-              {isCorrect ? (
-                <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-              <span className={`text-lg font-semibold ${isCorrect ? "text-green-400" : "text-red-400"}`}>
+            <View className="flex-row items-center justify-center gap-2 mb-2">
+              <Ionicons 
+                name={isCorrect ? "checkmark-circle" : "close-circle"} 
+                size={24} 
+                color={isCorrect ? "#4ade80" : "#f87171"}
+              />
+              <Text className={`text-lg font-semibold ${isCorrect ? "text-green-400" : "text-red-400"}`}>
                 {isCorrect ? "درست!" : "اشتباه!"}
-              </span>
-            </div>
-            <p className="text-gray-300">
+              </Text>
+            </View>
+            <Text className="text-gray-300">
               {isCorrect 
                 ? "پاسخ شما صحیح است" 
                 : "پاسخ شما اشتباه بود"
               }
-            </p>
-            <p className="text-gray-400 text-sm mt-2">
+            </Text>
+            <Text className="text-gray-400 text-sm mt-2">
               زمان پاسخ: {Math.round((Date.now() - questionStartTime) / 1000)} ثانیه
-            </p>
-          </div>
+            </Text>
+          </View>
         )}
-      </div>
+      </View>
 
-      {/* Skip Button */}
-      {!isAnswered && (
-        <div className="text-center">
-          <button
-            onClick={() => handleAnswerSubmit(0)}
-            className="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl font-semibold transition-colors"
-          >
-            رد کردن سؤال
-          </button>
-        </div>
-      )}
-    </div>
+        {/* Skip Button */}
+        {!isAnswered && (
+          <View className="items-center">
+            <TouchableOpacity
+              onPress={() => handleAnswerSubmit(0)}
+              className="px-6 py-3 bg-gray-600 rounded-xl"
+            >
+              <Text className="text-white font-semibold">رد کردن سؤال</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 }

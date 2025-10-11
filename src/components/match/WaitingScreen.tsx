@@ -1,3 +1,4 @@
+import { View, Text, ActivityIndicator } from "react-native";
 import { Button } from "../ui/Button";
 
 interface WaitingScreenProps {
@@ -6,28 +7,28 @@ interface WaitingScreenProps {
 
 export function WaitingScreen({ onCancel }: WaitingScreenProps) {
   return (
-    <div className="w-full max-w-none px-6 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
-          <h2 className="text-2xl font-bold text-white mb-4">
+    <View className="w-full px-6 py-8">
+      <View className="max-w-2xl mx-auto">
+        <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-8 items-center">
+          <ActivityIndicator size="large" color="#ff701a" className="mb-6" />
+          <Text className="text-2xl font-bold text-white mb-4">
             منتظر حریف...
-          </h2>
-          <p className="text-gray-300 mb-6">
+          </Text>
+          <Text className="text-gray-300 mb-6 text-center">
             منتظر بمانید تا حریف دیگری به مسابقه بپیوندد
-          </p>
-          <p className="text-gray-400 mb-6 text-sm">
+          </Text>
+          <Text className="text-gray-400 mb-6 text-sm text-center">
             وقتی حریف پیدا شد، مسابقه به طور خودکار شروع می‌شود
-          </p>
+          </Text>
           <Button
-            onClick={onCancel}
+            onPress={onCancel}
             variant="danger"
           >
             لغو مسابقه
           </Button>
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 }
 

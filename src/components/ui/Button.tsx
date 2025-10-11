@@ -1,29 +1,48 @@
-import { ReactNode, ButtonHTMLAttributes } from "react";
+import { ReactNode } from "react";
+import { TouchableOpacity, Text, View, ActivityIndicator, ViewStyle } from "react-native";
 
 type ButtonVariant = "primary" | "secondary" | "danger" | "success" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: ReactNode;
   iconPosition?: "left" | "right";
   loading?: boolean;
+  disabled?: boolean;
+  onPress?: () => void;
   children: ReactNode;
+  className?: string;
+  style?: ViewStyle;
 }
 
 const variantClasses: Record<ButtonVariant, string> = {
-  primary: "bg-accent hover:bg-accent-hover text-white",
-  secondary: "bg-gray-700/50 hover:bg-gray-600 text-gray-300 hover:text-white border border-gray-600",
-  danger: "bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 border border-red-800/30 hover:border-red-700/50",
-  success: "bg-green-600/20 hover:bg-green-600/30 text-green-400 hover:text-green-300 border border-green-800/30 hover:border-green-700/50",
-  ghost: "bg-transparent hover:bg-gray-700/50 text-gray-300 hover:text-white",
+  primary: "bg-accent active:bg-accent-hover",
+  secondary: "bg-gray-700/50 active:bg-gray-600 border border-gray-600",
+  danger: "bg-red-600/20 active:bg-red-600/30 border border-red-800/30",
+  success: "bg-green-600/20 active:bg-green-600/30 border border-green-800/30",
+  ghost: "bg-transparent active:bg-gray-700/50",
+};
+
+const variantTextClasses: Record<ButtonVariant, string> = {
+  primary: "text-white",
+  secondary: "text-gray-300",
+  danger: "text-red-400",
+  success: "text-green-400",
+  ghost: "text-gray-300",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs",
-  md: "px-4 py-2 text-sm",
-  lg: "px-6 py-3 text-base",
+  sm: "px-3 py-1.5",
+  md: "px-4 py-2",
+  lg: "px-6 py-3",
+};
+
+const sizeTextClasses: Record<ButtonSize, string> = {
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
 };
 
 export function Button({
@@ -33,33 +52,40 @@ export function Button({
   iconPosition = "left",
   loading,
   disabled,
+  onPress,
   children,
   className = "",
-  ...props
+  style,
 }: ButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
-    <button
-      className={`inline-flex items-center gap-2 rounded-lg font-medium transition-all duration-200 ${variantClasses[variant]} ${sizeClasses[size]} ${
-        isDisabled ? "opacity-50 cursor-not-allowed" : ""
+    <TouchableOpacity
+      className={`flex-row items-center gap-2 rounded-lg ${variantClasses[variant]} ${sizeClasses[size]} ${
+        isDisabled ? "opacity-50" : ""
       } ${className}`}
       disabled={isDisabled}
-      {...props}
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={style}
     >
       {loading ? (
         <>
-          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          در حال پردازش...
+          <ActivityIndicator size="small" color={variant === "primary" ? "#fff" : "#ff701a"} />
+          <Text className={`font-semibold ${variantTextClasses[variant]} ${sizeTextClasses[size]}`}>
+            در حال پردازش...
+          </Text>
         </>
       ) : (
         <>
-          {icon && iconPosition === "left" && icon}
-          {children}
-          {icon && iconPosition === "right" && icon}
+          {icon && iconPosition === "left" && <View>{icon}</View>}
+          <Text className={`font-semibold ${variantTextClasses[variant]} ${sizeTextClasses[size]}`}>
+            {children}
+          </Text>
+          {icon && iconPosition === "right" && <View>{icon}</View>}
         </>
       )}
-    </button>
+    </TouchableOpacity>
   );
 }
 

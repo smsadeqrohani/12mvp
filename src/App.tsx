@@ -1,9 +1,11 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { Platform } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { SignOutButton } from "./features/auth";
-import { Toaster } from "sonner";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "./lib/toast";
 import { ErrorBoundary, PageLoader } from "./components/ui";
 
 // Lazy load route components for code splitting
@@ -66,20 +68,7 @@ function AppContent() {
           </Suspense>
         </ErrorBoundary>
       </main>
-      <Toaster
-        position="top-center"
-        expand={true}
-        richColors={true}
-        closeButton={true}
-        duration={4000}
-        toastOptions={{
-          style: {
-            direction: 'rtl',
-            textAlign: 'right',
-          },
-          className: 'toast-rtl',
-        }}
-      />
+      {Platform.OS !== 'web' && <Toast config={toastConfig} />}
     </div>
   );
 }

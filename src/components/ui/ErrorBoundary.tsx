@@ -1,4 +1,5 @@
-import { Component, ReactNode, ErrorInfo } from "react";
+import React, { Component, ReactNode, ErrorInfo } from "react";
+import { View, Text, TouchableOpacity } from "react-native";
 
 interface Props {
   children: ReactNode;
@@ -14,29 +15,20 @@ interface State {
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-    };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return {
-      hasError: true,
-      error,
-    };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.error("Error caught by boundary:", error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
   handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-    });
+    this.setState({ hasError: false, error: null });
   };
 
   render() {
@@ -46,35 +38,32 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-          <div className="bg-background-light rounded-2xl border border-gray-700 p-8 max-w-lg w-full text-center">
-            <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-accent mb-3">خطای غیرمنتظره</h2>
-            <p className="text-gray-300 mb-6">
-              متأسفانه مشکلی پیش آمده است. لطفاً دوباره تلاش کنید.
-            </p>
+        <View className="flex-1 items-center justify-center p-6 bg-background">
+          <View className="bg-red-900/20 border border-red-500/30 rounded-2xl p-8 max-w-md">
+            <Text className="text-2xl font-bold text-red-400 mb-4 text-center">
+              خطایی رخ داد
+            </Text>
+            <Text className="text-gray-300 mb-6 text-center">
+              متأسفانه مشکلی پیش آمد. لطفاً دوباره تلاش کنید.
+            </Text>
             {this.state.error && (
-              <details className="mb-6 text-right">
-                <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300">
-                  جزئیات خطا
-                </summary>
-                <pre className="mt-3 p-4 bg-background rounded-lg text-xs text-red-400 overflow-auto text-left">
-                  {this.state.error.toString()}
-                </pre>
-              </details>
+              <Text className="text-red-300 text-sm mb-6 text-center">
+                {this.state.error.message}
+              </Text>
             )}
-            <button
-              onClick={this.handleReset}
-              className="px-6 py-3 bg-accent hover:bg-accent-hover text-white rounded-lg font-semibold transition-colors"
+            <TouchableOpacity
+              onPress={this.handleReset}
+              className="bg-accent px-6 py-3 rounded-lg"
             >
-              تلاش مجدد
-            </button>
-          </div>
-        </div>
+              <Text className="text-white font-semibold text-center">
+                تلاش مجدد
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       );
     }
 
     return this.props.children;
   }
 }
-

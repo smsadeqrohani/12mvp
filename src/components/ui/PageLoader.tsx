@@ -1,3 +1,4 @@
+import { View, Text } from "react-native";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 interface PageLoaderProps {
@@ -6,10 +7,10 @@ interface PageLoaderProps {
 
 export function PageLoader({ message = "در حال بارگذاری..." }: PageLoaderProps) {
   return (
-    <div className="min-h-[400px] flex flex-col items-center justify-center gap-4">
+    <View className="flex-1 items-center justify-center gap-4 min-h-[400px]">
       <LoadingSpinner />
-      <p className="text-gray-400 text-sm">{message}</p>
-    </div>
+      <Text className="text-gray-400 text-sm">{message}</Text>
+    </View>
   );
 }
 

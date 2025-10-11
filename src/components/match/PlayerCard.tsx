@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { View, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 interface PlayerCardProps {
   name: string;
@@ -20,74 +22,64 @@ export function PlayerCard({
   className = "",
 }: PlayerCardProps) {
   return (
-    <div
-      className={`bg-background-light/60 backdrop-blur-sm rounded-xl border ${
+    <View
+      className={`bg-background-light/60 rounded-xl border ${
         isWinner
-          ? "border-accent/50 shadow-lg shadow-accent/20"
+          ? "border-accent/50"
           : "border-gray-700/30"
       } p-6 ${className}`}
     >
-      <div className="flex items-center gap-4 mb-4">
-        <div
-          className={`w-12 h-12 rounded-full flex items-center justify-center ${
+      <View className="flex-row items-center gap-4 mb-4">
+        <View
+          className={`w-12 h-12 rounded-full items-center justify-center ${
             isWinner
-              ? "bg-gradient-to-br from-accent to-accent-hover"
-              : "bg-gradient-to-br from-accent/20 to-accent/10"
+              ? "bg-accent"
+              : "bg-accent/20"
           }`}
         >
-          <span
+          <Text
             className={`font-bold text-lg ${
               isWinner ? "text-white" : "text-accent"
             }`}
           >
             {name[0]}
-          </span>
-        </div>
-        <div className="flex-1">
-          <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-            {name}
+          </Text>
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-center gap-2">
+            <Text className="text-white font-semibold text-lg">
+              {name}
+            </Text>
             {isCurrentUser && (
-              <span className="text-xs text-gray-400 font-normal">(شما)</span>
+              <Text className="text-xs text-gray-400 font-normal">(شما)</Text>
             )}
-          </h3>
-          {status && <div className="mt-1">{status}</div>}
-        </div>
+          </View>
+          {status && <View className="mt-1">{status}</View>}
+        </View>
         {isWinner && (
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
+          <View className="w-8 h-8 bg-accent rounded-full items-center justify-center">
+            <Ionicons name="checkmark" size={20} color="#fff" />
+          </View>
         )}
-      </div>
+      </View>
 
       {(score !== undefined || time !== undefined) && (
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700/30">
+        <View className="flex-row gap-4 pt-4 border-t border-gray-700/30">
           {score !== undefined && (
-            <div>
-              <p className="text-gray-400 text-sm mb-1">امتیاز</p>
-              <p className="text-white text-2xl font-bold">{score}</p>
-            </div>
+            <View className="flex-1">
+              <Text className="text-gray-400 text-sm mb-1">امتیاز</Text>
+              <Text className="text-white text-2xl font-bold">{score}</Text>
+            </View>
           )}
           {time !== undefined && (
-            <div>
-              <p className="text-gray-400 text-sm mb-1">زمان</p>
-              <p className="text-white text-2xl font-bold">{time}s</p>
-            </div>
+            <View className="flex-1">
+              <Text className="text-gray-400 text-sm mb-1">زمان</Text>
+              <Text className="text-white text-2xl font-bold">{time}s</Text>
+            </View>
           )}
-        </div>
+        </View>
       )}
-    </div>
+    </View>
   );
 }
 

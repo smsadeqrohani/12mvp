@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { toast } from "sonner";
+import { toast } from "../../../lib/toast";
 import { FilePreview } from "./FilePreview";
 import { PaginationControls } from "../../../components/ui";
 

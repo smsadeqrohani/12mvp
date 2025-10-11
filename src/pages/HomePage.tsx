@@ -10,7 +10,7 @@ import { WaitingScreen } from "../components/match";
 import { LoadingSpinner, PageLoader } from "../components/ui";
 import { getStorageItem, setStorageItem } from "../lib/storage";
 import { STORAGE_KEYS, MESSAGES } from "../lib/constants";
-import { toast } from "sonner";
+import { toast } from "../lib/toast";
 
 type TabType = "dashboard" | "new-match" | "history";
 type GameState = "lobby" | "waiting" | "playing" | "results";
@@ -22,13 +22,20 @@ export function HomePage() {
   const leaveMatch = useMutation(api.matches.leaveMatch);
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = useState<TabType>(() => 
-    getStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard" as TabType)
-  );
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [gameState, setGameState] = useState<GameState>("lobby");
   const [currentMatchId, setCurrentMatchId] = useState<Id<"matches"> | null>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+
+  // Load saved tab from storage
+  useEffect(() => {
+    const loadSavedTab = async () => {
+      const savedTab = await getStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard" as TabType);
+      setActiveTab(savedTab);
+    };
+    loadSavedTab();
+  }, []);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -103,23 +110,27 @@ export function HomePage() {
     setGameState("results");
   };
 
-  const handlePlayAgain = () => {
+  const handlePlayAgain = async () => {
     setIsResetting(true);
     setCurrentMatchId(null);
     setGameState("lobby");
     setActiveTab("dashboard");
-    setStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard");
+    await setStorageItem(STORAGE_KEYS.ACTIVE_TAB, "dashboard");
     setTimeout(() => setIsResetting(false), 500);
   };
 
   const handleCancelMatch = async () => {
     try {
+      console.log("Cancel match attempt:", userMatchStatus?.matchId);
       if (userMatchStatus?.matchId) {
+        console.log("Calling leaveMatch with:", userMatchStatus.matchId);
         await leaveMatch({ matchId: userMatchStatus.matchId });
+        console.log("LeaveMatch successful");
       }
       toast.success(MESSAGES.MATCH.MATCH_CANCELLED);
       handlePlayAgain();
     } catch (error) {
+      console.error("Cancel match error:", error);
       toast.error("خطا در لغو مسابقه: " + (error as Error).message);
       handlePlayAgain();
     }
@@ -134,9 +145,9 @@ export function HomePage() {
     setViewingMatchId(null);
   };
 
-  const handleTabChange = (tabId: TabType) => {
+  const handleTabChange = async (tabId: TabType) => {
     setActiveTab(tabId);
-    setStorageItem(STORAGE_KEYS.ACTIVE_TAB, tabId);
+    await setStorageItem(STORAGE_KEYS.ACTIVE_TAB, tabId);
   };
 
   // Loading state

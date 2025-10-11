@@ -1132,5 +1132,342 @@ import { PaginationControls } from "../components/ui";
 
 ---
 
+## 📱 React Native Architecture
+
+### Cross-Platform Structure
+
+The app now uses **Expo with React Native Web** for unified web and mobile support:
+
+```
+12mvp/
+├── app/                         # 📱 Expo Router (File-based routing)
+│   ├── _layout.tsx             # Root layout with Convex + fonts
+│   ├── (tabs)/                 # Tab navigation group
+│   │   ├── _layout.tsx        # Tab bar configuration
+│   │   ├── index.tsx          # Dashboard (HelloPage)
+│   │   ├── new-match.tsx      # Match lobby
+│   │   └── history.tsx        # Match history
+│   ├── (auth)/                # Auth group
+│   │   └── login.tsx          # Login screen
+│   └── admin.tsx              # Admin panel
+│
+├── src/                        # Shared code (web + mobile)
+│   ├── components/            # React Native components
+│   ├── features/              # Feature modules
+│   ├── pages/                 # Page components
+│   ├── hooks/                 # Custom hooks
+│   └── lib/                   # Utilities
+│       └── toast.tsx          # Toast for RN
+│
+├── assets/                     # Static assets
+│   └── fonts/                 # Vazirmatn fonts
+│
+├── global.css                  # NativeWind styles
+├── metro.config.js            # Metro bundler config
+├── babel.config.js            # Babel config (NativeWind)
+└── app.json                   # Expo configuration
+```
+
+### Expo Router vs React Router
+
+**Before (Web only):**
+```tsx
+// src/App.tsx
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+<Routes>
+  <Route path="/" element={<HomePage />} />
+  <Route path="/login" element={<LoginPage />} />
+</Routes>
+```
+
+**After (Cross-platform):**
+```tsx
+// app/_layout.tsx - Root layout
+export default function RootLayout() {
+  return <Slot />;  // Renders matched route
+}
+
+// app/(tabs)/index.tsx - File = Route
+export default function DashboardScreen() {
+  return <HelloPage />;
+}
+
+// app/(tabs)/new-match.tsx
+export default function NewMatchScreen() {
+  return <MatchLobby />;
+}
+```
+
+**File-based routing:**
+- `app/(tabs)/index.tsx` → `/`
+- `app/(tabs)/new-match.tsx` → `/new-match`
+- `app/(auth)/login.tsx` → `/login`
+- `app/admin.tsx` → `/admin`
+
+### Navigation Patterns
+
+**Programmatic Navigation:**
+```tsx
+import { useRouter } from "expo-router";
+
+const router = useRouter();
+
+router.push("/admin");      // Navigate to route
+router.replace("/login");   // Replace current route
+router.back();              // Go back
+```
+
+**Tab Navigation:**
+```tsx
+// Configured in app/(tabs)/_layout.tsx
+<Tabs screenOptions={{ ... }}>
+  <Tabs.Screen name="index" options={{ title: "داشبورد" }} />
+  <Tabs.Screen name="new-match" options={{ title: "مسابقه جدید" }} />
+  <Tabs.Screen name="history" options={{ title: "تاریخچه" }} />
+</Tabs>
+```
+
+### State Management (Unchanged)
+
+Convex real-time state works identically on all platforms:
+
+```tsx
+// Same code for web, iOS, and Android
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
+
+const matches = useQuery(api.matches.getAllMatches);
+const createMatch = useMutation(api.matches.createMatch);
+```
+
+### Component Architecture
+
+**React Native Component Structure:**
+```tsx
+// Web version (old)
+export function MyComponent() {
+  return (
+    <div className="...">
+      <h1 className="...">Title</h1>
+      <button onClick={handleClick}>Click</button>
+    </div>
+  );
+}
+
+// React Native version (new)
+import { View, Text, TouchableOpacity } from "react-native";
+
+export function MyComponent() {
+  return (
+    <View className="...">
+      <Text className="...">Title</Text>
+      <TouchableOpacity onPress={handleClick}>
+        <Text>Click</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+```
+
+### Converted Components
+
+**✅ Fully Converted (React Native):**
+- All UI components (Button, Badge, Modal, etc.)
+- All layout components (PageContainer, PageHeader, etc.)
+- All match components (WaitingScreen, PlayerCard, etc.)
+- SignOutButton (auth feature)
+
+**🔄 Need Conversion:**
+- Auth feature components (SignInForm, SignUpForm, ProfileSetup)
+- Game feature components (HelloPage, MatchLobby, QuizGame, etc.)
+- Admin feature components (QuestionsForm, FilesTable, etc.)
+- Additional UI components (DataTable, Skeleton, etc.)
+
+### Platform Detection
+
+```tsx
+import { Platform } from "react-native";
+
+// Conditional rendering
+{Platform.OS === 'web' && <WebOnlyComponent />}
+{Platform.OS !== 'web' && <MobileComponent />}
+
+// Platform-specific values
+const fontSize = Platform.select({
+  ios: 16,
+  android: 14,
+  web: 15,
+});
+
+// Check specific platform
+if (Platform.OS === 'ios') {
+  // iOS-specific code
+}
+```
+
+### Styling with NativeWind
+
+**NativeWind = Tailwind for React Native:**
+
+```tsx
+// Same classes work everywhere!
+<View className="bg-background flex-1 p-6">
+  <Text className="text-accent text-2xl font-bold">
+    عنوان
+  </Text>
+  <TouchableOpacity className="bg-accent px-6 py-3 rounded-lg">
+    <Text className="text-white font-semibold">دکمه</Text>
+  </TouchableOpacity>
+</View>
+```
+
+**Custom theme in tailwind.config.js:**
+```js
+module.exports = {
+  content: ["./app/**/*.{js,tsx,ts}", "./src/**/*.{js,tsx,ts}"],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {
+      colors: {
+        background: { DEFAULT: "#06202F", light: "#0a2840" },
+        accent: { DEFAULT: "#ff701a", hover: "#e55a00" },
+      },
+    },
+  },
+};
+```
+
+### Font Configuration
+
+**Expo Font Loading:**
+```tsx
+// app/_layout.tsx
+import { useFonts } from "expo-font";
+
+const [fontsLoaded] = useFonts({
+  "Vazirmatn-Regular": require("../assets/fonts/Vazirmatn-Regular.ttf"),
+  "Vazirmatn-Medium": require("../assets/fonts/Vazirmatn-Medium.ttf"),
+  "Vazirmatn-SemiBold": require("../assets/fonts/Vazirmatn-SemiBold.ttf"),
+  "Vazirmatn-Bold": require("../assets/fonts/Vazirmatn-Bold.ttf"),
+});
+```
+
+**NativeWind font classes map to font families:**
+- `font-normal` → Vazirmatn-Regular
+- `font-medium` → Vazirmatn-Medium
+- `font-semibold` → Vazirmatn-SemiBold
+- `font-bold` → Vazirmatn-Bold
+
+### RTL Configuration
+
+**Force RTL globally:**
+```tsx
+// app/_layout.tsx
+import { I18nManager } from "react-native";
+
+if (!I18nManager.isRTL) {
+  I18nManager.forceRTL(true);
+}
+```
+
+**Text alignment:**
+```tsx
+<Text className="text-right">متن فارسی</Text>
+```
+
+### Toast Notifications
+
+**Custom implementation for React Native:**
+```tsx
+// src/lib/toast.tsx
+import Toast from "react-native-toast-message";
+
+export const toast = {
+  success: (message: string) => Toast.show({ type: "success", text1: message }),
+  error: (message: string) => Toast.show({ type: "error", text1: message }),
+  // ... more
+};
+```
+
+**Usage (same API as web):**
+```tsx
+import { toast } from "../lib/toast";
+
+toast.success("عملیات موفق بود");
+toast.error("خطا رخ داد");
+```
+
+### Metro Bundler
+
+**Configuration for NativeWind + Convex:**
+```js
+// metro.config.js
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require('nativewind/metro');
+
+const config = getDefaultConfig(__dirname);
+config.resolver.sourceExts = [...config.resolver.sourceExts, 'css'];
+
+module.exports = withNativeWind(config, { input: './global.css' });
+```
+
+### Build & Deployment
+
+**Development:**
+```bash
+npm start          # Expo dev server
+npm run web        # Web
+npm run ios        # iOS simulator
+npm run android    # Android emulator
+```
+
+**Production:**
+```bash
+npm run build:web      # Expo web build
+eas build --platform ios      # iOS build (EAS)
+eas build --platform android  # Android build (EAS)
+```
+
+### Testing Strategy
+
+**Platform-specific testing:**
+1. **Web**: Test in Chrome/Firefox with responsive design mode
+2. **iOS**: Test in iOS simulator or physical device
+3. **Android**: Test in Android emulator or physical device
+
+**Test checklist:**
+- [ ] Authentication flow
+- [ ] Match creation and gameplay
+- [ ] Real-time updates (Convex)
+- [ ] Navigation (Expo Router)
+- [ ] Toast notifications
+- [ ] RTL layout
+- [ ] Persian fonts
+- [ ] Form submissions
+- [ ] Admin panel (web/tablet only)
+
+### Performance Optimizations
+
+**Same as web, plus:**
+- **Native optimizations**: React Native's native components
+- **Bundle splitting**: Expo's automatic code splitting
+- **Image optimization**: Use `expo-image` for optimized images
+- **List virtualization**: Use `FlatList` for long lists
+
+### Known Limitations
+
+1. **Admin Panel**: Recommended for web/tablet only (screen size)
+2. **Complex Tables**: May need mobile-optimized views
+3. **File Uploads**: Use platform-specific APIs
+4. **Web-specific libraries**: Must find React Native alternatives
+
+## 📚 Additional Resources
+
+- [Expo Router Docs](https://docs.expo.dev/router/introduction/)
+- [NativeWind Docs](https://www.nativewind.dev/)
+- [React Native Docs](https://reactnative.dev/)
+- [Convex with React Native](https://docs.convex.dev/)
+
 **Last Updated**: October 9, 2025  
 **Maintainers**: Development Team

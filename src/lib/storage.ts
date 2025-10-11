@@ -1,68 +1,72 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 /**
- * LocalStorage utilities with type safety and error handling
+ * Cross-platform storage utilities with type safety and error handling
+ * Uses AsyncStorage for both mobile (iOS/Android) and web platforms
  */
 
 /**
- * Safely get item from localStorage
+ * Safely get item from storage
  */
-export function getStorageItem<T>(key: string, defaultValue: T): T {
+export async function getStorageItem<T>(key: string, defaultValue: T): Promise<T> {
   try {
-    const item = localStorage.getItem(key);
+    const item = await AsyncStorage.getItem(key);
     if (item === null) return defaultValue;
     return JSON.parse(item) as T;
   } catch (error) {
-    console.error(`Error reading from localStorage (${key}):`, error);
+    console.error(`Error reading from storage (${key}):`, error);
     return defaultValue;
   }
 }
 
 /**
- * Safely set item in localStorage
+ * Safely set item in storage
  */
-export function setStorageItem<T>(key: string, value: T): boolean {
+export async function setStorageItem<T>(key: string, value: T): Promise<boolean> {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const stringValue = JSON.stringify(value);
+    await AsyncStorage.setItem(key, stringValue);
     return true;
   } catch (error) {
-    console.error(`Error writing to localStorage (${key}):`, error);
+    console.error(`Error writing to storage (${key}):`, error);
     return false;
   }
 }
 
 /**
- * Safely remove item from localStorage
+ * Safely remove item from storage
  */
-export function removeStorageItem(key: string): boolean {
+export async function removeStorageItem(key: string): Promise<boolean> {
   try {
-    localStorage.removeItem(key);
+    await AsyncStorage.removeItem(key);
     return true;
   } catch (error) {
-    console.error(`Error removing from localStorage (${key}):`, error);
+    console.error(`Error removing from storage (${key}):`, error);
     return false;
   }
 }
 
 /**
- * Clear all localStorage items
+ * Clear all storage items
  */
-export function clearStorage(): boolean {
+export async function clearStorage(): Promise<boolean> {
   try {
-    localStorage.clear();
+    await AsyncStorage.clear();
     return true;
   } catch (error) {
-    console.error("Error clearing localStorage:", error);
+    console.error("Error clearing storage:", error);
     return false;
   }
 }
 
 /**
- * Check if localStorage is available
+ * Check if storage is available
  */
-export function isStorageAvailable(): boolean {
+export async function isStorageAvailable(): Promise<boolean> {
   try {
     const test = "__storage_test__";
-    localStorage.setItem(test, test);
-    localStorage.removeItem(test);
+    await AsyncStorage.setItem(test, test);
+    await AsyncStorage.removeItem(test);
     return true;
   } catch {
     return false;
@@ -70,28 +74,29 @@ export function isStorageAvailable(): boolean {
 }
 
 /**
- * Get all keys from localStorage
+ * Get all keys from storage
  */
-export function getStorageKeys(): string[] {
+export async function getStorageKeys(): Promise<readonly string[]> {
   try {
-    return Object.keys(localStorage);
+    return await AsyncStorage.getAllKeys();
   } catch (error) {
-    console.error("Error getting localStorage keys:", error);
+    console.error("Error getting storage keys:", error);
     return [];
   }
 }
 
 /**
  * Get storage size (approximate, in bytes)
+ * Note: This is an approximation based on stored items
  */
-export function getStorageSize(): number {
+export async function getStorageSize(): Promise<number> {
   try {
+    const keys = await AsyncStorage.getAllKeys();
+    const items = await AsyncStorage.multiGet(keys);
     let total = 0;
-    for (const key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        total += localStorage[key].length + key.length;
-      }
-    }
+    items.forEach(([key, value]) => {
+      total += key.length + (value?.length || 0);
+    });
     return total;
   } catch (error) {
     console.error("Error calculating storage size:", error);

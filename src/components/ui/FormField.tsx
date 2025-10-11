@@ -1,4 +1,6 @@
 import { ReactNode } from "react";
+import { View, Text, TextInput, TextInputProps } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 
 interface FormFieldProps {
   label: string;
@@ -10,49 +12,67 @@ interface FormFieldProps {
 
 export function FormField({ label, required, error, help, children }: FormFieldProps) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-300 mb-2 text-right">
-        {label} {required && <span className="text-accent">*</span>}
-      </label>
+    <View>
+      <Text className="text-sm font-medium text-gray-300 mb-2 text-right">
+        {label} {required && <Text className="text-accent">*</Text>}
+      </Text>
       {children}
-      {help && <p className="text-gray-500 text-xs mt-1 text-right">{help}</p>}
-      {error && <p className="text-red-400 text-xs mt-1 text-right">{error}</p>}
-    </div>
+      {help && <Text className="text-gray-500 text-xs mt-1 text-right">{help}</Text>}
+      {error && <Text className="text-red-400 text-xs mt-1 text-right">{error}</Text>}
+    </View>
   );
 }
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+interface InputComponentProps extends TextInputProps {
+  className?: string;
+}
 
-export function Input({ className = "", ...props }: InputProps) {
+export function Input({ className = "", ...props }: InputComponentProps) {
   return (
-    <input
-      className={`w-full bg-gray-700/50 backdrop-blur-sm text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50 focus:border-accent/50 focus:ring-2 focus:ring-accent/20 transition-all ${className}`}
+    <TextInput
+      className={`w-full bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50 ${className}`}
+      placeholderTextColor="#9ca3af"
       {...props}
     />
   );
 }
 
-interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+interface TextAreaComponentProps extends TextInputProps {
+  className?: string;
+  rows?: number;
+}
 
-export function TextArea({ className = "", ...props }: TextAreaProps) {
+export function TextArea({ className = "", rows = 4, ...props }: TextAreaComponentProps) {
   return (
-    <textarea
-      className={`w-full bg-gray-700/50 backdrop-blur-sm text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50 focus:border-accent/50 focus:ring-2 focus:ring-accent/20 transition-all resize-none ${className}`}
+    <TextInput
+      className={`w-full bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50 ${className}`}
+      placeholderTextColor="#9ca3af"
+      multiline
+      numberOfLines={rows}
+      textAlignVertical="top"
       {...props}
     />
   );
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {}
+interface SelectProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  className?: string;
+  children: ReactNode;
+}
 
-export function Select({ className = "", children, ...props }: SelectProps) {
+export function Select({ value, onValueChange, className = "", children }: SelectProps) {
   return (
-    <select
-      className={`w-full bg-gray-700/50 backdrop-blur-sm text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50 focus:border-accent/50 focus:ring-2 focus:ring-accent/20 transition-all ${className}`}
-      {...props}
-    >
-      {children}
-    </select>
+    <View className={`w-full bg-gray-700/50 rounded-lg border border-gray-600/50 ${className}`}>
+      <Picker
+        selectedValue={value}
+        onValueChange={onValueChange}
+        style={{ color: "#fff" }}
+      >
+        {children}
+      </Picker>
+    </View>
   );
 }
 

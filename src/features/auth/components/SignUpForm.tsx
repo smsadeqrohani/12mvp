@@ -1,13 +1,17 @@
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { toast } from "../../../lib/toast";
+import { useRouter } from "expo-router";
 
 export function SignUpForm() {
   const { signIn } = useAuthActions();
   const [loading, setLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
   // Password validation function
   const validatePassword = (password: string): string[] => {
@@ -36,130 +40,145 @@ export function SignUpForm() {
     return errors;
   };
 
+  const handleSubmit = () => {
+    setLoading(true);
+
+    // Validate password
+    const errors = validatePassword(password);
+    if (errors.length > 0) {
+      setPasswordErrors(errors);
+      toast.error("رمز عبور معیارهای امنیتی را برآورده نمی‌کند");
+      setLoading(false);
+      return;
+    }
+
+    // Check password confirmation
+    if (password !== confirmPassword) {
+      toast.error("رمزهای عبور مطابقت ندارند");
+      setLoading(false);
+      return;
+    }
+
+    // Clear any previous errors
+    setPasswordErrors([]);
+
+    signIn("password", { email, password, flow: "signUp" })
+      .then(() => {
+        router.replace("/");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("نمی‌توان حساب ایجاد کرد");
+      })
+      .finally(() => setLoading(false));
+  };
+
   return (
-    <form
-      className="flex flex-col gap-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        setLoading(true);
-        const formData = new FormData(event.currentTarget);
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
-        const confirmPassword = formData.get("confirmPassword") as string;
+    <View className="w-full">
+      <View className="flex flex-col gap-4">
+        {/* Email Field */}
+        <View>
+          <Text className="text-gray-300 mb-2 font-medium">ایمیل</Text>
+          <TextInput
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            placeholder="example@email.com"
+            placeholderTextColor="#6b7280"
+            className="auth-input-field"
+            editable={!loading}
+            autoCapitalize="none"
+          />
+        </View>
 
-        // Validate password
-        const errors = validatePassword(password);
-        if (errors.length > 0) {
-          setPasswordErrors(errors);
-          toast.error("رمز عبور معیارهای امنیتی را برآورده نمی‌کند");
-          setLoading(false);
-          return;
-        }
+        {/* Password Requirements Info */}
+        <View className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
+          <Text className="text-blue-400 text-sm font-semibold mb-2">معیارهای رمز عبور:</Text>
+          <View className="space-y-1">
+            <View className="flex-row items-center gap-2 mb-1">
+              <Text className="text-blue-400">•</Text>
+              <Text className="text-blue-300 text-sm">حداقل ۸ کاراکتر</Text>
+            </View>
+            <View className="flex-row items-center gap-2 mb-1">
+              <Text className="text-blue-400">•</Text>
+              <Text className="text-blue-300 text-sm">یک حرف بزرگ انگلیسی</Text>
+            </View>
+            <View className="flex-row items-center gap-2 mb-1">
+              <Text className="text-blue-400">•</Text>
+              <Text className="text-blue-300 text-sm">یک حرف کوچک انگلیسی</Text>
+            </View>
+            <View className="flex-row items-center gap-2 mb-1">
+              <Text className="text-blue-400">•</Text>
+              <Text className="text-blue-300 text-sm">یک عدد</Text>
+            </View>
+            <View className="flex-row items-center gap-2">
+              <Text className="text-blue-400">•</Text>
+              <Text className="text-blue-300 text-sm">یک کاراکتر ویژه (!@#$%^&*...)</Text>
+            </View>
+          </View>
+        </View>
 
-        // Check password confirmation
-        if (password !== confirmPassword) {
-          toast.error("رمزهای عبور مطابقت ندارند");
-          setLoading(false);
-          return;
-        }
+        {/* Password Field */}
+        <View>
+          <Text className="text-gray-300 mb-2 font-medium">رمز عبور</Text>
+          <TextInput
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (text.length > 0) {
+                const errors = validatePassword(text);
+                setPasswordErrors(errors);
+              } else {
+                setPasswordErrors([]);
+              }
+            }}
+            secureTextEntry
+            placeholder="رمز عبور خود را وارد کنید"
+            placeholderTextColor="#6b7280"
+            className="auth-input-field"
+            editable={!loading}
+          />
+        </View>
 
-        // Clear any previous errors
-        setPasswordErrors([]);
-
-        signIn("password", { email, password, flow: "signUp" })
-          .then(() => {
-            navigate("/");
-          })
-          .catch((error) => {
-            console.error(error);
-            toast.error("نمی‌توان حساب ایجاد کرد");
-          })
-          .finally(() => setLoading(false));
-      }}
-    >
-      <label htmlFor="email" className="text-gray-300">ایمیل</label>
-      <input
-        name="email"
-        id="email"
-        type="email"
-        className="auth-input-field"
-        required
-        disabled={loading}
-      />
-      <label htmlFor="password" className="text-gray-300">رمز عبور</label>
-      <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3 mb-2">
-        <p className="text-blue-400 text-sm font-semibold mb-2">معیارهای رمز عبور:</p>
-        <ul className="text-blue-300 text-sm space-y-1">
-          <li className="flex items-center gap-2">
-            <span className="text-blue-400">•</span>
-            حداقل ۸ کاراکتر
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-blue-400">•</span>
-            یک حرف بزرگ انگلیسی
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-blue-400">•</span>
-            یک حرف کوچک انگلیسی
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-blue-400">•</span>
-            یک عدد
-          </li>
-          <li className="flex items-center gap-2">
-            <span className="text-blue-400">•</span>
-            یک کاراکتر ویژه (!@#$%^&*...)
-          </li>
-        </ul>
-      </div>
-      <input
-        name="password"
-        id="password"
-        type="password"
-        className="auth-input-field"
-        required
-        disabled={loading}
-        onChange={(e) => {
-          if (e.target.value.length > 0) {
-            const errors = validatePassword(e.target.value);
-            setPasswordErrors(errors);
-          } else {
-            setPasswordErrors([]);
-          }
-        }}
-      />
-      {passwordErrors.length > 0 && (
-        <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-3 mt-2">
-          <p className="text-red-400 text-sm font-semibold mb-2">رمز عبور باید شامل موارد زیر باشد:</p>
-          <ul className="text-red-300 text-sm space-y-1">
-            {passwordErrors.map((error, index) => (
-              <li key={index} className="flex items-center gap-2">
-                <span className="text-red-400">•</span>
-                {error}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      <label htmlFor="confirmPassword" className="text-gray-300">تأیید رمز عبور</label>
-      <input
-        name="confirmPassword"
-        id="confirmPassword"
-        type="password"
-        className="auth-input-field"
-        required
-        disabled={loading}
-      />
-      <button type="submit" className="auth-button" disabled={loading}>
-        {loading ? (
-          <div className="flex items-center justify-center gap-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-            <span>در حال ایجاد حساب...</span>
-          </div>
-        ) : (
-          "ثبت نام"
+        {passwordErrors.length > 0 && (
+          <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+            <Text className="text-red-400 text-sm font-semibold mb-2">رمز عبور باید شامل موارد زیر باشد:</Text>
+            <View className="space-y-1">
+              {passwordErrors.map((error, index) => (
+                <View key={index} className="flex-row items-center gap-2 mb-1">
+                  <Text className="text-red-400">•</Text>
+                  <Text className="text-red-300 text-sm">{error}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         )}
-      </button>
-    </form>
+
+        {/* Confirm Password Field */}
+        <View>
+          <Text className="text-gray-300 mb-2 font-medium">تأیید رمز عبور</Text>
+          <TextInput
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            placeholder="رمز عبور را دوباره وارد کنید"
+            placeholderTextColor="#6b7280"
+            className="auth-input-field"
+            editable={!loading}
+          />
+        </View>
+
+        <TouchableOpacity onPress={handleSubmit} className="auth-button mt-2" disabled={loading}>
+          {loading ? (
+            <View className="flex-row items-center justify-center gap-2">
+              <ActivityIndicator size="small" color="#fff" />
+              <Text className="text-white font-semibold text-base">در حال ایجاد حساب...</Text>
+            </View>
+          ) : (
+            <Text className="text-white font-semibold text-base">ثبت نام</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }

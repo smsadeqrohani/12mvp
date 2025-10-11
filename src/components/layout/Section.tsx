@@ -1,39 +1,43 @@
 import { ReactNode } from "react";
+import { View, ViewStyle } from "react-native";
+
+type SectionVariant = "default" | "glass" | "card";
+type SectionPadding = "none" | "sm" | "md" | "lg";
 
 interface SectionProps {
   children: ReactNode;
-  variant?: "default" | "card" | "glass";
-  padding?: "none" | "sm" | "md" | "lg";
+  variant?: SectionVariant;
+  padding?: SectionPadding;
   className?: string;
+  style?: ViewStyle;
 }
 
-/**
- * Section - Reusable section/container component
- * Provides consistent styling for content sections
- */
-export function Section({ 
-  children, 
-  variant = "default",
+const variantClasses: Record<SectionVariant, string> = {
+  default: "bg-background-light/40",
+  glass: "bg-background-light/60 backdrop-blur-sm",
+  card: "bg-background-light border border-gray-700/30",
+};
+
+const paddingClasses: Record<SectionPadding, string> = {
+  none: "p-0",
+  sm: "p-4",
+  md: "p-6",
+  lg: "p-8",
+};
+
+export function Section({
+  children,
+  variant = "glass",
   padding = "md",
-  className = "" 
+  className = "",
+  style,
 }: SectionProps) {
-  const variantClasses = {
-    default: "",
-    card: "bg-background-light/60 rounded-2xl border border-gray-700/30",
-    glass: "bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30",
-  };
-
-  const paddingClasses = {
-    none: "",
-    sm: "p-4",
-    md: "p-6",
-    lg: "p-8",
-  };
-
   return (
-    <div className={`${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}>
+    <View
+      className={`rounded-2xl ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`}
+      style={style}
+    >
       {children}
-    </div>
+    </View>
   );
 }
-

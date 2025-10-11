@@ -1,60 +1,80 @@
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView, ScrollView } from "react-native";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { toast } from "../../../lib/toast";
+import { useRouter } from "expo-router";
 
 export function ProfileSetup() {
   const createProfile = useMutation(api.auth.createProfile);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = () => {
+    setLoading(true);
+
+    createProfile({ name })
+      .then(() => {
+        toast.success("پروفایل ایجاد شد!");
+        router.replace("/");
+      })
+      .catch((error) => {
+        console.error(error);
+        toast.error("نمی‌توان پروفایل ایجاد کرد");
+      })
+      .finally(() => setLoading(false));
+  };
 
   return (
-    <div className="text-center">
-      <h2 className="text-2xl font-bold text-accent mb-4">پروفایل خود را تکمیل کنید</h2>
-      <p className="text-gray-300 mb-6">چطور شما را صدا کنیم؟</p>
-      
-      <form
-        className="flex flex-col gap-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setLoading(true);
-          const formData = new FormData(event.currentTarget);
-          const name = formData.get("name") as string;
-
-          createProfile({ name })
-            .then(() => {
-              toast.success("پروفایل ایجاد شد!");
-              navigate("/");
-            })
-            .catch((error) => {
-              console.error(error);
-              toast.error("نمی‌توان پروفایل ایجاد کرد");
-            })
-            .finally(() => setLoading(false));
-        }}
+    <SafeAreaView className="flex-1 bg-background">
+      <ScrollView 
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}
       >
-        <label htmlFor="name" className="text-gray-200">نام شما</label>
-        <input
-          name="name"
-          id="name"
-          type="text"
-          className="auth-input-field"
-          placeholder="نام خود را وارد کنید"
-          required
-          disabled={loading}
-        />
-        <button type="submit" className="auth-button" disabled={loading}>
-          {loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              <span>در حال ایجاد پروفایل...</span>
-            </div>
-          ) : (
-            "ادامه"
-          )}
-        </button>
-      </form>
-    </div>
+        <View className="max-w-md w-full mx-auto">
+          {/* Header */}
+          <View className="items-center mb-10">
+            <View className="bg-accent/20 rounded-full p-6 mb-6">
+              <Text className="text-5xl">👤</Text>
+            </View>
+            <Text className="text-4xl font-bold text-accent mb-3 text-center">
+              پروفایل خود را تکمیل کنید
+            </Text>
+            <Text className="text-lg text-gray-300 text-center">
+              چطور شما را صدا کنیم؟
+            </Text>
+          </View>
+
+          {/* Form Container */}
+          <View className="bg-background-light rounded-2xl p-6 border border-gray-700 shadow-lg">
+            <View className="flex flex-col gap-4">
+              <View>
+                <Text className="text-gray-300 mb-2 font-medium">نام شما</Text>
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  className="auth-input-field"
+                  placeholder="نام و نام خانوادگی"
+                  placeholderTextColor="#6b7280"
+                  editable={!loading}
+                  autoFocus
+                />
+              </View>
+              <TouchableOpacity onPress={handleSubmit} className="auth-button mt-2" disabled={loading}>
+                {loading ? (
+                  <View className="flex-row items-center justify-center gap-2">
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text className="text-white font-semibold text-base">در حال ایجاد پروفایل...</Text>
+                  </View>
+                ) : (
+                  <Text className="text-white font-semibold text-base">ادامه</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

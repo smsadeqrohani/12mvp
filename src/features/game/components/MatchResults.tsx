@@ -1,6 +1,8 @@
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { Ionicons } from "@expo/vector-icons";
 
 interface MatchResultsProps {
   matchId: Id<"matches">;
@@ -13,33 +15,33 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
 
   if (!matchResults || !userProfile) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#ff701a" />
+      </View>
     );
   }
 
   // Show waiting message if match is not completed yet or result is not available
   if (!matchResults.isCompleted || !matchResults.result) {
     return (
-      <div className="w-full max-w-none px-6 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-8 text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-accent mx-auto mb-6"></div>
-            <h2 className="text-2xl font-bold text-white mb-4">
+      <View className="w-full px-6 py-8">
+        <View className="max-w-2xl mx-auto">
+          <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-8 items-center">
+            <ActivityIndicator size="large" color="#ff701a" className="mb-6" />
+            <Text className="text-2xl font-bold text-white mb-4">
               منتظر سایر بازیکنان...
-            </h2>
-            <p className="text-gray-300 mb-6">
+            </Text>
+            <Text className="text-gray-300 mb-6 text-center">
               شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
-            </p>
-            <div className="bg-accent/20 rounded-lg p-4 border border-accent/30">
-              <p className="text-accent font-semibold">
+            </Text>
+            <View className="bg-accent/20 rounded-lg p-4 border border-accent/30">
+              <Text className="text-accent font-semibold text-center">
                 نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
     );
   }
 
@@ -65,258 +67,241 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
   };
 
   return (
-    <div className="w-full max-w-none px-6 py-8 space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-full text-xl font-bold mb-4 ${
-          isDraw 
-            ? "bg-yellow-600/20 text-yellow-400 border border-yellow-500/30"
-            : isWinner 
-            ? "bg-green-600/20 text-green-400 border border-green-500/30"
-            : "bg-red-600/20 text-red-400 border border-red-500/30"
-        }`}>
-          {isDraw ? (
-            <>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              مساوی!
-            </>
-          ) : isWinner ? (
-            <>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              برنده شدید!
-            </>
-          ) : (
-            <>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              باختید
-            </>
-          )}
-        </div>
-        
-        <h1 className="text-3xl font-bold text-accent mb-2">
-          نتایج مسابقه
-        </h1>
-        <p className="text-gray-300">
-          مسابقه در {new Date(match.completedAt!).toLocaleString('fa-IR')} به پایان رسید
-        </p>
-      </div>
-
-      {/* Score Comparison */}
-      <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-6">
-        <h2 className="text-xl font-semibold text-white mb-6 text-center">
-          مقایسه امتیازات
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Current User */}
-          <div className={`p-6 rounded-xl border-2 ${
-            isWinner 
-              ? "bg-green-600/10 border-green-500/30" 
-              : isDraw 
-              ? "bg-yellow-600/10 border-yellow-500/30"
-              : "bg-red-600/10 border-red-500/30"
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <View className="w-full px-6 py-8 space-y-6">
+        {/* Header */}
+        <View className="items-center">
+          <View className={`flex-row items-center gap-3 px-6 py-3 rounded-full mb-4 border ${
+            isDraw 
+              ? "bg-yellow-600/20 border-yellow-500/30"
+              : isWinner 
+              ? "bg-green-600/20 border-green-500/30"
+              : "bg-red-600/20 border-red-500/30"
           }`}>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-accent/20 to-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-accent font-bold text-xl">
-                  {currentUserParticipant?.profile?.name[0] || "?"}
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                {currentUserParticipant?.profile?.name || "شما"}
-              </h3>
-              <div className="text-3xl font-bold text-accent mb-2">
-                {currentUserParticipant?.totalScore || 0}
-              </div>
-              <p className="text-gray-400 text-sm mb-4">امتیاز</p>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">دقت:</span>
-                  <span className="text-white font-semibold">
-                    {getAccuracy(currentUserParticipant)}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">زمان کل:</span>
-                  <span className="text-white font-semibold">
-                    {currentUserParticipant?.totalTime ? formatTime(currentUserParticipant.totalTime) : "محاسبه نشده"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">میانگین زمان:</span>
-                  <span className="text-white font-semibold">
-                    {currentUserParticipant?.totalTime ? formatTime(Math.round(currentUserParticipant.totalTime / 5)) : "محاسبه نشده"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+            <Ionicons 
+              name={isDraw ? "time-outline" : isWinner ? "trophy" : "close-circle"} 
+              size={24} 
+              color={isDraw ? "#facc15" : isWinner ? "#4ade80" : "#f87171"}
+            />
+            <Text className={`text-xl font-bold ${
+              isDraw ? "text-yellow-400" : isWinner ? "text-green-400" : "text-red-400"
+            }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              {isDraw ? "مساوی!" : isWinner ? "برنده شدید!" : "باختید"}
+            </Text>
+          </View>
+          
+          <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            نتایج مسابقه
+          </Text>
+          <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            مسابقه در {new Date(match.completedAt!).toLocaleString('fa-IR')} به پایان رسید
+          </Text>
+        </View>
 
-          {/* Opponent */}
-          <div className={`p-6 rounded-xl border-2 ${
-            !isWinner && !isDraw
-              ? "bg-green-600/10 border-green-500/30" 
-              : isDraw
-              ? "bg-yellow-600/10 border-yellow-500/30"
-              : "bg-red-600/10 border-red-500/30"
-          }`}>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-gray-600/20 to-gray-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-gray-400 font-bold text-xl">
-                  {opponentParticipant?.profile?.name[0] || "?"}
-                </span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
-                {opponentParticipant?.profile?.name || "حریف"}
-              </h3>
-              <div className="text-3xl font-bold text-gray-400 mb-2">
-                {opponentParticipant?.totalScore || 0}
-              </div>
-              <p className="text-gray-400 text-sm mb-4">امتیاز</p>
-              
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">دقت:</span>
-                  <span className="text-white font-semibold">
-                    {getAccuracy(opponentParticipant)}%
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">زمان کل:</span>
-                  <span className="text-white font-semibold">
-                    {opponentParticipant?.totalTime ? formatTime(opponentParticipant.totalTime) : "محاسبه نشده"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">میانگین زمان:</span>
-                  <span className="text-white font-semibold">
-                    {opponentParticipant?.totalTime ? formatTime(Math.round(opponentParticipant.totalTime / 5)) : "محاسبه نشده"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Score Comparison */}
+        <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6">
+          <Text className="text-xl font-semibold text-white mb-6 text-center">
+            مقایسه امتیازات
+          </Text>
+          
+          <View className="space-y-6">
+            {/* Current User */}
+            <View className={`p-6 rounded-xl border-2 ${
+              isWinner 
+                ? "bg-green-600/10 border-green-500/30" 
+                : isDraw 
+                ? "bg-yellow-600/10 border-yellow-500/30"
+                : "bg-red-600/10 border-red-500/30"
+            }`}>
+              <View className="items-center">
+                <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
+                  <Text className="text-accent font-bold text-xl">
+                    {currentUserParticipant?.profile?.name[0] || "?"}
+                  </Text>
+                </View>
+                <Text className="text-xl font-semibold text-white mb-2">
+                  {currentUserParticipant?.profile?.name || "شما"}
+                </Text>
+                <Text className="text-3xl font-bold text-accent mb-2">
+                  {currentUserParticipant?.totalScore || 0}
+                </Text>
+                <Text className="text-gray-400 text-sm mb-4">امتیاز</Text>
+                
+                <View className="space-y-2 w-full">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">دقت:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {getAccuracy(currentUserParticipant)}%
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">زمان کل:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {currentUserParticipant?.totalTime ? formatTime(currentUserParticipant.totalTime) : "محاسبه نشده"}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">میانگین زمان:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {currentUserParticipant?.totalTime ? formatTime(Math.round(currentUserParticipant.totalTime / 5)) : "محاسبه نشده"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
 
-      {/* Detailed Results */}
-      <div className="bg-background-light/60 backdrop-blur-sm rounded-2xl border border-gray-700/30 p-6">
-        <h2 className="text-xl font-semibold text-white mb-6 text-center">
-          جزئیات پاسخ‌ها
-        </h2>
-        
-        <div className="space-y-4">
-          {questions.map((question, index) => {
-            const userAnswer = currentUserParticipant?.answers?.find(
-              (a: any) => a.questionId === question._id
-            );
-            const opponentAnswer = opponentParticipant?.answers?.find(
-              (a: any) => a.questionId === question._id
-            );
-            
-            return (
-              <div key={question._id} className="bg-gray-800/50 rounded-xl p-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                    {index + 1}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <h3 className="text-white font-semibold mb-2">
-                      {question.questionText}
-                    </h3>
+            {/* Opponent */}
+            <View className={`p-6 rounded-xl border-2 ${
+              !isWinner && !isDraw
+                ? "bg-green-600/10 border-green-500/30" 
+                : isDraw
+                ? "bg-yellow-600/10 border-yellow-500/30"
+                : "bg-red-600/10 border-red-500/30"
+            }`}>
+              <View className="items-center">
+                <View className="w-16 h-16 bg-gray-600/20 rounded-full items-center justify-center mb-4">
+                  <Text className="text-gray-400 font-bold text-xl">
+                    {opponentParticipant?.profile?.name[0] || "?"}
+                  </Text>
+                </View>
+                <Text className="text-xl font-semibold text-white mb-2">
+                  {opponentParticipant?.profile?.name || "حریف"}
+                </Text>
+                <Text className="text-3xl font-bold text-gray-400 mb-2">
+                  {opponentParticipant?.totalScore || 0}
+                </Text>
+                <Text className="text-gray-400 text-sm mb-4">امتیاز</Text>
+                
+                <View className="space-y-2 w-full">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">دقت:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {getAccuracy(opponentParticipant)}%
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">زمان کل:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {opponentParticipant?.totalTime ? formatTime(opponentParticipant.totalTime) : "محاسبه نشده"}
+                    </Text>
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-300 text-sm">میانگین زمان:</Text>
+                    <Text className="text-white font-semibold text-sm">
+                      {opponentParticipant?.totalTime ? formatTime(Math.round(opponentParticipant.totalTime / 5)) : "محاسبه نشده"}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Detailed Results */}
+        <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6">
+          <Text className="text-xl font-semibold text-white mb-6 text-center">
+            جزئیات پاسخ‌ها
+          </Text>
+          
+          <View className="space-y-4">
+            {questions.map((question, index) => {
+              const userAnswer = currentUserParticipant?.answers?.find(
+                (a: any) => a.questionId === question._id
+              );
+              const opponentAnswer = opponentParticipant?.answers?.find(
+                (a: any) => a.questionId === question._id
+              );
+              
+              return (
+                <View key={question._id} className="bg-gray-800/50 rounded-xl p-4">
+                  <View className="flex-row items-start gap-4">
+                    <View className="w-8 h-8 bg-accent rounded-full items-center justify-center">
+                      <Text className="text-white font-bold">{index + 1}</Text>
+                    </View>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* User's Answer */}
-                      <div className="space-y-2">
-                        <h4 className="text-accent font-semibold text-sm">پاسخ شما:</h4>
-                        <div className={`p-3 rounded-lg ${
-                          userAnswer?.isCorrect 
-                            ? "bg-green-600/20 border border-green-500/30" 
-                            : "bg-red-600/20 border border-red-500/30"
-                        }`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            {userAnswer?.isCorrect ? (
-                              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            )}
-                            <span className={`text-sm font-semibold ${
-                              userAnswer?.isCorrect ? "text-green-400" : "text-red-400"
-                            }`}>
-                              گزینه {userAnswer?.selectedAnswer || "ندارد"}
-                            </span>
-                          </div>
-                          <p className="text-gray-300 text-sm">
-                            زمان: {userAnswer?.timeSpent ? formatTime(userAnswer.timeSpent) : "ثبت نشده"}
-                          </p>
-                        </div>
-                      </div>
+                    <View className="flex-1">
+                      <Text className="text-white font-semibold mb-2">
+                        {question.questionText}
+                      </Text>
                       
-                      {/* Opponent's Answer */}
-                      <div className="space-y-2">
-                        <h4 className="text-gray-400 font-semibold text-sm">پاسخ حریف:</h4>
-                        <div className={`p-3 rounded-lg ${
-                          opponentAnswer?.isCorrect 
-                            ? "bg-green-600/20 border border-green-500/30" 
-                            : "bg-red-600/20 border border-red-500/30"
-                        }`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            {opponentAnswer?.isCorrect ? (
-                              <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            ) : (
-                              <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            )}
-                            <span className={`text-sm font-semibold ${
-                              opponentAnswer?.isCorrect ? "text-green-400" : "text-red-400"
-                            }`}>
-                              گزینه {opponentAnswer?.selectedAnswer || "ندارد"}
-                            </span>
-                          </div>
-                          <p className="text-gray-300 text-sm">
-                            زمان: {opponentAnswer?.timeSpent ? formatTime(opponentAnswer.timeSpent) : "ثبت نشده"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-3 p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg">
-                      <p className="text-blue-400 text-sm">
-                        <span className="font-semibold">پاسخ صحیح:</span> گزینه {question.rightAnswer}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                      <View className="space-y-4">
+                        {/* User's Answer */}
+                        <View>
+                          <Text className="text-accent font-semibold text-sm mb-2">پاسخ شما:</Text>
+                          <View className={`p-3 rounded-lg border ${
+                            userAnswer?.isCorrect 
+                              ? "bg-green-600/20 border-green-500/30" 
+                              : "bg-red-600/20 border-red-500/30"
+                          }`}>
+                            <View className="flex-row items-center gap-2 mb-1">
+                              <Ionicons 
+                                name={userAnswer?.isCorrect ? "checkmark-circle" : "close-circle"}
+                                size={16}
+                                color={userAnswer?.isCorrect ? "#4ade80" : "#f87171"}
+                              />
+                              <Text className={`text-sm font-semibold ${
+                                userAnswer?.isCorrect ? "text-green-400" : "text-red-400"
+                              }`}>
+                                گزینه {userAnswer?.selectedAnswer || "ندارد"}
+                              </Text>
+                            </View>
+                            <Text className="text-gray-300 text-sm">
+                              زمان: {userAnswer?.timeSpent ? formatTime(userAnswer.timeSpent) : "ثبت نشده"}
+                            </Text>
+                          </View>
+                        </View>
+                        
+                        {/* Opponent's Answer */}
+                        <View>
+                          <Text className="text-gray-400 font-semibold text-sm mb-2">پاسخ حریف:</Text>
+                          <View className={`p-3 rounded-lg border ${
+                            opponentAnswer?.isCorrect 
+                              ? "bg-green-600/20 border-green-500/30" 
+                              : "bg-red-600/20 border-red-500/30"
+                          }`}>
+                            <View className="flex-row items-center gap-2 mb-1">
+                              <Ionicons 
+                                name={opponentAnswer?.isCorrect ? "checkmark-circle" : "close-circle"}
+                                size={16}
+                                color={opponentAnswer?.isCorrect ? "#4ade80" : "#f87171"}
+                              />
+                              <Text className={`text-sm font-semibold ${
+                                opponentAnswer?.isCorrect ? "text-green-400" : "text-red-400"
+                              }`}>
+                                گزینه {opponentAnswer?.selectedAnswer || "ندارد"}
+                              </Text>
+                            </View>
+                            <Text className="text-gray-300 text-sm">
+                              زمان: {opponentAnswer?.timeSpent ? formatTime(opponentAnswer.timeSpent) : "ثبت نشده"}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                      
+                      <View className="mt-3 p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg">
+                        <Text className="text-blue-400 text-sm">
+                          <Text className="font-semibold">پاسخ صحیح:</Text> گزینه {question.rightAnswer}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
 
-      {/* Actions */}
-      <div className="text-center">
-        <button
-          onClick={onPlayAgain}
-          className="px-8 py-4 bg-accent hover:bg-accent-hover text-white rounded-xl font-semibold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-        >
-          بازگشت به خانه
-        </button>
-      </div>
-    </div>
+        {/* Actions */}
+        <View className="items-center">
+          <TouchableOpacity
+            onPress={onPlayAgain}
+            className="px-8 py-4 bg-accent rounded-xl"
+            activeOpacity={0.7}
+          >
+            <Text className="text-white font-semibold text-lg">بازگشت به خانه</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </ScrollView>
   );
 }

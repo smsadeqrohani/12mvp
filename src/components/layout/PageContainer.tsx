@@ -1,9 +1,13 @@
 import { ReactNode } from "react";
+import { ScrollView, View, ViewStyle } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface PageContainerProps {
   children: ReactNode;
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
   className?: string;
+  scrollable?: boolean;
+  style?: ViewStyle;
 }
 
 /**
@@ -13,7 +17,9 @@ interface PageContainerProps {
 export function PageContainer({ 
   children, 
   maxWidth = "none",
-  className = "" 
+  className = "",
+  scrollable = true,
+  style,
 }: PageContainerProps) {
   const maxWidthClasses = {
     sm: "max-w-sm",
@@ -25,10 +31,26 @@ export function PageContainer({
     none: "max-w-none",
   };
 
-  return (
-    <div className={`w-full ${maxWidthClasses[maxWidth]} px-6 py-8 ${className}`}>
+  const content = (
+    <View className={`w-full ${maxWidthClasses[maxWidth]} px-6 py-8 ${className}`} style={style}>
       {children}
-    </div>
+    </View>
+  );
+
+  if (scrollable) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+          {content}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-background">
+      {content}
+    </SafeAreaView>
   );
 }
 
