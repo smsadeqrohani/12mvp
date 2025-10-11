@@ -19,7 +19,10 @@ export default {
       bundleIdentifier: "com.12mvp.app",
       infoPlist: {
         UIViewControllerBasedStatusBarAppearance: true,
-        UIStatusBarStyle: "UIStatusBarStyleLightContent"
+        UIStatusBarStyle: "UIStatusBarStyleLightContent",
+        // Enable RTL layout
+        CFBundleDevelopmentRegion: "fa",
+        CFBundleAllowMixedLocalizations: true
       }
     },
     android: {
@@ -28,7 +31,9 @@ export default {
         backgroundColor: "#06202F"
       },
       package: "com.mvp12.app",
-      permissions: []
+      permissions: [],
+      // Enable RTL support for Android
+      supportsRtl: true
     },
     web: {
       favicon: "./assets/favicon.png",

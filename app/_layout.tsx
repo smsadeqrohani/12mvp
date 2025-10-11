@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { View, I18nManager, Text, TextInput } from "react-native";
+import { View, I18nManager, Text, TextInput, Platform } from "react-native";
 import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { useFonts } from "expo-font";
@@ -18,9 +18,17 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL || "");
 // Prevent splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync();
 
-// Enable RTL
-if (!I18nManager.isRTL) {
-  I18nManager.forceRTL(true);
+// Enable RTL for mobile platforms
+if (Platform.OS !== 'web') {
+  // Enable RTL support
+  I18nManager.allowRTL(true);
+  
+  // Force RTL layout if not already set
+  if (!I18nManager.isRTL) {
+    I18nManager.forceRTL(true);
+    // Note: On native platforms, this requires an app restart to take effect
+    // The user may need to close and reopen the app the first time
+  }
 }
 
 // Configure NativeWind dark mode
@@ -94,7 +102,10 @@ export default function RootLayout() {
       <ConvexProvider client={convex}>
         <ConvexAuthProvider client={convex} storage={AsyncStorage}>
           <SafeAreaProvider>
-            <View className="flex-1 bg-background">
+            <View 
+              className="flex-1 bg-background" 
+              style={Platform.OS !== 'web' ? { direction: 'rtl' } : undefined}
+            >
               <RootLayoutNav />
               <Toast config={toastConfig} />
             </View>

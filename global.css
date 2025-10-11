@@ -59,6 +59,36 @@
   transform: scaleX(-1);
 }
 
+/* Ensure RTL direction is applied */
+@layer base {
+  * {
+    direction: rtl;
+  }
+}
+
+/* RTL-aware flex utilities for React Native */
+@layer utilities {
+  .flex-row-rtl {
+    flex-direction: row;
+  }
+  
+  .items-start-rtl {
+    align-items: flex-start;
+  }
+  
+  .items-end-rtl {
+    align-items: flex-end;
+  }
+  
+  .text-start {
+    text-align: start;
+  }
+  
+  .text-end {
+    text-align: end;
+  }
+}
+
 /* Auth form styles */
 @layer components {
   .auth-input-field {
