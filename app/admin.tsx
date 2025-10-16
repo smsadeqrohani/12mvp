@@ -7,8 +7,9 @@ import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
 import { QuestionsForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
-import { PaginationControls } from "../src/components/ui";
+import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
+import type { Column } from "../src/components/ui/DataTableRN";
 
 type TabType = "users" | "questions" | "files" | "matches";
 
@@ -30,7 +31,7 @@ interface QuestionWithAnswer {
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { isAdminReady, width, orientation } = useResponsive();
+  const { isAdminReady, width, orientation, touchTargetSize, isTouchDevice } = useResponsive();
   const [activeTab, setActiveTab] = useState<TabType>("users");
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -196,6 +197,7 @@ export default function AdminScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             className="mt-8 px-6 py-3 bg-accent active:bg-accent-hover rounded-lg"
+            style={{ minHeight: touchTargetSize }}
             activeOpacity={0.7}
           >
             <Text className="text-white font-semibold text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -397,190 +399,173 @@ export default function AdminScreen() {
     }
   };
 
-  const renderUsersTab = () => (
-    <View className="flex-1">
-      <View className="mb-6">
-        <View className="flex-row items-center justify-between mb-4">
-          <View>
-            <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-              مدیریت کاربران
-            </Text>
-            <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-              مدیریت و تنظیم کاربران سیستم
+  const renderUsersTab = () => {
+    // Show skeleton while loading
+    if (allUsers === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    // Define table columns
+    const usersColumns: Column<typeof allUsers.page[0]>[] = [
+      {
+        key: 'name',
+        header: 'نام کاربر',
+        render: (user) => (
+          <View className="flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
+              <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {user.name[0]}
+              </Text>
+            </View>
+            <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              {user.name}
             </Text>
           </View>
-          <View className="flex-row items-center gap-3">
-            <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
-              <Text className="text-gray-400 text-sm">صفحه:</Text>
-              <Text className="text-white font-semibold mr-2">{usersPage}</Text>
+        ),
+      },
+      {
+        key: 'email',
+        header: 'ایمیل',
+        render: (user) => (
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {user.email}
+          </Text>
+        ),
+      },
+      {
+        key: 'emailStatus',
+        header: 'وضعیت ایمیل',
+        render: (user) => (
+          <View className={`px-3 py-1 rounded-full w-fit ${
+            user.emailVerified
+              ? "bg-green-900/30 border border-green-800/30"
+              : "bg-yellow-900/30 border border-yellow-800/30"
+          }`}>
+            <Text className={`text-xs font-medium ${
+              user.emailVerified ? "text-green-400" : "text-yellow-400"
+            }`}>
+              {user.emailVerified ? "تأیید شده" : "تأیید نشده"}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        key: 'adminStatus',
+        header: 'دسترسی مدیر',
+        render: (user) => (
+          <TouchableOpacity
+            onPress={() => handleToggleAdmin(user.userId, !user.isAdmin)}
+            className="flex-row items-center gap-3"
+            activeOpacity={0.7}
+          >
+            <View className={`relative inline-block w-12 h-6 rounded-full ${
+              user.isAdmin ? "bg-accent" : "bg-gray-600"
+            }`}>
+              <View className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
+                user.isAdmin ? "translate-x-6" : "translate-x-0.5"
+              }`} />
+            </View>
+            <Text className={`text-sm font-medium ${
+              user.isAdmin ? "text-accent" : "text-gray-400"
+            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              {user.isAdmin ? "مدیر" : "کاربر عادی"}
+            </Text>
+          </TouchableOpacity>
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'عملیات',
+        width: 256,
+        render: (user) => (
+          <TouchableOpacity
+            onPress={() => handleResetPassword(user.userId, user.name)}
+            className="px-4 py-3 bg-red-600/20 rounded-lg border border-red-800/30"
+            style={{ minHeight: touchTargetSize }}
+            activeOpacity={0.7}
+          >
+            <Text className="text-red-400 text-sm font-semibold text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              بازنشانی رمز عبور
+            </Text>
+          </TouchableOpacity>
+        ),
+      },
+    ];
+
+    return (
+      <View className="flex-1">
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت کاربران
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مدیریت و تنظیم کاربران سیستم
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">صفحه:</Text>
+                <Text className="text-white font-semibold mr-2">{usersPage.toLocaleString('fa-IR')}</Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
       
-      {/* Users Table */}
-      <View className="bg-gradient-to-br from-background-light/80 to-background-light/40 backdrop-blur-sm rounded-2xl border border-gray-700/30 overflow-hidden shadow-2xl shadow-black/20">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="min-w-full">
-            {/* Table Header */}
-            <View className="bg-gradient-to-r from-gray-800/80 to-gray-700/80 border-b border-gray-600/50 flex-row">
-              <View className="flex-1 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  نام کاربر
-                </Text>
-              </View>
-              <View className="flex-1 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  ایمیل
-                </Text>
-              </View>
-              <View className="flex-1 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  وضعیت ایمیل
-                </Text>
-              </View>
-              <View className="flex-1 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  دسترسی مدیر
-                </Text>
-              </View>
-              <View className="w-64 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  عملیات
-                </Text>
-              </View>
-            </View>
-            
-            {/* Table Body */}
-            <View>
-              {allUsers?.page?.map((user, index) => (
-                <View
-                  key={user.userId}
-                  className={`border-b border-gray-700/30 ${
-                    index % 2 === 0 ? "bg-gray-800/10" : "bg-gray-800/5"
-                  }`}
-                >
-                  <View className="flex-row items-center min-h-[80px]">
-                    {/* Name */}
-                    <View className="flex-1 px-6 py-4">
-                      <View className="flex-row items-center gap-3">
-                        <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-                          <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                            {user.name[0]}
-                          </Text>
-                        </View>
-                        <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                          {user.name}
-                        </Text>
-                      </View>
-                    </View>
-                    
-                    {/* Email */}
-                    <View className="flex-1 px-6 py-4">
-                      <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                        {user.email}
-                      </Text>
-                    </View>
-                    
-                    {/* Email Status */}
-                    <View className="flex-1 px-6 py-4">
-                      <View className={`px-3 py-1 rounded-full w-fit ${
-                        user.emailVerified
-                          ? "bg-green-900/30 border border-green-800/30"
-                          : "bg-yellow-900/30 border border-yellow-800/30"
-                      }`}>
-                        <Text className={`text-xs font-medium ${
-                          user.emailVerified ? "text-green-400" : "text-yellow-400"
-                        }`}>
-                          {user.emailVerified ? "تأیید شده" : "تأیید نشده"}
-                        </Text>
-                      </View>
-                    </View>
-                    
-                    {/* Admin Status */}
-                    <View className="flex-1 px-6 py-4">
-                      <TouchableOpacity
-                        onPress={() => handleToggleAdmin(user.userId, !user.isAdmin)}
-                        className="flex-row items-center gap-3"
-                        activeOpacity={0.7}
-                      >
-                        <View className={`relative inline-block w-12 h-6 rounded-full ${
-                          user.isAdmin ? "bg-accent" : "bg-gray-600"
-                        }`}>
-                          <View className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ${
-                            user.isAdmin ? "translate-x-6" : "translate-x-0.5"
-                          }`} />
-                        </View>
-                        <Text className={`text-sm font-medium ${
-                          user.isAdmin ? "text-accent" : "text-gray-400"
-                        }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                          {user.isAdmin ? "مدیر" : "کاربر عادی"}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    
-                    {/* Actions */}
-                    <View className="w-64 px-6 py-4">
-                      <TouchableOpacity
-                        onPress={() => handleResetPassword(user.userId, user.name)}
-                        className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 rounded-lg text-sm font-medium transition-all duration-200 border border-red-800/30"
-                        activeOpacity={0.7}
-                      >
-                        <Text className="text-red-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                          بازنشانی رمز عبور
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ))}
-              
-              {allUsers?.page?.length === 0 && (
-                <View className="items-center py-16">
-                  <View className="w-16 h-16 bg-gray-700/50 rounded-full items-center justify-center mb-4">
-                    <Ionicons name="people" size={32} color="#6b7280" />
-                  </View>
-                  <Text className="text-gray-400 text-lg">کاربری یافت نشد</Text>
-                  <Text className="text-gray-500 text-sm mt-1">هنوز هیچ کاربری در سیستم ثبت نشده است</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+        {/* Users Table */}
+        <DataTableRN
+          columns={usersColumns}
+          data={allUsers?.page || []}
+          keyExtractor={(user) => user.userId}
+          emptyState={{
+            icon: <Ionicons name="people" size={32} color="#6b7280" />,
+            title: "کاربری یافت نشد",
+            description: "هنوز هیچ کاربری در سیستم ثبت نشده است",
+          }}
+        />
       
-      <PaginationControls 
-        currentPage={usersPage}
-        isDone={allUsers?.isDone ?? true}
-        onNext={handleNextUsers}
-        onPrev={handlePrevUsers}
-      />
-    </View>
-  );
+        <PaginationControls 
+          currentPage={usersPage}
+          isDone={allUsers?.isDone ?? true}
+          onNext={handleNextUsers}
+          onPrev={handlePrevUsers}
+          isLoading={allUsers === undefined}
+        />
+      </View>
+    );
+  };
 
-  const renderQuestionsTab = () => (
-    <View className="flex-1">
-      <View className="mb-6">
-        <View className="flex-row items-center justify-between mb-4">
-          <View>
-            <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-              مدیریت سؤالات
-            </Text>
-            <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-              مدیریت و تنظیم سؤالات سیستم
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-3">
-            <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
-              <Text className="text-gray-400 text-sm">صفحه:</Text>
-              <Text className="text-white font-semibold mr-2">{questionsPage}</Text>
+  const renderQuestionsTab = () => {
+    // Show skeleton while loading
+    if (allQuestions === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    return (
+      <View className="flex-1">
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت سؤالات
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مدیریت و تنظیم سؤالات سیستم
+              </Text>
             </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">صفحه:</Text>
+                <Text className="text-white font-semibold mr-2">{questionsPage.toLocaleString('fa-IR')}</Text>
+              </View>
             <TouchableOpacity
               onPress={handleCreateQuestion}
-              className="flex-row items-center gap-2 px-4 py-2 bg-accent rounded-lg"
+              className="flex-row items-center gap-2 px-4 py-3 bg-accent rounded-lg"
+              style={{ minHeight: touchTargetSize }}
               activeOpacity={0.7}
             >
-              <Ionicons name="add" size={16} color="#fff" />
+              <Ionicons name="add" size={20} color="#fff" />
               <Text className="text-white text-sm font-semibold">افزودن سؤال</Text>
             </TouchableOpacity>
           </View>
@@ -708,7 +693,8 @@ export default function AdminScreen() {
                       <View className="flex-row items-center gap-2">
                         <TouchableOpacity
                           onPress={() => handleEditQuestion(question)}
-                          className="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                          className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                          style={{ minHeight: touchTargetSize }}
                           activeOpacity={0.7}
                         >
                           <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -717,7 +703,8 @@ export default function AdminScreen() {
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={() => handleDeleteQuestion(question._id)}
-                          className="px-3 py-1.5 bg-red-600/20 border border-red-500/30 rounded-lg"
+                          className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+                          style={{ minHeight: touchTargetSize }}
                           activeOpacity={0.7}
                         >
                           <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -757,9 +744,11 @@ export default function AdminScreen() {
         isDone={allQuestions?.isDone ?? true}
         onNext={handleNextQuestions}
         onPrev={handlePrevQuestions}
+        isLoading={allQuestions === undefined}
       />
     </View>
   );
+  };
 
   const renderFilesTab = () => (
     <View className="flex-1">
@@ -775,23 +764,29 @@ export default function AdminScreen() {
     </View>
   );
 
-  const renderMatchesTab = () => (
-    <View className="flex-1">
-      <View className="mb-6">
-        <View className="flex-row items-center justify-between mb-4">
-          <View>
-            <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-              مدیریت مسابقات
-            </Text>
-            <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-              مشاهده و مدیریت تمام مسابقات
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-3">
-            <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
-              <Text className="text-gray-400 text-sm">صفحه:</Text>
-              <Text className="text-white font-semibold mr-2">{matchesPage}</Text>
+  const renderMatchesTab = () => {
+    // Show skeleton while loading
+    if (allMatches === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    return (
+      <View className="flex-1">
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت مسابقات
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مشاهده و مدیریت تمام مسابقات
+              </Text>
             </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">صفحه:</Text>
+                <Text className="text-white font-semibold mr-2">{matchesPage.toLocaleString('fa-IR')}</Text>
+              </View>
             <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
               <Text className="text-gray-400 text-sm">فعال در این صفحه:</Text>
               <Text className="text-accent font-semibold mr-2">
@@ -963,7 +958,8 @@ export default function AdminScreen() {
                         <View className="flex-row items-center gap-2">
                           <TouchableOpacity
                             onPress={() => handleViewMatch(match._id)}
-                            className="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                            className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                            style={{ minHeight: touchTargetSize }}
                             activeOpacity={0.7}
                           >
                             <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -979,7 +975,8 @@ export default function AdminScreen() {
                                 e.stopPropagation();
                                 handleCancelMatch(match._id);
                               }}
-                              className="px-3 py-1.5 bg-red-600/20 border border-red-500/30 rounded-lg"
+                              className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+                              style={{ minHeight: touchTargetSize }}
                               activeOpacity={0.7}
                             >
                               <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -1013,9 +1010,11 @@ export default function AdminScreen() {
         isDone={allMatches?.isDone ?? true}
         onNext={handleNextMatches}
         onPrev={handlePrevMatches}
+        isLoading={allMatches === undefined}
       />
     </View>
   );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -1138,19 +1137,27 @@ export default function AdminScreen() {
         </View>
 
         {/* Main Content */}
-        <View className="flex-1 px-6 py-6">
+        <ScrollView 
+          className="flex-1" 
+          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 24 }}
+          showsVerticalScrollIndicator={false}
+        >
           {activeTab === "users" && renderUsersTab()}
           {activeTab === "questions" && renderQuestionsTab()}
           {activeTab === "files" && renderFilesTab()}
           {activeTab === "matches" && renderMatchesTab()}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Questions Form Modal */}
       <Modal
         visible={showQuestionForm}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
       >
         <SafeAreaView className="flex-1 bg-background">
           <QuestionsForm

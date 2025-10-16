@@ -1,9 +1,10 @@
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView } from "react-native";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
+import { KeyboardAvoidingContainer } from "../../../components/ui";
 
 export function ProfileSetup() {
   const createProfile = useMutation(api.auth.createProfile);
@@ -28,10 +29,7 @@ export function ProfileSetup() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}
-      >
+      <KeyboardAvoidingContainer className="flex-1 justify-center p-5">
         <View className="max-w-md w-full mx-auto">
           {/* Header */}
           <View className="items-center mb-10">
@@ -74,7 +72,7 @@ export function ProfileSetup() {
             </View>
           </View>
         </View>
-      </ScrollView>
+      </KeyboardAvoidingContainer>
     </SafeAreaView>
   );
 }

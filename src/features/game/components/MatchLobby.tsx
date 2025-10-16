@@ -114,13 +114,13 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
   }
 
   return (
-    <View className="w-full px-6 py-8 space-y-6">
+    <View className="flex-1 w-full px-6 py-8 space-y-6">
       {/* Header */}
       <View className="items-center">
-        <Text className="text-3xl font-bold text-accent mb-2">
+        <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
           مسابقه کویز دو نفره
         </Text>
-        <Text className="text-gray-300">
+        <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
           با حریفان مختلف مسابقه دهید و مهارت‌های خود را محک بزنید
         </Text>
       </View>

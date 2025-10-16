@@ -1,19 +1,19 @@
 import { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
-import { Button } from "../../../components/ui";
+import { Button, SkeletonAdminTab } from "../../../components/ui";
 import { FilePreview } from "./FilePreview";
+import { FileUpload } from "./FileUpload";
 import { PaginationControls } from "../../../components/ui";
 import { Ionicons } from "@expo/vector-icons";
+import { formatFileSize } from "../../../lib/filePicker";
 
 export function FilesTable() {
   const [editingFile, setEditingFile] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [showUploadForm, setShowUploadForm] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
   
   // Pagination state - track cursor history for back navigation
@@ -25,53 +25,15 @@ export function FilesTable() {
   const allFiles = useQuery(api.files.getAllFiles, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: filesCursor },
   });
-  const generateUploadUrl = useMutation(api.questions.generateUploadUrl);
-  const uploadFile = useMutation(api.files.uploadFile);
   const renameFile = useMutation(api.files.renameFile);
   const deleteFile = useMutation(api.files.deleteFile);
 
-  const handleFileUpload = async () => {
-    if (!selectedFile) return;
-
-    try {
-      setIsUploading(true);
-      
-      // Generate upload URL
-      const uploadUrl = await generateUploadUrl();
-      
-      // Upload file
-      const result = await fetch(uploadUrl, {
-        method: "POST",
-        headers: { "Content-Type": selectedFile.type },
-        body: selectedFile,
-      });
-      
-      const { storageId } = await result.json();
-      
-      // Save file metadata
-      await uploadFile({
-        storageId,
-        fileName: selectedFile.name,
-        originalName: selectedFile.name,
-        fileType: selectedFile.type,
-        fileSize: selectedFile.size,
-      });
-      
-      toast.success("فایل با موفقیت آپلود شد");
-      setSelectedFile(null);
-      setShowUploadForm(false);
-      
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error("خطا در آپلود فایل");
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleRename = async (fileId: string, newName: string) => {
     try {
-      await renameFile({ id: fileId, newName });
+      await renameFile({ 
+        fileId: fileId as any,
+        newName 
+      });
       toast.success("نام فایل با موفقیت تغییر کرد");
       setEditingFile(null);
       setEditName("");
@@ -92,12 +54,12 @@ export function FilesTable() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteFile({ id: fileId });
-        toast.success("فایل با موفقیت حذف شد");
-      } catch (error) {
+              await deleteFile({ fileId: fileId as any });
+              toast.success("فایل با موفقیت حذف شد");
+            } catch (error) {
               console.error("Error deleting file:", error);
-        toast.error("خطا در حذف فایل");
-      }
+              toast.error("خطا در حذف فایل");
+            }
           },
         },
       ]
@@ -122,24 +84,12 @@ export function FilesTable() {
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 بایت";
-    const k = 1024;
-    const sizes = ["بایت", "کیلوبایت", "مگابایت", "گیگابایت"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('fa-IR');
   };
 
   if (!allFiles) {
-    return (
-      <View className="flex-1 items-center justify-center p-8">
-        <Text className="text-gray-400">در حال بارگذاری فایل‌ها...</Text>
-      </View>
-    );
+    return <SkeletonAdminTab />;
   }
 
   return (
@@ -158,7 +108,7 @@ export function FilesTable() {
       </View>
 
       {/* Files List */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <View className="flex-1">
         {allFiles.page.length === 0 ? (
           <View className="flex-1 items-center justify-center p-8">
             <Ionicons name="folder-open-outline" size={64} color="#6b7280" />
@@ -224,7 +174,7 @@ export function FilesTable() {
             ))}
           </View>
         )}
-      </ScrollView>
+      </View>
 
       {/* Pagination */}
       {allFiles.page.length > 0 && (
@@ -234,6 +184,7 @@ export function FilesTable() {
             isDone={allFiles.isDone}
           onNext={handleNextFiles}
           onPrev={handlePrevFiles}
+          isLoading={allFiles === undefined}
         />
         </View>
       )}
@@ -242,43 +193,32 @@ export function FilesTable() {
       <Modal
         visible={showUploadForm}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
       >
         <View className="flex-1 bg-background">
           <View className="flex-row items-center justify-between p-4 border-b border-gray-700">
-            <Text className="text-xl font-bold text-white">آپلود فایل</Text>
+            <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              آپلود فایل جدید
+            </Text>
             <TouchableOpacity
-              onPress={() => {
-                setShowUploadForm(false);
-                setSelectedFile(null);
-              }}
+              onPress={() => setShowUploadForm(false)}
               className="w-8 h-8 bg-gray-700/50 rounded-lg items-center justify-center"
             >
               <Ionicons name="close" size={20} color="#9ca3af" />
             </TouchableOpacity>
           </View>
           
-          <View className="flex-1 p-4">
-            <View className="flex-1 items-center justify-center">
-              <Ionicons name="cloud-upload-outline" size={64} color="#6b7280" />
-              <Text className="text-gray-400 text-center mt-4">
-                انتخاب فایل از دستگاه
-              </Text>
-              <Text className="text-gray-500 text-center text-sm mt-2">
-                این قابلیت در نسخه موبایل در دسترس نیست
-              </Text>
-            </View>
-            
-            <View className="mt-6">
-              <Button
-                onPress={() => setShowUploadForm(false)}
-                variant="secondary"
-                size="lg"
-              >
-                بستن
-              </Button>
-            </View>
-          </View>
+          <ScrollView className="flex-1 p-6">
+            <FileUpload 
+              onUploadComplete={() => {
+                setShowUploadForm(false);
+              }}
+            />
+          </ScrollView>
         </View>
       </Modal>
 
@@ -286,7 +226,11 @@ export function FilesTable() {
       <Modal
         visible={editingFile !== null}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
       >
         <View className="flex-1 bg-background">
           <View className="flex-row items-center justify-between p-4 border-b border-gray-700">

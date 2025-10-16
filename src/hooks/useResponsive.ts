@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Dimensions, ScaledSize } from 'react-native';
+import { Dimensions, ScaledSize, Platform } from 'react-native';
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop';
+export type PlatformOS = 'web' | 'ios' | 'android';
 
 export interface ResponsiveInfo {
   width: number;
@@ -13,6 +14,24 @@ export interface ResponsiveInfo {
   isTabletLandscape: boolean;
   isAdminReady: boolean; // iPad landscape or desktop
   orientation: 'portrait' | 'landscape';
+  
+  // Platform detection
+  platform: PlatformOS;
+  isWeb: boolean;
+  isIOS: boolean;
+  isAndroid: boolean;
+  isNative: boolean;
+  
+  // Interaction mode
+  isTouchDevice: boolean;
+  hasMouseSupport: boolean;
+  
+  // UI sizing
+  touchTargetSize: number;
+  
+  // Layout helpers
+  shouldUseCardLayout: boolean; // True for touch devices
+  shouldUseTableLayout: boolean; // True for desktop
 }
 
 /**
@@ -24,6 +43,11 @@ export interface ResponsiveInfo {
  * 
  * Admin panel requires:
  * - iPad in landscape (≥1024px width) or desktop
+ * 
+ * Platform detection:
+ * - Automatically detects web vs native
+ * - Provides touch vs mouse interaction info
+ * - Returns optimal UI sizing for each platform
  */
 export function useResponsive(): ResponsiveInfo {
   const [dimensions, setDimensions] = useState<ScaledSize>(
@@ -56,6 +80,28 @@ export function useResponsive(): ResponsiveInfo {
 
   // Admin panel is ready for iPad landscape or desktop
   const isAdminReady = width >= 1024;
+  
+  // Platform detection
+  const platform = Platform.OS as PlatformOS;
+  const isWeb = Platform.OS === 'web';
+  const isIOS = Platform.OS === 'ios';
+  const isAndroid = Platform.OS === 'android';
+  const isNative = isIOS || isAndroid;
+  
+  // Interaction mode - native is always touch, web depends on screen size
+  const isTouchDevice = isNative || (isWeb && (isMobile || isTablet));
+  const hasMouseSupport = isWeb && isDesktop;
+  
+  // Minimum touch target size based on platform guidelines
+  const touchTargetSize = Platform.select({
+    ios: 44,      // Apple HIG minimum
+    android: 48,  // Material Design minimum
+    web: 36,      // Can be smaller with mouse
+  }) ?? 36;
+  
+  // Layout decision helpers
+  const shouldUseCardLayout = isTouchDevice; // Cards are better for touch
+  const shouldUseTableLayout = hasMouseSupport; // Tables work well with mouse
 
   return {
     width,
@@ -67,6 +113,20 @@ export function useResponsive(): ResponsiveInfo {
     isTabletLandscape,
     isAdminReady,
     orientation,
+    
+    platform,
+    isWeb,
+    isIOS,
+    isAndroid,
+    isNative,
+    
+    isTouchDevice,
+    hasMouseSupport,
+    
+    touchTargetSize,
+    
+    shouldUseCardLayout,
+    shouldUseTableLayout,
   };
 }
 

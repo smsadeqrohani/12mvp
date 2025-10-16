@@ -114,7 +114,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   }
 
   return (
-    <View className="w-full px-6 py-8 space-y-6">
+    <View className="flex-1 w-full px-6 py-8 space-y-6">
       {/* Header */}
       <View className="items-center">
         <Text className="text-3xl font-bold text-accent mb-2">
@@ -162,6 +162,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
           <FlatList
             data={matchHistory}
             keyExtractor={(item) => item.match._id}
+            scrollEnabled={false}
             renderItem={({ item: matchData, index }) => {
               const { match, result, participant, opponent, isWinner, isDraw } = matchData;
               

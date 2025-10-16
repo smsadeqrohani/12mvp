@@ -4,6 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
+import { KeyboardAvoidingContainer } from "../../../components/ui";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
@@ -76,7 +77,7 @@ export function SignInForm() {
   };
 
   return (
-    <View className="w-full">
+    <KeyboardAvoidingContainer className="w-full">
       <View className="flex flex-col gap-4">
         {/* Email Field */}
         <View>
@@ -146,6 +147,6 @@ export function SignInForm() {
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingContainer>
   );
 }

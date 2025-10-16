@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { SafeAreaView, View, Text, ActivityIndicator } from "react-native";
+import { SafeAreaView, ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { MatchHistory } from "../../src/features/game";
 import { api } from "../../convex/_generated/api";
@@ -42,7 +42,13 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <MatchHistory onViewMatch={() => {}} /> {/* Navigation handled in component */}
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+        <MatchHistory onViewMatch={() => {}} /> {/* Navigation handled in component */}
+      </ScrollView>
     </SafeAreaView>
   );
 }

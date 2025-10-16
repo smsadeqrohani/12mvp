@@ -16,18 +16,18 @@ export function HelloPage() {
   }
 
   return (
-    <View className="p-4 space-y-6">
+    <View className="flex-1 p-4 space-y-6">
       <View className="items-center">
-        <Text className="text-4xl font-bold text-accent mb-4">
+        <Text className="text-4xl font-bold text-accent mb-4" style={{ fontFamily: 'Vazirmatn-Bold' }}>
           سلام، {userProfile.name}! 👋
         </Text>
-        <Text className="text-lg text-gray-300">
+        <Text className="text-lg text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
           به داشبورد خود خوش آمدید
         </Text>
       </View>
       
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-        <Text className="text-xl font-semibold mb-4 text-white text-right">حساب شما</Text>
+        <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>حساب شما</Text>
         <View className="space-y-3">
           <View className="flex-row items-center justify-between">
             <Text className="text-white text-right flex-1">{userProfile.name}</Text>
@@ -47,8 +47,8 @@ export function HelloPage() {
       </View>
 
       <View className="bg-accent/20 rounded-lg p-6 border border-accent/30">
-        <Text className="text-lg font-semibold text-accent mb-2 text-right">🎉 همه چیز آماده است!</Text>
-        <Text className="text-gray-300 text-right leading-6">
+        <Text className="text-lg font-semibold text-accent mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>🎉 همه چیز آماده است!</Text>
+        <Text className="text-gray-300 text-right leading-6" style={{ fontFamily: 'Vazirmatn-Regular' }}>
           حساب شما با موفقیت ایجاد شد. اکنون می‌توانید از برنامه استفاده کنید.
         </Text>
       </View>
