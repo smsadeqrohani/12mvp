@@ -550,7 +550,10 @@ export default function AdminScreen() {
     }
 
     return (
-      <View className="flex-1">
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
@@ -753,8 +756,8 @@ export default function AdminScreen() {
         onPrev={handlePrevQuestions}
         isLoading={allQuestions === undefined}
       />
-    </View>
-  );
+      </ScrollView>
+    );
   };
 
   const renderFilesTab = () => (
@@ -778,7 +781,10 @@ export default function AdminScreen() {
     }
 
     return (
-      <View className="flex-1">
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
@@ -1019,8 +1025,8 @@ export default function AdminScreen() {
         onPrev={handlePrevMatches}
         isLoading={allMatches === undefined}
       />
-    </View>
-  );
+      </ScrollView>
+    );
   };
 
   return (
@@ -1144,16 +1150,15 @@ export default function AdminScreen() {
         </View>
 
         {/* Main Content */}
-        <ScrollView 
+        <View 
           className="flex-1" 
-          contentContainerStyle={{ paddingHorizontal: 24, paddingVertical: 24 }}
-          showsVerticalScrollIndicator={false}
+          style={{ paddingHorizontal: 24, paddingVertical: 24 }}
         >
           {activeTab === "users" && renderUsersTab()}
           {activeTab === "questions" && renderQuestionsTab()}
           {activeTab === "files" && renderFilesTab()}
           {activeTab === "matches" && renderMatchesTab()}
-        </ScrollView>
+        </View>
       </View>
 
       {/* Questions Form Modal */}
