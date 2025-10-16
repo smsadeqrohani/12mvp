@@ -31,7 +31,14 @@ interface QuestionWithAnswer {
 
 export default function AdminScreen() {
   const router = useRouter();
-  const { isAdminReady, width, orientation, touchTargetSize, isTouchDevice } = useResponsive();
+  const responsive = useResponsive();
+  const { isAdminReady, width, orientation, touchTargetSize, isTouchDevice } = responsive || {
+    isAdminReady: false,
+    width: 0,
+    orientation: 'portrait' as const,
+    touchTargetSize: 44,
+    isTouchDevice: true
+  };
   const [activeTab, setActiveTab] = useState<TabType>("users");
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -647,7 +654,7 @@ export default function AdminScreen() {
                     {/* Time */}
                     <View className="w-32 px-6 py-4">
                       <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                        {question.timeToRespond.toLocaleString()}
+                        {question.timeToRespond.toLocaleString('fa-IR')}
                       </Text>
                     </View>
                     

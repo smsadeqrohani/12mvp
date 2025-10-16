@@ -42,7 +42,12 @@ export function DataTableRN<T>({
   keyExtractor, 
   emptyState 
 }: DataTableRNProps<T>) {
-  const { shouldUseTableLayout, shouldUseCardLayout, touchTargetSize } = useResponsive();
+  const responsive = useResponsive();
+  const { shouldUseTableLayout, shouldUseCardLayout, touchTargetSize } = responsive || {
+    shouldUseTableLayout: false,
+    shouldUseCardLayout: true,
+    touchTargetSize: 44
+  };
   
   // Show empty state if no data
   if (data.length === 0 && emptyState) {
@@ -77,19 +82,30 @@ export function DataTableRN<T>({
             className="bg-background-light/60 backdrop-blur-sm rounded-xl border border-gray-700/30 p-4 mb-3"
             style={{ minHeight: touchTargetSize }}
           >
-            {columns.map((column) => (
-              <View key={column.key} className="mb-3 last:mb-0">
-                {/* Column header */}
-                <View className="flex-row items-center gap-2 mb-1">
-                  {column.icon}
-                  <Text className="text-gray-400 text-xs font-semibold uppercase" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {column.header}
-                  </Text>
+            {columns.map((column) => {
+              const renderedContent = column.render(item, index);
+              return (
+                <View key={column.key} className="mb-3 last:mb-0">
+                  {/* Column header */}
+                  <View className="flex-row items-center gap-2 mb-1">
+                    {column.icon}
+                    <Text className="text-gray-400 text-xs font-semibold uppercase" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      {column.header}
+                    </Text>
+                  </View>
+                  {/* Column content */}
+                  <View>
+                    {typeof renderedContent === 'string' || typeof renderedContent === 'number' ? (
+                      <Text className="text-white" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        {String(renderedContent)}
+                      </Text>
+                    ) : (
+                      renderedContent
+                    )}
+                  </View>
                 </View>
-                {/* Column content */}
-                <View>{column.render(item, index)}</View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
         showsVerticalScrollIndicator={false}
