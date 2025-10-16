@@ -19,10 +19,13 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   // Check authentication first
   const loggedInUser = useQuery(api.auth.loggedInUser);
   
-  // Only query match history if user is authenticated
-  const matchHistoryResult = loggedInUser ? useQuery(api.matches.getUserMatchHistory, {
-    paginationOpts: { numItems: PAGE_SIZE, cursor: historyCursor },
-  }) : null;
+  // Query match history (will return null if user not authenticated)
+  const matchHistoryResult = useQuery(
+    api.matches.getUserMatchHistory, 
+    loggedInUser ? {
+      paginationOpts: { numItems: PAGE_SIZE, cursor: historyCursor },
+    } : "skip"
+  );
 
   const matchHistory = matchHistoryResult?.page || [];
 

@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['expo', 'prettier'],
+  extends: ['expo'],
   ignorePatterns: ['/dist/*', '/convex/_generated/*', '/.expo/*'],
   plugins: [],
   rules: {
