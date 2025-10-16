@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from "../convex/_generated/api";
 import { toastConfig } from "../src/lib/toast";
+import { ErrorBoundary } from "../src/components/ui";
 import "../global.css";
 
 // Initialize Convex client
@@ -83,7 +84,11 @@ function RootLayoutNav() {
     }
   }, [loggedInUser, userProfile, segments]);
 
-  return <Slot />;
+  return (
+    <ErrorBoundary>
+      <Slot />
+    </ErrorBoundary>
+  );
 }
 
 export default function RootLayout() {

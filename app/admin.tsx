@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, FlatList, Modal, TextInput, Alert } from "react-native";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, FlatList, Modal, TextInput, Alert, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../convex/_generated/api";
@@ -8,16 +8,34 @@ import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
 import { QuestionsForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
 import { PaginationControls } from "../src/components/ui";
+import { useResponsive } from "../src/hooks";
 
 type TabType = "users" | "questions" | "files" | "matches";
 
+// Question type from admin query (includes rightAnswer)
+interface QuestionWithAnswer {
+  _id: Id<"questions">;
+  mediaPath?: string;
+  mediaStorageId?: Id<"_storage">;
+  questionText: string;
+  option1Text: string;
+  option2Text: string;
+  option3Text: string;
+  option4Text: string;
+  timeToRespond: number;
+  grade: number;
+  category?: string;
+  rightAnswer: number; // From questionAnswers table
+}
+
 export default function AdminScreen() {
   const router = useRouter();
+  const { isAdminReady, width, orientation } = useResponsive();
   const [activeTab, setActiveTab] = useState<TabType>("users");
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [showQuestionForm, setShowQuestionForm] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<any>(null);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionWithAnswer | null>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
 
   // Pagination state
@@ -94,6 +112,101 @@ export default function AdminScreen() {
     );
   }
 
+  // Check screen size - Admin panel requires iPad (landscape) or desktop
+  if (!isAdminReady) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <ScrollView 
+          contentContainerClassName="flex-1 justify-center items-center p-8"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Icon */}
+          <View className="items-center mb-6">
+            <View className="w-24 h-24 bg-accent/20 rounded-full items-center justify-center mb-4">
+              <Ionicons 
+                name={Platform.OS === 'web' ? 'desktop' : 'tablet-landscape'} 
+                size={48} 
+                color="#ff701a" 
+              />
+            </View>
+          </View>
+
+          {/* Title */}
+          <Text className="text-white text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            پنل مدیریت
+          </Text>
+
+          {/* Message */}
+          <Text className="text-gray-300 text-center text-base mb-6 max-w-md" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            برای استفاده از پنل مدیریت، لطفاً از یکی از موارد زیر استفاده کنید:
+          </Text>
+
+          {/* Requirements */}
+          <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 w-full max-w-md mb-6">
+            <View className="flex-row items-center gap-3 mb-4">
+              <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
+                <Ionicons name="checkmark" size={20} color="#10b981" />
+              </View>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                کامپیوتر رومیزی یا لپ‌تاپ
+              </Text>
+            </View>
+
+            <View className="flex-row items-center gap-3 mb-4">
+              <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
+                <Ionicons name="checkmark" size={20} color="#10b981" />
+              </View>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                آیپد در حالت افقی (Landscape)
+              </Text>
+            </View>
+
+            <View className="flex-row items-center gap-3">
+              <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
+                <Ionicons name="checkmark" size={20} color="#10b981" />
+              </View>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                مرورگر وب
+              </Text>
+            </View>
+          </View>
+
+          {/* Technical Info */}
+          <View className="bg-blue-900/20 border border-blue-800/30 rounded-xl p-4 max-w-md w-full">
+            <View className="flex-row items-start gap-2">
+              <Ionicons name="information-circle" size={20} color="#60a5fa" />
+              <View className="flex-1">
+                <Text className="text-blue-400 text-sm mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  اطلاعات فنی:
+                </Text>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  حداقل عرض صفحه: ۱۰۲۴ پیکسل
+                </Text>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  عرض فعلی: {Math.round(width).toLocaleString('fa-IR')} پیکسل
+                </Text>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  جهت: {orientation === 'landscape' ? 'افقی' : 'عمودی'}
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Back Button */}
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mt-8 px-6 py-3 bg-accent active:bg-accent-hover rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Text className="text-white font-semibold text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              بازگشت به داشبورد
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   // If viewing match details, show the match results view
   if (viewingMatchId) {
     return (
@@ -118,7 +231,7 @@ export default function AdminScreen() {
 
   const handleToggleAdmin = async (userId: string, isAdmin: boolean) => {
     try {
-      await makeUserAdmin({ userId: userId as any, isAdmin });
+      await makeUserAdmin({ userId: userId as Id<"users">, isAdmin });
       toast.success(isAdmin ? "کاربر به مدیر تبدیل شد" : "دسترسی مدیر حذف شد");
     } catch (error) {
       toast.error("خطا در تغییر دسترسی کاربر");
@@ -128,7 +241,7 @@ export default function AdminScreen() {
   const handleEditName = async (userId: string) => {
     if (!editName.trim()) return;
     try {
-      await updateUserName({ userId: userId as any, name: editName });
+      await updateUserName({ userId: userId as Id<"users">, name: editName });
       toast.success("نام کاربر با موفقیت به‌روزرسانی شد");
       setEditingUser(null);
       setEditName("");
@@ -139,7 +252,7 @@ export default function AdminScreen() {
 
   const handleResetPassword = async (userId: string, userName: string) => {
     try {
-      await resetUserPassword({ userId: userId as any });
+      await resetUserPassword({ userId: userId as Id<"users"> });
       toast.success(`رمز عبور برای کاربر ${userName} بازنشانی شد`);
     } catch (error) {
       toast.error("خطا در بازنشانی رمز عبور");
@@ -167,7 +280,7 @@ export default function AdminScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteQuestion({ questionId: questionId as any });
+              await deleteQuestion({ questionId: questionId as Id<"questions"> });
               toast.success("سؤال با موفقیت حذف شد");
             } catch (error) {
               toast.error("خطا در حذف سؤال");
@@ -178,7 +291,7 @@ export default function AdminScreen() {
     );
   };
 
-  const handleEditQuestion = (question: any) => {
+  const handleEditQuestion = (question: QuestionWithAnswer) => {
     setEditingQuestion(question);
     setShowQuestionForm(true);
   };
@@ -198,7 +311,7 @@ export default function AdminScreen() {
     
     try {
       console.log("Calling cancelMatch mutation...");
-      await cancelMatch({ matchId: matchId as any });
+      await cancelMatch({ matchId: matchId as Id<"matches"> });
       console.log("cancelMatch successful");
       toast.success("مسابقه با موفقیت لغو شد");
     } catch (error) {
