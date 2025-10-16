@@ -1,9 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
+import { useQuery } from "convex/react";
+import { useRouter } from "expo-router";
 import { SignInForm, SignUpForm } from "../../src/features/auth";
+import { api } from "../../convex/_generated/api";
 
 export default function LoginScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
+  const router = useRouter();
+  const loggedInUser = useQuery(api.auth.loggedInUser);
+  const userProfile = useQuery(api.auth.getUserProfile);
+
+  // Handle authentication and profile setup
+  useEffect(() => {
+    if (loggedInUser && userProfile === null) {
+      // User is logged in but no profile exists, redirect to profile setup
+      router.replace("/(auth)/profile-setup");
+    } else if (loggedInUser && userProfile) {
+      // User is logged in and has profile, redirect to main app
+      router.replace("/(tabs)");
+    }
+  }, [loggedInUser, userProfile, router]);
 
   return (
     <SafeAreaView className="flex-1 bg-background">

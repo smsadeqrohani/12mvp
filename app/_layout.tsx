@@ -18,17 +18,14 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL || "");
 // Prevent splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync();
 
-// Enable RTL for mobile platforms
-if (Platform.OS !== 'web') {
-  // Enable RTL support
-  I18nManager.allowRTL(true);
-  
-  // Force RTL layout if not already set
-  if (!I18nManager.isRTL) {
-    I18nManager.forceRTL(true);
-    // Note: On native platforms, this requires an app restart to take effect
-    // The user may need to close and reopen the app the first time
-  }
+// Enable RTL for all platforms
+I18nManager.allowRTL(true);
+
+// Force RTL layout if not already set
+if (!I18nManager.isRTL) {
+  I18nManager.forceRTL(true);
+  // Note: On native platforms, this requires an app restart to take effect
+  // The user may need to close and reopen the app the first time
 }
 
 // Configure NativeWind dark mode
@@ -61,6 +58,7 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const userProfile = useQuery(api.auth.getUserProfile);
 
   useEffect(() => {
     if (loggedInUser === undefined) return; // Still loading
@@ -71,10 +69,19 @@ function RootLayoutNav() {
       // Redirect to login if not authenticated
       router.replace("/(auth)/login");
     } else if (loggedInUser !== null && inAuthGroup) {
-      // Redirect to home if authenticated
-      router.replace("/(tabs)");
+      // Check if user needs profile setup
+      if (userProfile === null && segments[1] !== "profile-setup") {
+        // User is logged in but no profile exists, redirect to profile setup
+        router.replace("/(auth)/profile-setup");
+      } else if (userProfile && segments[1] === "profile-setup") {
+        // User has profile but is on profile setup page, redirect to main app
+        router.replace("/(tabs)");
+      } else if (userProfile && segments[1] === "login") {
+        // User has profile but is on login page, redirect to main app
+        router.replace("/(tabs)");
+      }
     }
-  }, [loggedInUser, segments]);
+  }, [loggedInUser, userProfile, segments]);
 
   return <Slot />;
 }

@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, Modal } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useState, useEffect } from "react";
+import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
@@ -15,6 +16,7 @@ interface MatchLobbyProps {
 export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLobbyProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [currentMatchId, setCurrentMatchId] = useState<Id<"matches"> | null>(null);
+  const router = useRouter();
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const userMatchStatus = useQuery(api.matches.getUserActiveMatchStatus);
@@ -28,9 +30,9 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
     console.log("MatchLobby: Match status changed:", userMatchStatus.status);
     
     if (userMatchStatus.status === "active") {
-      console.log("MatchLobby: Match is now active, calling onMatchStart");
+      console.log("MatchLobby: Match is now active, navigating to play");
       setIsSearching(false);
-      onMatchStart(userMatchStatus.matchId);
+      router.push(`/(tabs)/play?matchId=${userMatchStatus.matchId}`);
     } else if (userMatchStatus.status === "waiting") {
       console.log("MatchLobby: Match is waiting for opponent");
       // Keep showing searching state
@@ -65,7 +67,7 @@ export function MatchLobby({ onMatchStart, onMatchFound, isResetting }: MatchLob
       if (userMatchStatus?.status === "active") {
         console.log("MatchLobby: Match is immediately active");
         setIsSearching(false);
-        onMatchStart(matchId);
+        router.push(`/(tabs)/play?matchId=${matchId}`);
       }
       
     } catch (error) {

@@ -1,5 +1,6 @@
 import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
+import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { PaginationControls } from "../../../components/ui";
 import { useState } from "react";
@@ -15,6 +16,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   const [historyCursorHistory, setHistoryCursorHistory] = useState<(string | null)[]>([null]);
   const [historyPage, setHistoryPage] = useState(1);
   const PAGE_SIZE = 10;
+  const router = useRouter();
 
   // Check authentication first
   const loggedInUser = useQuery(api.auth.loggedInUser);
@@ -165,7 +167,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
               
               return (
                 <TouchableOpacity 
-                  onPress={() => onViewMatch(match._id)}
+                  onPress={() => router.push(`/(tabs)/results/${match._id}`)}
                   className="bg-background-light/60 rounded-xl border border-gray-700/30 p-6 mb-4 active:bg-background-light/80"
                   activeOpacity={0.7}
                 >

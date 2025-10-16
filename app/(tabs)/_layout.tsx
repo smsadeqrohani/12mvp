@@ -82,6 +82,20 @@ export default function TabsLayout() {
           title: "تاریخچه",
         }}
       />
+      <Tabs.Screen
+        name="play"
+        options={{
+          title: "بازی",
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="results/[id]"
+        options={{
+          title: "نتایج",
+          href: null, // Hide from tab bar
+        }}
+      />
     </Tabs>
   );
 }
