@@ -12,6 +12,7 @@
     "dev": "npm-run-all --parallel dev:app dev:backend",
     "dev:app": "expo start",
     "dev:backend": "convex dev",
+    "build": "expo export:web",
     "build:web": "expo export:web",
     "build:android": "eas build --platform android",
     "build:ios": "eas build --platform ios",
