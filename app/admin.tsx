@@ -1355,6 +1355,24 @@ export default function AdminScreen() {
                 </View>
               </TouchableOpacity>
             </View>
+
+            {/* Back to Main Button */}
+            <View className="mt-8 pt-6 border-t border-gray-700/30">
+              <TouchableOpacity
+                onPress={() => router.push("/(tabs)")}
+                className="p-4 rounded-xl bg-gray-700/30 border border-gray-600/30"
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 rounded-lg items-center justify-center bg-gray-600">
+                    <Ionicons name="home-outline" size={20} color="#9ca3af" />
+                  </View>
+                  <Text className="font-medium text-gray-300" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    بازگشت به صفحه اصلی
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
