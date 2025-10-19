@@ -12,8 +12,8 @@
     "dev": "npm-run-all --parallel dev:app dev:backend",
     "dev:app": "expo start",
     "dev:backend": "convex dev",
-    "build": "expo export:web",
-    "build:web": "expo export:web",
+    "build": "expo export",
+    "build:web": "expo export",
     "build:android": "eas build --platform android",
     "build:ios": "eas build --platform ios",
     "lint": "tsc -p convex -noEmit --pretty false && expo lint"
