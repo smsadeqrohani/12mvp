@@ -9,6 +9,12 @@ const applicationTables = {
     isAdmin: v.boolean(),
   }).index("by_user", ["userId"]),
   
+  categories: defineTable({
+    persianName: v.string(),
+    slug: v.string(),
+    englishName: v.optional(v.string()),
+  }).index("by_slug", ["slug"]),
+  
   questions: defineTable({
     mediaPath: v.optional(v.string()),
     mediaStorageId: v.optional(v.id("_storage")),
@@ -19,8 +25,15 @@ const applicationTables = {
     option4Text: v.string(),
     timeToRespond: v.number(),
     grade: v.number(),
-    category: v.optional(v.string()),
   }),
+  
+  questionCategories: defineTable({
+    questionId: v.id("questions"),
+    categoryId: v.id("categories"),
+  })
+    .index("by_question", ["questionId"])
+    .index("by_category", ["categoryId"])
+    .index("by_question_category", ["questionId", "categoryId"]),
   
   questionAnswers: defineTable({
     questionId: v.id("questions"),

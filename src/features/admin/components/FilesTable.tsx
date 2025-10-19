@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
-import { Button, SkeletonAdminTab, DataTableRN } from "../../../components/ui";
+import { Button, SkeletonAdminTab, DataTableRN, TextInput } from "../../../components/ui";
 import { FilePreview } from "./FilePreview";
 import { FileUpload } from "./FileUpload";
 import { PaginationControls } from "../../../components/ui";
@@ -16,6 +16,14 @@ export function FilesTable() {
   const [editName, setEditName] = useState("");
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText: string;
+    cancelText: string;
+  } | null>(null);
   
   // Pagination state - track cursor history for back navigation
   const [filesCursor, setFilesCursor] = useState<string | null>(null);
@@ -28,6 +36,30 @@ export function FilesTable() {
   });
   const renameFile = useMutation(api.files.renameFile);
   const deleteFile = useMutation(api.files.deleteFile);
+
+  const showConfirmation = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmText: string = "حذف",
+    cancelText: string = "لغو"
+  ) => {
+    if (Platform.OS === 'web') {
+      setConfirmationDialog({
+        isOpen: true,
+        title,
+        message,
+        onConfirm,
+        confirmText,
+        cancelText,
+      });
+    } else {
+      Alert.alert(title, message, [
+        { text: cancelText, style: "cancel" },
+        { text: confirmText, style: "destructive", onPress: onConfirm }
+      ]);
+    }
+  };
 
   const handleRename = async (fileId: string, newName: string) => {
     try {
@@ -45,25 +77,18 @@ export function FilesTable() {
   };
 
   const handleDelete = async (fileId: string, fileName: string) => {
-    Alert.alert(
+    showConfirmation(
       "حذف فایل",
       `آیا مطمئن هستید که می‌خواهید فایل "${fileName}" را حذف کنید؟`,
-      [
-        { text: "لغو", style: "cancel" },
-        {
-          text: "حذف",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteFile({ fileId: fileId as any });
-              toast.success("فایل با موفقیت حذف شد");
-            } catch (error) {
-              console.error("Error deleting file:", error);
-              toast.error("خطا در حذف فایل");
-            }
-          },
-        },
-      ]
+      async () => {
+        try {
+          await deleteFile({ fileId: fileId as any });
+          toast.success("فایل با موفقیت حذف شد");
+        } catch (error) {
+          console.error("Error deleting file:", error);
+          toast.error("خطا در حذف فایل");
+        }
+      }
     );
   };
 
@@ -171,6 +196,18 @@ export function FilesTable() {
 
   return (
     <View className="flex-1">
+      {/* Upload Button */}
+      <View className="mb-4">
+        <Button
+          onPress={() => setShowUploadForm(true)}
+          variant="primary"
+          size="md"
+          icon={<Ionicons name="cloud-upload-outline" size={20} color="#fff" />}
+        >
+          آپلود فایل جدید
+        </Button>
+      </View>
+
       {/* Files Table */}
       <DataTableRN
         columns={filesColumns}
@@ -271,7 +308,6 @@ export function FilesTable() {
               <TextInput
                 value={editName}
                 onChangeText={setEditName}
-                className="bg-gray-700/50 text-white rounded-lg px-4 py-3 text-sm border border-gray-600/50"
                 placeholder="نام فایل را وارد کنید"
                 textAlign="right"
               />
@@ -309,6 +345,50 @@ export function FilesTable() {
           file={previewFile} 
           onClose={() => setPreviewFile(null)} 
         />
+      )}
+
+      {/* Confirmation Dialog Modal */}
+      {confirmationDialog && (
+        <Modal
+          visible={confirmationDialog.isOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmationDialog(null)}
+        >
+          <View className="flex-1 bg-black/50 items-center justify-center p-4">
+            <View className="bg-background-light rounded-2xl border border-gray-700/30 p-6 max-w-md w-full">
+              <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {confirmationDialog.title}
+              </Text>
+              <Text className="text-gray-300 mb-6 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {confirmationDialog.message}
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setConfirmationDialog(null)}
+                  className="flex-1 py-3 px-4 bg-gray-700/50 border border-gray-600 rounded-lg"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    {confirmationDialog.cancelText}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setConfirmationDialog(null);
+                    confirmationDialog.onConfirm();
+                  }}
+                  className="flex-1 py-3 px-4 bg-red-600/20 border border-red-500/30 rounded-lg"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-red-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    {confirmationDialog.confirmText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );

@@ -3,6 +3,23 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, getRandomQuestions } from "./utils";
 
+// Helper function to get categories for a question
+async function getQuestionCategories(ctx: any, questionId: string) {
+  const questionCategories = await ctx.db
+    .query("questionCategories")
+    .withIndex("by_question", (q: any) => q.eq("questionId", questionId))
+    .collect();
+
+  const categories = await Promise.all(
+    questionCategories.map(async (qc: any) => {
+      const category = await ctx.db.get(qc.categoryId);
+      return category;
+    })
+  );
+
+  return categories.filter(Boolean);
+}
+
 /**
  * Core match operations - creating, joining, leaving matches
  */
@@ -148,7 +165,7 @@ export const getMatchDetails = query({
           option4Text: question.option4Text,
           timeToRespond: question.timeToRespond,
           grade: question.grade,
-          category: question.category,
+          categories: await getQuestionCategories(ctx, question._id),
         };
       })
     );

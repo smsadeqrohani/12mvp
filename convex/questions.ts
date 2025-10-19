@@ -35,7 +35,7 @@ export const getAllQuestions = query({
       .order("desc")
       .paginate(args.paginationOpts);
     
-    // For admins, also include the correct answers
+    // For admins, also include the correct answers and categories
     const questionsWithAnswers = await Promise.all(
       paginatedResult.page.map(async (question) => {
         const answerEntry = await ctx.db
@@ -43,9 +43,23 @@ export const getAllQuestions = query({
           .withIndex("by_question", (q: any) => q.eq("questionId", question._id))
           .unique();
         
+        // Get categories for this question
+        const questionCategories = await ctx.db
+          .query("questionCategories")
+          .withIndex("by_question", (q: any) => q.eq("questionId", question._id))
+          .collect();
+        
+        const categories = await Promise.all(
+          questionCategories.map(async (qc) => {
+            const category = await ctx.db.get(qc.categoryId);
+            return category;
+          })
+        );
+        
         return {
           ...question,
           rightAnswer: answerEntry?.correctOption || 0,
+          categories: categories.filter(Boolean),
         };
       })
     );
@@ -69,7 +83,7 @@ export const createQuestion = mutation({
     rightAnswer: v.number(),
     timeToRespond: v.number(),
     grade: v.number(),
-    category: v.optional(v.string()),
+    categories: v.optional(v.array(v.id("categories"))),
   },
   handler: adminOnly(async (ctx, args) => {
     validateQuestion(args);
@@ -85,7 +99,6 @@ export const createQuestion = mutation({
       option4Text: args.option4Text,
       timeToRespond: args.timeToRespond,
       grade: args.grade,
-      category: args.category,
     });
     
     // Store correct answer separately in secure table
@@ -93,6 +106,16 @@ export const createQuestion = mutation({
       questionId: questionId,
       correctOption: args.rightAnswer,
     });
+    
+    // Add categories using junction table
+    if (args.categories && args.categories.length > 0) {
+      for (const categoryId of args.categories) {
+        await ctx.db.insert("questionCategories", {
+          questionId: questionId,
+          categoryId: categoryId,
+        });
+      }
+    }
     
     return questionId;
   }),
@@ -111,7 +134,7 @@ export const updateQuestion = mutation({
     rightAnswer: v.number(),
     timeToRespond: v.number(),
     grade: v.number(),
-    category: v.optional(v.string()),
+    categories: v.optional(v.array(v.id("categories"))),
   },
   handler: adminOnly(async (ctx, args) => {
     validateQuestion(args);
@@ -133,7 +156,6 @@ export const updateQuestion = mutation({
       option4Text: args.option4Text,
       timeToRespond: args.timeToRespond,
       grade: args.grade,
-      category: args.category,
     });
     
     // Update correct answer in separate table
@@ -152,6 +174,27 @@ export const updateQuestion = mutation({
         questionId: args.questionId,
         correctOption: args.rightAnswer,
       });
+    }
+    
+    // Update categories using junction table
+    // Remove existing category relationships
+    const existingRelations = await ctx.db
+      .query("questionCategories")
+      .withIndex("by_question", (q: any) => q.eq("questionId", args.questionId))
+      .collect();
+
+    for (const relation of existingRelations) {
+      await ctx.db.delete(relation._id);
+    }
+
+    // Add new category relationships
+    if (args.categories && args.categories.length > 0) {
+      for (const categoryId of args.categories) {
+        await ctx.db.insert("questionCategories", {
+          questionId: args.questionId,
+          categoryId: categoryId,
+        });
+      }
     }
   }),
 });
@@ -193,6 +236,16 @@ export const deleteQuestion = mutation({
     
     if (answerEntry) {
       await ctx.db.delete(answerEntry._id);
+    }
+    
+    // Delete category relationships
+    const categoryRelations = await ctx.db
+      .query("questionCategories")
+      .withIndex("by_question", (q: any) => q.eq("questionId", args.questionId))
+      .collect();
+
+    for (const relation of categoryRelations) {
+      await ctx.db.delete(relation._id);
     }
     
     // Delete the question

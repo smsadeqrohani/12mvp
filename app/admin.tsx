@@ -6,14 +6,14 @@ import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
-import { QuestionsForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
+import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
 import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "files" | "matches";
+type TabType = "users" | "questions" | "categories" | "files" | "matches";
 
-// Question type from admin query (includes rightAnswer)
+// Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
   _id: Id<"questions">;
   mediaPath?: string;
@@ -25,7 +25,12 @@ interface QuestionWithAnswer {
   option4Text: string;
   timeToRespond: number;
   grade: number;
-  category?: string;
+  categories?: Array<{
+    _id: Id<"categories">;
+    persianName: string;
+    slug: string;
+    englishName?: string;
+  }>;
   rightAnswer: number; // From questionAnswers table
 }
 
@@ -44,21 +49,34 @@ export default function AdminScreen() {
   const [editName, setEditName] = useState("");
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuestionWithAnswer | null>(null);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText: string;
+    cancelText: string;
+  } | null>(null);
 
   // Pagination state
   const [usersCursor, setUsersCursor] = useState<string | null>(null);
   const [questionsCursor, setQuestionsCursor] = useState<string | null>(null);
+  const [categoriesCursor, setCategoriesCursor] = useState<string | null>(null);
   const [filesCursor, setFilesCursor] = useState<string | null>(null);
   const [matchesCursor, setMatchesCursor] = useState<string | null>(null);
   
   const [usersCursorHistory, setUsersCursorHistory] = useState<(string | null)[]>([null]);
   const [questionsCursorHistory, setQuestionsCursorHistory] = useState<(string | null)[]>([null]);
+  const [categoriesCursorHistory, setCategoriesCursorHistory] = useState<(string | null)[]>([null]);
   const [filesCursorHistory, setFilesCursorHistory] = useState<(string | null)[]>([null]);
   const [matchesCursorHistory, setMatchesCursorHistory] = useState<(string | null)[]>([null]);
   
   const [usersPage, setUsersPage] = useState(1);
   const [questionsPage, setQuestionsPage] = useState(1);
+  const [categoriesPage, setCategoriesPage] = useState(1);
   const [filesPage, setFilesPage] = useState(1);
   const [matchesPage, setMatchesPage] = useState(1);
 
@@ -73,6 +91,9 @@ export default function AdminScreen() {
   const allQuestions = useQuery(api.questions.getAllQuestions, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: questionsCursor },
   });
+  const allCategories = useQuery(api.categories.getCategoriesPaginated, {
+    paginationOpts: { numItems: PAGE_SIZE, cursor: categoriesCursor },
+  });
   const allFiles = useQuery(api.files.getAllFiles, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: filesCursor },
   });
@@ -86,6 +107,7 @@ export default function AdminScreen() {
   const createQuestion = useMutation(api.questions.createQuestion);
   const updateQuestion = useMutation(api.questions.updateQuestion);
   const deleteQuestion = useMutation(api.questions.deleteQuestion);
+  const deleteCategory = useMutation(api.categories.deleteCategory);
   const cancelMatch = useMutation(api.matches.cancelMatch);
 
   console.log("cancelMatch mutation:", cancelMatch);
@@ -238,6 +260,30 @@ export default function AdminScreen() {
     );
   }
 
+  const showConfirmation = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmText: string = "حذف",
+    cancelText: string = "لغو"
+  ) => {
+    if (Platform.OS === 'web') {
+      setConfirmationDialog({
+        isOpen: true,
+        title,
+        message,
+        onConfirm,
+        confirmText,
+        cancelText,
+      });
+    } else {
+      Alert.alert(title, message, [
+        { text: cancelText, style: "cancel" },
+        { text: confirmText, style: "destructive", onPress: onConfirm }
+      ]);
+    }
+  };
+
   const handleToggleAdmin = async (userId: string, isAdmin: boolean) => {
     try {
       await makeUserAdmin({ userId: userId as Id<"users">, isAdmin });
@@ -279,24 +325,17 @@ export default function AdminScreen() {
   };
 
   const handleDeleteQuestion = async (questionId: string) => {
-    Alert.alert(
+    showConfirmation(
       "حذف سؤال",
       "آیا مطمئن هستید که می‌خواهید این سؤال را حذف کنید؟",
-      [
-        { text: "لغو", style: "cancel" },
-        {
-          text: "حذف",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteQuestion({ questionId: questionId as Id<"questions"> });
-              toast.success("سؤال با موفقیت حذف شد");
-            } catch (error) {
-              toast.error("خطا در حذف سؤال");
-            }
-          }
+      async () => {
+        try {
+          await deleteQuestion({ questionId: questionId as Id<"questions"> });
+          toast.success("سؤال با موفقیت حذف شد");
+        } catch (error) {
+          toast.error("خطا در حذف سؤال");
         }
-      ]
+      }
     );
   };
 
@@ -313,6 +352,36 @@ export default function AdminScreen() {
   const handleCloseQuestionForm = () => {
     setShowQuestionForm(false);
     setEditingQuestion(null);
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    showConfirmation(
+      "حذف دسته‌بندی",
+      "آیا مطمئن هستید که می‌خواهید این دسته‌بندی را حذف کنید؟",
+      async () => {
+        try {
+          await deleteCategory({ categoryId: categoryId as Id<"categories"> });
+          toast.success("دسته‌بندی با موفقیت حذف شد");
+        } catch (error) {
+          toast.error("خطا در حذف دسته‌بندی: " + (error as Error).message);
+        }
+      }
+    );
+  };
+
+  const handleEditCategory = (category: any) => {
+    setEditingCategory(category);
+    setShowCategoryForm(true);
+  };
+
+  const handleCreateCategory = () => {
+    setEditingCategory(null);
+    setShowCategoryForm(true);
+  };
+
+  const handleCloseCategoryForm = () => {
+    setShowCategoryForm(false);
+    setEditingCategory(null);
   };
 
   const handleCancelMatch = async (matchId: string) => {
@@ -367,6 +436,24 @@ export default function AdminScreen() {
       setQuestionsCursorHistory(newHistory);
       setQuestionsCursor(newHistory[newHistory.length - 1]);
       setQuestionsPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextCategories = () => {
+    if (allCategories && !allCategories.isDone) {
+      const newCursor = allCategories.continueCursor;
+      setCategoriesCursorHistory(prev => [...prev, newCursor]);
+      setCategoriesCursor(newCursor);
+      setCategoriesPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevCategories = () => {
+    if (categoriesPage > 1) {
+      const newHistory = categoriesCursorHistory.slice(0, -1);
+      setCategoriesCursorHistory(newHistory);
+      setCategoriesCursor(newHistory[newHistory.length - 1]);
+      setCategoriesPage(prev => prev - 1);
     }
   };
 
@@ -604,17 +691,21 @@ export default function AdminScreen() {
         ),
       },
       {
-        key: 'category',
-        header: 'دسته‌بندی',
+        key: 'categories',
+        header: 'دسته‌بندی‌ها',
         render: (question) => (
-          question.category ? (
-                        <View className="px-3 py-1 rounded-full bg-blue-900/30 border border-blue-800/30 w-fit">
-                          <Text className="text-blue-400 text-xs font-medium">
-                            {question.category}
-                          </Text>
-                        </View>
-                      ) : (
-                        <Text className="text-gray-500 text-sm">بدون دسته</Text>
+          question.categories && question.categories.length > 0 ? (
+            <View className="flex-row flex-wrap gap-1">
+              {question.categories.map((category: any, index: number) => (
+                <View key={index} className="px-2 py-1 rounded-full bg-blue-900/30 border border-blue-800/30">
+                  <Text className="text-blue-400 text-xs font-medium">
+                    {category.persianName}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <Text className="text-gray-500 text-sm">بدون دسته</Text>
           )
         ),
       },
@@ -721,6 +812,147 @@ export default function AdminScreen() {
         onNext={handleNextQuestions}
         onPrev={handlePrevQuestions}
         isLoading={allQuestions === undefined}
+      />
+      </ScrollView>
+    );
+  };
+
+  const renderCategoriesTab = () => {
+    // Show skeleton while loading
+    if (allCategories === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    // Define table columns
+    const categoriesColumns: Column<typeof allCategories.page[0]>[] = [
+      {
+        key: 'persianName',
+        header: 'نام فارسی',
+        render: (category) => (
+          <View className="flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
+              <Ionicons name="folder" size={20} color="#ff701a" />
+            </View>
+            <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              {category.persianName}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        key: 'slug',
+        header: 'Slug',
+        render: (category) => (
+          <Text className="text-gray-400 text-sm font-mono">
+            {category.slug}
+          </Text>
+        ),
+      },
+      {
+        key: 'englishName',
+        header: 'English Name',
+        render: (category) => (
+          category.englishName ? (
+            <Text className="text-gray-300 text-sm">
+              {category.englishName}
+            </Text>
+          ) : (
+            <Text className="text-gray-500 text-sm">-</Text>
+          )
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'عملیات',
+        width: 200,
+        render: (category) => (
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={() => handleEditCategory(category)}
+              className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+              style={{ minHeight: touchTargetSize }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                ویرایش
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleDeleteCategory(category._id)}
+              className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+              style={{ minHeight: touchTargetSize }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                حذف
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ),
+      },
+    ];
+
+    return (
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت دسته‌بندی‌ها
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مدیریت و تنظیم دسته‌بندی‌های سیستم
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">صفحه:</Text>
+                <Text className="text-white font-semibold mr-2">{categoriesPage.toLocaleString('fa-IR')}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleCreateCategory}
+                className="flex-row items-center gap-2 px-4 py-3 bg-accent rounded-lg"
+                style={{ minHeight: touchTargetSize }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={20} color="#fff" />
+                <Text className="text-white text-sm font-semibold">افزودن دسته‌بندی</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      
+      {/* Categories Table */}
+      <DataTableRN
+        columns={categoriesColumns}
+        data={allCategories?.page || []}
+        keyExtractor={(category) => category._id}
+        emptyState={{
+          icon: <Ionicons name="folder-outline" size={32} color="#6b7280" />,
+          title: "دسته‌بندی‌ای یافت نشد",
+          description: "هنوز هیچ دسته‌بندی‌ای در سیستم ثبت نشده است",
+          action: (
+            <TouchableOpacity
+              onPress={handleCreateCategory}
+              className="flex-row items-center gap-2 px-4 py-2 bg-accent rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+              <Text className="text-white text-sm font-semibold">افزودن اولین دسته‌بندی</Text>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      
+      <PaginationControls 
+        currentPage={categoriesPage}
+        isDone={allCategories?.isDone ?? true}
+        onNext={handleNextCategories}
+        onPrev={handlePrevCategories}
+        isLoading={allCategories === undefined}
       />
       </ScrollView>
     );
@@ -1055,6 +1287,29 @@ export default function AdminScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                onPress={() => setActiveTab("categories")}
+                className={`p-4 rounded-xl ${
+                  activeTab === "categories"
+                    ? "bg-accent/20 border border-accent/30"
+                    : "bg-transparent"
+                }`}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
+                    activeTab === "categories" ? "bg-accent" : "bg-gray-700"
+                  }`}>
+                    <Ionicons name="pricetags" size={20} color={activeTab === "categories" ? "#fff" : "#9ca3af"} />
+                  </View>
+                  <Text className={`font-medium ${
+                    activeTab === "categories" ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    مدیریت دسته‌بندی‌ها
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 onPress={() => setActiveTab("files")}
                 className={`p-4 rounded-xl ${
                   activeTab === "files"
@@ -1110,6 +1365,7 @@ export default function AdminScreen() {
         >
           {activeTab === "users" && renderUsersTab()}
           {activeTab === "questions" && renderQuestionsTab()}
+          {activeTab === "categories" && renderCategoriesTab()}
           {activeTab === "files" && renderFilesTab()}
           {activeTab === "matches" && renderMatchesTab()}
         </View>
@@ -1132,6 +1388,68 @@ export default function AdminScreen() {
           />
         </SafeAreaView>
       </Modal>
+
+      {/* Category Form Modal */}
+      <Modal
+        visible={showCategoryForm}
+        animationType="slide"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
+      >
+        <SafeAreaView className="flex-1 bg-background">
+          <CategoryForm
+            category={editingCategory}
+            onClose={handleCloseCategoryForm}
+          />
+        </SafeAreaView>
+      </Modal>
+
+      {/* Confirmation Dialog Modal */}
+      {confirmationDialog && (
+        <Modal
+          visible={confirmationDialog.isOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setConfirmationDialog(null)}
+        >
+          <View className="flex-1 bg-black/50 items-center justify-center p-4">
+            <View className="bg-background-light rounded-2xl border border-gray-700/30 p-6 max-w-md w-full">
+              <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {confirmationDialog.title}
+              </Text>
+              <Text className="text-gray-300 mb-6 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {confirmationDialog.message}
+              </Text>
+              <View className="flex-row gap-3">
+                <TouchableOpacity
+                  onPress={() => setConfirmationDialog(null)}
+                  className="flex-1 py-3 px-4 bg-gray-700/50 border border-gray-600 rounded-lg"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    {confirmationDialog.cancelText}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setConfirmationDialog(null);
+                    confirmationDialog.onConfirm();
+                  }}
+                  className="flex-1 py-3 px-4 bg-red-600/20 border border-red-500/30 rounded-lg"
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-red-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    {confirmationDialog.confirmText}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 }

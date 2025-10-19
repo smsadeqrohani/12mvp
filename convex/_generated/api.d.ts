@@ -14,6 +14,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as auth from "../auth.js";
+import type * as categories from "../categories.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as matchAdmin from "../matchAdmin.js";
@@ -21,6 +22,7 @@ import type * as matchCore from "../matchCore.js";
 import type * as matchGameplay from "../matchGameplay.js";
 import type * as matchResults from "../matchResults.js";
 import type * as matches from "../matches.js";
+import type * as questionCategories from "../questionCategories.js";
 import type * as questions from "../questions.js";
 import type * as router from "../router.js";
 import type * as utils from "../utils.js";
@@ -35,6 +37,7 @@ import type * as utils from "../utils.js";
  */
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  categories: typeof categories;
   files: typeof files;
   http: typeof http;
   matchAdmin: typeof matchAdmin;
@@ -42,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   matchGameplay: typeof matchGameplay;
   matchResults: typeof matchResults;
   matches: typeof matches;
+  questionCategories: typeof questionCategories;
   questions: typeof questions;
   router: typeof router;
   utils: typeof utils;
