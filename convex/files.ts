@@ -29,6 +29,7 @@ export const getAllFiles = query({
       throw new Error("Only admins can view all files");
     }
     
+    
     const paginatedResult = await ctx.db
       .query("files")
       .order("desc")

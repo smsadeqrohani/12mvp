@@ -135,6 +135,15 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
       });
       const { storageId } = await result.json();
       
+      // Create file record in files table
+      await uploadFile({
+        storageId,
+        fileName: selectedFile.name,
+        originalName: selectedFile.name,
+        fileType: selectedFile.type,
+        fileSize: selectedFile.size,
+      });
+      
       setFormData(prev => ({
         ...prev,
         mediaStorageId: storageId as any,
