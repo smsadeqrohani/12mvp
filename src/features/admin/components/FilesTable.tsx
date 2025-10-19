@@ -3,12 +3,13 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Plat
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
-import { Button, SkeletonAdminTab } from "../../../components/ui";
+import { Button, SkeletonAdminTab, DataTableRN } from "../../../components/ui";
 import { FilePreview } from "./FilePreview";
 import { FileUpload } from "./FileUpload";
 import { PaginationControls } from "../../../components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { formatFileSize } from "../../../lib/filePicker";
+import type { Column } from "../../../components/ui/DataTableRN";
 
 export function FilesTable() {
   const [editingFile, setEditingFile] = useState<string | null>(null);
@@ -92,100 +93,116 @@ export function FilesTable() {
     return <SkeletonAdminTab />;
   }
 
+  // Define table columns
+  const filesColumns: Column<typeof allFiles.page[0]>[] = [
+    {
+      key: 'name',
+      header: 'نام فایل',
+      render: (file) => (
+        <View className="flex-row items-center gap-3">
+          <View className="w-10 h-10 bg-accent/20 rounded-lg items-center justify-center">
+            <Ionicons name="document" size={20} color="#ff701a" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-white font-medium text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              {file.originalName}
+            </Text>
+            <Text className="text-gray-400 text-xs text-right mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              {file.fileType}
+            </Text>
+          </View>
+        </View>
+      ),
+    },
+    {
+      key: 'size',
+      header: 'حجم',
+      render: (file) => (
+        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          {formatFileSize(file.fileSize)}
+        </Text>
+      ),
+    },
+    {
+      key: 'date',
+      header: 'تاریخ آپلود',
+      render: (file) => (
+        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          {formatDate(file.uploadedAt)}
+        </Text>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'عملیات',
+      width: 200,
+      render: (file) => (
+        <View className="flex-row items-center gap-2">
+          <TouchableOpacity
+            onPress={() => setPreviewFile(file)}
+            className="p-2 bg-gray-700/50 rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="eye-outline" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => {
+              setEditingFile(file._id);
+              setEditName(file.originalName);
+            }}
+            className="p-2 bg-gray-700/50 rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="pencil-outline" size={16} color="#9ca3af" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            onPress={() => handleDelete(file._id, file.originalName)}
+            className="p-2 bg-red-600/20 rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash-outline" size={16} color="#ef4444" />
+          </TouchableOpacity>
+        </View>
+      ),
+    },
+  ];
+
   return (
     <View className="flex-1">
-      {/* Header */}
-      <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-xl font-bold text-white">مدیریت فایل‌ها</Text>
-        <Button
-          onPress={() => setShowUploadForm(true)}
-          variant="primary"
-          size="sm"
-          icon={<Ionicons name="cloud-upload-outline" size={16} color="#fff" />}
-        >
-          آپلود فایل
-        </Button>
-      </View>
-
-      {/* Files List */}
-      <View className="flex-1">
-        {allFiles.page.length === 0 ? (
-          <View className="flex-1 items-center justify-center p-8">
-            <Ionicons name="folder-open-outline" size={64} color="#6b7280" />
-            <Text className="text-gray-400 text-center mt-4">
-              هیچ فایلی یافت نشد
-            </Text>
-            <Text className="text-gray-500 text-center text-sm mt-2">
-              فایل جدیدی آپلود کنید
-            </Text>
-          </View>
-        ) : (
-          <View className="space-y-3">
-            {allFiles.page.map((file) => (
-              <View
-                  key={file._id}
-                className="bg-background-light/60 rounded-lg border border-gray-700/30 p-4"
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <Text className="text-white font-medium text-right">
-                      {file.originalName}
-                    </Text>
-                    <View className="flex-row items-center gap-4 mt-1">
-                      <Text className="text-gray-400 text-sm">
-                            {formatFileSize(file.fileSize)}
-                      </Text>
-                      <Text className="text-gray-400 text-sm">
-                        {formatDate(file.uploadedAt)}
-                      </Text>
-                      <Text className="text-gray-400 text-sm">
-                        {file.fileType}
-                      </Text>
-                    </View>
-                  </View>
-                  
-                  <View className="flex-row items-center gap-2">
-                    <TouchableOpacity
-                      onPress={() => setPreviewFile(file)}
-                      className="p-2 bg-gray-700/50 rounded-lg"
-                    >
-                      <Ionicons name="eye-outline" size={16} color="#9ca3af" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => {
-                        setEditingFile(file._id);
-                        setEditName(file.originalName);
-                      }}
-                      className="p-2 bg-gray-700/50 rounded-lg"
-                    >
-                      <Ionicons name="pencil-outline" size={16} color="#9ca3af" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      onPress={() => handleDelete(file._id, file.originalName)}
-                      className="p-2 bg-red-600/20 rounded-lg"
-                    >
-                      <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+      {/* Files Table */}
+      <DataTableRN
+        columns={filesColumns}
+        data={allFiles.page}
+        keyExtractor={(file) => file._id}
+        emptyState={{
+          icon: <Ionicons name="folder-open-outline" size={32} color="#6b7280" />,
+          title: "هیچ فایلی یافت نشد",
+          description: "فایل جدیدی آپلود کنید",
+          action: (
+            <Button
+              onPress={() => setShowUploadForm(true)}
+              variant="primary"
+              size="sm"
+              icon={<Ionicons name="cloud-upload-outline" size={16} color="#fff" />}
+            >
+              آپلود فایل
+            </Button>
+          ),
+        }}
+      />
 
       {/* Pagination */}
       {allFiles.page.length > 0 && (
         <View className="mt-4">
-        <PaginationControls 
-          currentPage={filesPage}
+          <PaginationControls 
+            currentPage={filesPage}
             isDone={allFiles.isDone}
-          onNext={handleNextFiles}
-          onPrev={handlePrevFiles}
-          isLoading={allFiles === undefined}
-        />
+            onNext={handleNextFiles}
+            onPrev={handlePrevFiles}
+            isLoading={allFiles === undefined}
+          />
         </View>
       )}
 

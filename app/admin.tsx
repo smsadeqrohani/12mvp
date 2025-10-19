@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, FlatList, Modal, TextInput, Alert, Platform } from "react-native";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Modal, Alert, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../convex/_generated/api";
@@ -549,89 +549,12 @@ export default function AdminScreen() {
       return <SkeletonAdminTab />;
     }
 
-    return (
-      <ScrollView 
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                مدیریت سؤالات
-              </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                مدیریت و تنظیم سؤالات سیستم
-              </Text>
-            </View>
-            <View className="flex-row items-center gap-3">
-              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
-                <Text className="text-gray-400 text-sm">صفحه:</Text>
-                <Text className="text-white font-semibold mr-2">{questionsPage.toLocaleString('fa-IR')}</Text>
-              </View>
-            <TouchableOpacity
-              onPress={handleCreateQuestion}
-              className="flex-row items-center gap-2 px-4 py-3 bg-accent rounded-lg"
-              style={{ minHeight: touchTargetSize }}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-              <Text className="text-white text-sm font-semibold">افزودن سؤال</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      
-      {/* Questions Table */}
-      <View className="bg-gradient-to-br from-background-light/80 to-background-light/40 backdrop-blur-sm rounded-2xl border border-gray-700/30 overflow-hidden shadow-2xl shadow-black/20">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="min-w-full">
-            {/* Table Header */}
-            <View className="bg-gradient-to-r from-gray-800/80 to-gray-700/80 border-b border-gray-600/50 flex-row">
-              <View className="w-80 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  متن سؤال
-                </Text>
-              </View>
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  زمان پاسخ (ثانیه)
-                </Text>
-              </View>
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  سطح سختی
-                </Text>
-              </View>
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  دسته‌بندی
-                </Text>
-              </View>
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  پاسخ صحیح
-                </Text>
-              </View>
-              <View className="w-48 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  عملیات
-                </Text>
-              </View>
-            </View>
-            
-            {/* Table Body */}
-            <View>
-              {allQuestions?.page?.map((question, index) => (
-                <View
-                  key={question._id}
-                  className={`border-b border-gray-700/30 ${
-                    index % 2 === 0 ? "bg-gray-800/10" : "bg-gray-800/5"
-                  }`}
-                >
-                  <View className="flex-row items-center min-h-[100px]">
-                    {/* Question Text */}
-                    <View className="w-80 px-6 py-4">
+    // Define table columns
+    const questionsColumns: Column<typeof allQuestions.page[0]>[] = [
+      {
+        key: 'questionText',
+        header: 'متن سؤال',
+        render: (question) => (
                       <View className="flex-row items-start gap-3">
                         <View className="w-8 h-8 bg-accent rounded-full items-center justify-center">
                           <Text className="text-white font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
@@ -652,17 +575,21 @@ export default function AdminScreen() {
                           )}
                         </View>
                       </View>
-                    </View>
-                    
-                    {/* Time */}
-                    <View className="w-32 px-6 py-4">
+        ),
+      },
+      {
+        key: 'timeToRespond',
+        header: 'زمان پاسخ (ثانیه)',
+        render: (question) => (
                       <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
                         {question.timeToRespond.toLocaleString('fa-IR')}
                       </Text>
-                    </View>
-                    
-                    {/* Difficulty */}
-                    <View className="w-32 px-6 py-4">
+        ),
+      },
+      {
+        key: 'grade',
+        header: 'سطح سختی',
+        render: (question) => (
                       <View className="flex-row items-center gap-1">
                         {Array.from({ length: 5 }, (_, i) => (
                           <View
@@ -674,11 +601,13 @@ export default function AdminScreen() {
                         ))}
                         <Text className="text-gray-300 text-sm mr-2">{question.grade}</Text>
                       </View>
-                    </View>
-                    
-                    {/* Category */}
-                    <View className="w-32 px-6 py-4">
-                      {question.category ? (
+        ),
+      },
+      {
+        key: 'category',
+        header: 'دسته‌بندی',
+        render: (question) => (
+          question.category ? (
                         <View className="px-3 py-1 rounded-full bg-blue-900/30 border border-blue-800/30 w-fit">
                           <Text className="text-blue-400 text-xs font-medium">
                             {question.category}
@@ -686,20 +615,25 @@ export default function AdminScreen() {
                         </View>
                       ) : (
                         <Text className="text-gray-500 text-sm">بدون دسته</Text>
-                      )}
-                    </View>
-                    
-                    {/* Correct Answer */}
-                    <View className="w-32 px-6 py-4">
+          )
+        ),
+      },
+      {
+        key: 'rightAnswer',
+        header: 'پاسخ صحیح',
+        render: (question) => (
                       <View className="px-3 py-1 rounded-full bg-green-900/30 border border-green-800/30 w-fit">
                         <Text className="text-green-400 text-xs font-medium">
                           گزینه {question.rightAnswer}
                         </Text>
                       </View>
-                    </View>
-                    
-                    {/* Actions */}
-                    <View className="w-48 px-6 py-4">
+        ),
+      },
+      {
+        key: 'actions',
+        header: 'عملیات',
+        width: 200,
+        render: (question) => (
                       <View className="flex-row items-center gap-2">
                         <TouchableOpacity
                           onPress={() => handleEditQuestion(question)}
@@ -722,32 +656,64 @@ export default function AdminScreen() {
                           </Text>
                         </TouchableOpacity>
                       </View>
-                    </View>
-                  </View>
-                </View>
-              ))}
-              
-              {allQuestions?.page?.length === 0 && (
-                <View className="items-center py-16">
-                  <View className="w-16 h-16 bg-gray-700/50 rounded-full items-center justify-center mb-4">
-                    <Ionicons name="help-circle" size={32} color="#6b7280" />
-                  </View>
-                  <Text className="text-gray-400 text-lg">سؤالی یافت نشد</Text>
-                  <Text className="text-gray-500 text-sm mt-1">هنوز هیچ سؤالی در سیستم ثبت نشده است</Text>
+        ),
+      },
+    ];
+
+    return (
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت سؤالات
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مدیریت و تنظیم سؤالات سیستم
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">صفحه:</Text>
+                <Text className="text-white font-semibold mr-2">{questionsPage.toLocaleString('fa-IR')}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={handleCreateQuestion}
+                className="flex-row items-center gap-2 px-4 py-3 bg-accent rounded-lg"
+                style={{ minHeight: touchTargetSize }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={20} color="#fff" />
+                <Text className="text-white text-sm font-semibold">افزودن سؤال</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      
+      {/* Questions Table */}
+      <DataTableRN
+        columns={questionsColumns}
+        data={allQuestions?.page || []}
+        keyExtractor={(question) => question._id}
+        emptyState={{
+          icon: <Ionicons name="help-circle" size={32} color="#6b7280" />,
+          title: "سؤالی یافت نشد",
+          description: "هنوز هیچ سؤالی در سیستم ثبت نشده است",
+          action: (
                   <TouchableOpacity
                     onPress={handleCreateQuestion}
-                    className="flex-row items-center gap-2 px-4 py-2 bg-accent rounded-lg mt-4"
+              className="flex-row items-center gap-2 px-4 py-2 bg-accent rounded-lg"
                     activeOpacity={0.7}
                   >
                     <Ionicons name="add" size={16} color="#fff" />
                     <Text className="text-white text-sm font-semibold">افزودن اولین سؤال</Text>
                   </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+          ),
+        }}
+      />
       
       <PaginationControls 
         currentPage={questionsPage}
@@ -763,12 +729,22 @@ export default function AdminScreen() {
   const renderFilesTab = () => (
     <View className="flex-1">
       <View className="mb-6">
+        <View className="flex-row items-center justify-between mb-4">
+          <View>
         <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
           مدیریت فایل‌ها
         </Text>
         <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
           مدیریت فایل‌های آپلود شده
         </Text>
+          </View>
+          <View className="flex-row items-center gap-3">
+            <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+              <Text className="text-gray-400 text-sm">صفحه:</Text>
+              <Text className="text-white font-semibold mr-2">{filesPage.toLocaleString('fa-IR')}</Text>
+            </View>
+          </View>
+        </View>
       </View>
       <FilesTable />
     </View>
@@ -779,6 +755,180 @@ export default function AdminScreen() {
     if (allMatches === undefined) {
       return <SkeletonAdminTab />;
     }
+
+    // Define table columns
+    const matchesColumns: Column<typeof allMatches.page[0]>[] = [
+      {
+        key: 'id',
+        header: 'شناسه',
+        render: (matchData) => (
+          <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {matchData.match._id.slice(-8)}
+          </Text>
+        ),
+      },
+      {
+        key: 'creator',
+        header: 'سازنده',
+        render: (matchData) => {
+          const { creator } = matchData;
+          return (
+            <View className="flex-row items-center gap-2">
+              <View className="w-8 h-8 bg-accent/20 rounded-full items-center justify-center">
+                <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  {creator?.name[0] || "?"}
+                </Text>
+              </View>
+              <Text className="text-white text-sm font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                {creator?.name || "ناشناس"}
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'participants',
+        header: 'شرکت‌کنندگان',
+        render: (matchData) => {
+          const { participants } = matchData;
+          return (
+            <View className="space-y-1">
+              {participants.map((p) => (
+                <View key={p.userId} className="flex-row items-center gap-2">
+                  <View className="w-6 h-6 bg-accent/20 rounded-full items-center justify-center">
+                    <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                      {p.profile?.name[0] || "?"}
+                    </Text>
+                  </View>
+                  <Text className="text-white text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                    {p.profile?.name || "ناشناس"}
+                  </Text>
+                  {p.completedAt && (
+                    <Ionicons name="checkmark-circle" size={12} color="#10b981" />
+                  )}
+                </View>
+              ))}
+            </View>
+          );
+        },
+      },
+      {
+        key: 'status',
+        header: 'وضعیت',
+        render: (matchData) => {
+          const { match } = matchData;
+          const statusColors = {
+            waiting: "bg-yellow-900/30 text-yellow-400 border-yellow-800/30",
+            active: "bg-blue-900/30 text-blue-400 border-blue-800/30",
+            completed: "bg-green-900/30 text-green-400 border-green-800/30",
+            cancelled: "bg-red-900/30 text-red-400 border-red-800/30",
+          };
+          const statusText = {
+            waiting: "منتظر",
+            active: "در حال انجام",
+            completed: "تکمیل شده",
+            cancelled: "لغو شده",
+          };
+          
+          return (
+            <View className={`px-3 py-1 rounded-full border ${statusColors[match.status]} w-fit`}>
+              <Text className="text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                {statusText[match.status]}
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'date',
+        header: 'تاریخ',
+        render: (matchData) => {
+          const { match } = matchData;
+          return (
+            <View>
+              <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {new Date(match.createdAt).toLocaleDateString("fa-IR")}
+              </Text>
+              <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {new Date(match.createdAt).toLocaleTimeString("fa-IR", { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'result',
+        header: 'نتیجه',
+        render: (matchData) => {
+          const { result, participants } = matchData;
+          if (!result) {
+            return <Text className="text-gray-500 text-sm">-</Text>;
+          }
+          
+          if (result.isDraw) {
+            return (
+              <Text className="text-yellow-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                مساوی
+              </Text>
+            );
+          }
+          
+          return (
+            <View>
+              <Text className="text-green-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                برنده: {participants.find(p => p.userId === result.winnerId)?.profile?.name || "ناشناس"}
+              </Text>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {result.player1Score} - {result.player2Score}
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: 'عملیات',
+        width: 200,
+        render: (matchData) => {
+          const { match } = matchData;
+          return (
+            <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={() => handleViewMatch(match._id)}
+                className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                style={{ minHeight: touchTargetSize }}
+                activeOpacity={0.7}
+              >
+                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  جزئیات
+                </Text>
+              </TouchableOpacity>
+              {(match.status === "waiting" || match.status === "active") && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    console.log("Cancel button pressed for match:", match._id);
+                    console.log("Match status:", match.status);
+                    console.log("User profile:", userProfile);
+                    e.stopPropagation();
+                    handleCancelMatch(match._id);
+                  }}
+                  className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+                  style={{ minHeight: touchTargetSize }}
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    لغو مسابقه
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        },
+      },
+    ];
 
     return (
       <ScrollView 
@@ -800,223 +950,27 @@ export default function AdminScreen() {
                 <Text className="text-gray-400 text-sm">صفحه:</Text>
                 <Text className="text-white font-semibold mr-2">{matchesPage.toLocaleString('fa-IR')}</Text>
               </View>
-            <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
-              <Text className="text-gray-400 text-sm">فعال در این صفحه:</Text>
-              <Text className="text-accent font-semibold mr-2">
-                {allMatches?.page?.filter(m => m.match.status === "waiting" || m.match.status === "active").length || 0}
-              </Text>
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">فعال در این صفحه:</Text>
+                <Text className="text-accent font-semibold mr-2">
+                  {allMatches?.page?.filter(m => m.match.status === "waiting" || m.match.status === "active").length || 0}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
-      </View>
       
       {/* Matches Table */}
-      <View className="bg-gradient-to-br from-background-light/80 to-background-light/40 backdrop-blur-sm rounded-2xl border border-gray-700/30 overflow-hidden shadow-2xl shadow-black/20">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="min-w-full">
-            {/* Table Header */}
-            <View className="bg-gradient-to-r from-gray-800/80 to-gray-700/80 border-b border-gray-600/50 flex-row">
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  شناسه
-                </Text>
-              </View>
-              <View className="w-40 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  سازنده
-                </Text>
-              </View>
-              <View className="w-48 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  شرکت‌کنندگان
-                </Text>
-              </View>
-              <View className="w-32 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  وضعیت
-                </Text>
-              </View>
-              <View className="w-40 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  تاریخ
-                </Text>
-              </View>
-              <View className="w-40 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  نتیجه
-                </Text>
-              </View>
-              <View className="w-48 px-6 py-4">
-                <Text className="text-gray-300 font-semibold text-sm uppercase tracking-wider text-right">
-                  عملیات
-                </Text>
-              </View>
-            </View>
-            
-            {/* Table Body */}
-            <View>
-              {allMatches?.page?.map((matchData, index) => {
-                const { match, participants, creator, result } = matchData;
-                const statusColors = {
-                  waiting: "bg-yellow-900/30 text-yellow-400 border-yellow-800/30",
-                  active: "bg-blue-900/30 text-blue-400 border-blue-800/30",
-                  completed: "bg-green-900/30 text-green-400 border-green-800/30",
-                  cancelled: "bg-red-900/30 text-red-400 border-red-800/30",
-                };
-                const statusText = {
-                  waiting: "منتظر",
-                  active: "در حال انجام",
-                  completed: "تکمیل شده",
-                  cancelled: "لغو شده",
-                };
-                
-                return (
-                  <View
-                    key={match._id}
-                    className={`border-b border-gray-700/30 ${
-                      index % 2 === 0 ? "bg-gray-800/10" : "bg-gray-800/5"
-                    }`}
-                  >
-                    <View className="flex-row items-center min-h-[100px]">
-                      {/* ID */}
-                      <View className="w-32 px-6 py-4">
-                        <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                          {match._id.slice(-8)}
-                        </Text>
-                      </View>
-                      
-                      {/* Creator */}
-                      <View className="w-40 px-6 py-4">
-                        <View className="flex-row items-center gap-2">
-                          <View className="w-8 h-8 bg-accent/20 rounded-full items-center justify-center">
-                            <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                              {creator?.name[0] || "?"}
-                            </Text>
-                          </View>
-                          <Text className="text-white text-sm font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                            {creator?.name || "ناشناس"}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      {/* Participants */}
-                      <View className="w-48 px-6 py-4">
-                        <View className="space-y-1">
-                          {participants.map((p) => (
-                            <View key={p.userId} className="flex-row items-center gap-2">
-                              <View className="w-6 h-6 bg-accent/20 rounded-full items-center justify-center">
-                                <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                                  {p.profile?.name[0] || "?"}
-                                </Text>
-                              </View>
-                              <Text className="text-white text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                                {p.profile?.name || "ناشناس"}
-                              </Text>
-                              {p.completedAt && (
-                                <Ionicons name="checkmark-circle" size={12} color="#10b981" />
-                              )}
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                      
-                      {/* Status */}
-                      <View className="w-32 px-6 py-4">
-                        <View className={`px-3 py-1 rounded-full border ${statusColors[match.status]} w-fit`}>
-                          <Text className="text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                            {statusText[match.status]}
-                          </Text>
-                        </View>
-                      </View>
-                      
-                      {/* Date */}
-                      <View className="w-40 px-6 py-4">
-                        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                          {new Date(match.createdAt).toLocaleDateString("fa-IR")}
-                        </Text>
-                        <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                          {new Date(match.createdAt).toLocaleTimeString("fa-IR", { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
-                          })}
-                        </Text>
-                      </View>
-                      
-                      {/* Result */}
-                      <View className="w-40 px-6 py-4">
-                        {result ? (
-                          <View>
-                            {result.isDraw ? (
-                              <Text className="text-yellow-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                                مساوی
-                              </Text>
-                            ) : (
-                              <View>
-                                <Text className="text-green-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                                  برنده: {participants.find(p => p.userId === result.winnerId)?.profile?.name || "ناشناس"}
-                                </Text>
-                                <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                                  {result.player1Score} - {result.player2Score}
-                                </Text>
-                              </View>
-                            )}
-                          </View>
-                        ) : (
-                          <Text className="text-gray-500 text-sm">-</Text>
-                        )}
-                      </View>
-                      
-                      {/* Actions */}
-                      <View className="w-48 px-6 py-4">
-                        <View className="flex-row items-center gap-2">
-                          <TouchableOpacity
-                            onPress={() => handleViewMatch(match._id)}
-                            className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
-                            style={{ minHeight: touchTargetSize }}
-                            activeOpacity={0.7}
-                          >
-                            <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                              جزئیات
-                            </Text>
-                          </TouchableOpacity>
-                          {(match.status === "waiting" || match.status === "active") && (
-                            <TouchableOpacity
-                              onPress={(e) => {
-                                console.log("Cancel button pressed for match:", match._id);
-                                console.log("Match status:", match.status);
-                                console.log("User profile:", userProfile);
-                                e.stopPropagation();
-                                handleCancelMatch(match._id);
-                              }}
-                              className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
-                              style={{ minHeight: touchTargetSize }}
-                              activeOpacity={0.7}
-                            >
-                              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                                لغو مسابقه
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                );
-              })}
-              
-              {allMatches?.page?.length === 0 && (
-                <View className="items-center py-16">
-                  <View className="w-16 h-16 bg-gray-700/50 rounded-full items-center justify-center mb-4">
-                    <Ionicons name="trophy" size={32} color="#6b7280" />
-                  </View>
-                  <Text className="text-gray-400 text-lg">مسابقه‌ای یافت نشد</Text>
-                  <Text className="text-gray-500 text-sm mt-1">هنوز هیچ مسابقه‌ای در سیستم ثبت نشده است</Text>
-                </View>
-              )}
-            </View>
-          </View>
-        </ScrollView>
-      </View>
+      <DataTableRN
+        columns={matchesColumns}
+        data={allMatches?.page || []}
+        keyExtractor={(matchData) => matchData.match._id}
+        emptyState={{
+          icon: <Ionicons name="trophy" size={32} color="#6b7280" />,
+          title: "مسابقه‌ای یافت نشد",
+          description: "هنوز هیچ مسابقه‌ای در سیستم ثبت نشده است",
+        }}
+      />
       
       <PaginationControls 
         currentPage={matchesPage}
