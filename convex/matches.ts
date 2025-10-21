@@ -11,9 +11,15 @@
 // Core match operations
 export {
   createMatch,
+  joinMatch,
+  cancelMatch,
   getMatchDetails,
   getUserActiveMatch,
+  getUserActiveMatches,
+  getUserPendingResultsMatches,
   getUserActiveMatchStatus,
+  getWaitingMatches,
+  getMyWaitingMatches,
   leaveMatch,
 } from "./matchCore";
 
@@ -30,8 +36,8 @@ export {
   getMatchResultsPartial,
 } from "./matchResults";
 
-// Admin operations
+// Admin operations (for admin panel only)
 export {
   getAllMatches,
-  cancelMatch,
+  cancelMatch as adminCancelMatch,
 } from "./matchAdmin";

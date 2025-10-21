@@ -94,7 +94,9 @@ export const submitAnswer = mutation({
     });
     
     // Check if this was the last question for this user
-    if (updatedAnswers.length === match.questions.length) {
+    const userCompleted = updatedAnswers.length === match.questions.length;
+    
+    if (userCompleted) {
       // Calculate total score and time
       const totalScore = updatedAnswers.filter(a => a.isCorrect).length;
       const totalTime = updatedAnswers.reduce((sum, a) => sum + a.timeSpent, 0);
@@ -157,8 +159,11 @@ export const submitAnswer = mutation({
       }
     }
     
-    // DO NOT expose correct answer to client for security
-    return { isCorrect };
+    // Return result without exposing correct answer
+    return { 
+      isCorrect,
+      userCompleted,
+    };
   },
 });
 

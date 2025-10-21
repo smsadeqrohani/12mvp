@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAdmin } from "./utils";
 
@@ -110,6 +110,46 @@ export const cancelMatch = mutation({
     }
     
     return true;
+  },
+});
+
+export const expireOldMatches = internalMutation({
+  handler: async (ctx) => {
+    const now = Date.now();
+    
+    // Find all matches that have expired
+    const allMatches = await ctx.db.query("matches").collect();
+    
+    const expiredMatches = allMatches.filter(
+      match => 
+        match.expiresAt <= now && 
+        (match.status === "waiting" || match.status === "active")
+    );
+    
+    console.log(`Found ${expiredMatches.length} expired matches to cancel`);
+    
+    // Cancel each expired match
+    for (const match of expiredMatches) {
+      // Update match status
+      await ctx.db.patch(match._id, {
+        status: "cancelled",
+        completedAt: now,
+      });
+      
+      // Remove all participants
+      const participants = await ctx.db
+        .query("matchParticipants")
+        .withIndex("by_match", (q) => q.eq("matchId", match._id))
+        .collect();
+      
+      for (const participant of participants) {
+        await ctx.db.delete(participant._id);
+      }
+      
+      console.log(`Cancelled expired match ${match._id}`);
+    }
+    
+    return { cancelledCount: expiredMatches.length };
   },
 });
 

@@ -55,10 +55,11 @@ const applicationTables = {
     createdAt: v.number(),
     startedAt: v.optional(v.number()),
     completedAt: v.optional(v.number()),
+    expiresAt: v.number(),
     questions: v.array(v.id("questions")),
     currentQuestionIndex: v.optional(v.number()),
     creatorId: v.optional(v.id("users")),
-  }).index("by_status", ["status"]),
+  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]),
   
   matchParticipants: defineTable({
     matchId: v.id("matches"),

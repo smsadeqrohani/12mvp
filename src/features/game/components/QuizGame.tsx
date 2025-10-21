@@ -20,7 +20,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const [questionStartTime, setQuestionStartTime] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [isWaitingForOthers, setIsWaitingForOthers] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -29,6 +29,17 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const matchCompletion = useQuery(api.matches.checkMatchCompletion, { matchId });
   const submitAnswer = useMutation(api.matches.submitAnswer);
   const leaveMatch = useMutation(api.matches.leaveMatch);
+
+  // Check localStorage for previous redirect when userProfile is available
+  useEffect(() => {
+    if (userProfile?.userId) {
+      const key = `redirected_${matchId}_${userProfile.userId}`;
+      const wasRedirected = localStorage?.getItem(key) === 'true';
+      if (wasRedirected) {
+        setHasRedirected(true);
+      }
+    }
+  }, [userProfile?.userId, matchId]);
   const mediaUrl = useQuery(
     api.questions.getQuestionMediaUrl,
     matchDetails?.questions[currentQuestionIndex]?.mediaStorageId
@@ -39,17 +50,30 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const currentQuestion = matchDetails?.questions[currentQuestionIndex];
   const timePerQuestion = currentQuestion?.timeToRespond || 30;
 
-  // Check if match is completed
+  // Check if current user has completed all questions
   useEffect(() => {
-    if (matchCompletion?.isCompleted) {
-      console.log("Match completed, redirecting to results...");
-      onGameComplete();
-    } else if (matchCompletion?.allCompleted === false && matchCompletion?.participants?.some(p => p.userId === userProfile?.userId && p.completedAt)) {
-      // If current user has completed all questions but others haven't, show waiting
-      console.log("Current user completed all questions, waiting for other players...");
-      setIsWaitingForOthers(true);
+    const currentParticipant = matchCompletion?.participants?.find(
+      p => p.userId === userProfile?.userId
+    );
+    
+    // If current user completed all questions and hasn't redirected yet
+    if (currentParticipant?.completedAt && !hasRedirected) {
+      // Mark as redirected in localStorage
+      const key = `redirected_${matchId}_${userProfile?.userId}`;
+      localStorage?.setItem(key, 'true');
+      setHasRedirected(true); // Prevent multiple redirects
+      
+      if (matchCompletion?.isCompleted) {
+        // Match is fully completed - this user was the last one to finish
+        console.log("Match fully completed, this was the last player to finish");
+        onGameComplete();
+      } else {
+        // User finished first - go to lobby to see pending results
+        console.log("User finished first, going to lobby to see pending results");
+        onGameComplete();
+      }
     }
-  }, [matchCompletion?.isCompleted, matchCompletion?.allCompleted, matchCompletion?.participants, userProfile?.userId, currentQuestionIndex, matchDetails?.questions.length, onGameComplete]);
+  }, [matchCompletion?.participants, matchCompletion?.isCompleted, userProfile?.userId, onGameComplete, hasRedirected]);
 
   // Initialize timer when question changes
   useEffect(() => {
@@ -131,15 +155,16 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       setIsCorrect(result.isCorrect);
       setShowResult(true);
       
-      // Show result for 2 seconds before moving to next question (faster transition)
+      // Show result for 2 seconds before moving to next question
       setTimeout(() => {
         if (currentQuestionIndex < matchDetails!.questions.length - 1) {
           setCurrentQuestionIndex(prev => prev + 1);
           setIsAnswered(false);
           setShowResult(false);
         } else {
-          // Game completed
-          onGameComplete();
+          // User completed all questions
+          // The useEffect will handle redirect based on match completion status
+          console.log("User completed all questions, useEffect will handle redirect");
         }
       }, 2000);
       
@@ -160,26 +185,17 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   };
 
   const handleLeaveGame = async () => {
-    Alert.alert(
-      "خروج از مسابقه",
-      "آیا مطمئن هستید که می‌خواهید از مسابقه خارج شوید؟",
-      [
-        { text: "لغو", style: "cancel" },
-        {
-          text: "خروج",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await leaveMatch({ matchId });
-              toast.success("از مسابقه خارج شدید");
-              onLeaveMatch();
-            } catch (error) {
-              toast.error("خطا در خروج از مسابقه: " + (error as Error).message);
-            }
-          }
-        }
-      ]
-    );
+    console.log("handleLeaveGame called");
+    try {
+      console.log("Attempting to leave match:", matchId);
+      await leaveMatch({ matchId });
+      console.log("Successfully left match, calling onLeaveMatch");
+      toast.success("از مسابقه خارج شدید");
+      onLeaveMatch();
+    } catch (error) {
+      console.error("Error leaving match:", error);
+      toast.error("خطا در خروج از مسابقه: " + (error as Error).message);
+    }
   };
 
   if (!userProfile || !matchDetails || !currentQuestion) {
@@ -187,32 +203,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#ff701a" />
       </View>
-    );
-  }
-
-  // Show waiting screen if user finished but others haven't
-  if (isWaitingForOthers) {
-    return (
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="w-full px-6 py-8">
-          <View className="max-w-2xl mx-auto">
-            <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-8 items-center">
-              <ActivityIndicator size="large" color="#ff701a" className="mb-6" />
-              <Text className="text-2xl font-bold text-white mb-4">
-                منتظر سایر بازیکنان...
-              </Text>
-              <Text className="text-gray-300 mb-6 text-center">
-                شما تمام سؤالات را پاسخ دادید. منتظر بمانید تا سایر بازیکنان نیز تکمیل کنند.
-              </Text>
-              <View className="bg-accent/20 rounded-lg p-4 border border-accent/30">
-                <Text className="text-accent font-semibold text-center">
-                  نتایج به محض تکمیل همه بازیکنان نمایش داده خواهد شد
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
     );
   }
 
