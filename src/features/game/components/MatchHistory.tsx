@@ -65,8 +65,8 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   };
 
   const getAccuracy = (participant: any) => {
-    if (!participant.answers) return 0;
-    const correct = participant.answers.filter((a: any) => a.isCorrect).length;
+    if (!participant?.answers || !Array.isArray(participant.answers)) return 0;
+    const correct = participant.answers.filter((a: any) => a?.isCorrect).length;
     return Math.round((correct / participant.answers.length) * 100);
   };
 
@@ -114,153 +114,154 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   }
 
   return (
-    <View className="flex-1 w-full px-6 py-8 space-y-6">
-      {/* Header */}
-      <View className="items-center">
-        <Text className="text-3xl font-bold text-accent mb-2">
-          تاریخچه مسابقات
-        </Text>
-        <Text className="text-gray-300">
-          {matchHistory.length} مسابقه انجام شده
-        </Text>
-      </View>
+    <View className="flex-1 w-full">
+      <FlatList
+        data={matchHistory}
+        keyExtractor={(item) => item.match._id}
+        contentContainerStyle={{ padding: 24, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={() => (
+          <View className="space-y-6">
+            {/* Header */}
+            <View className="items-center">
+              <Text className="text-3xl font-bold text-accent mb-2">
+                تاریخچه مسابقات
+              </Text>
+              <Text className="text-gray-300">
+                {matchHistory.length} مسابقه انجام شده
+              </Text>
+            </View>
 
-      {/* Statistics - Current Page Only */}
-      <View className="flex-row flex-wrap gap-4">
-        <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
-          <Text className="text-2xl font-bold text-accent mb-1">
-            {matchHistory.filter(m => m.isWinner).length}
-          </Text>
-          <Text className="text-gray-300 text-sm">برد (این صفحه)</Text>
-        </View>
-        
-        <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
-          <Text className="text-2xl font-bold text-red-400 mb-1">
-            {matchHistory.filter(m => !m.isWinner && !m.isDraw).length}
-          </Text>
-          <Text className="text-gray-300 text-sm">باخت (این صفحه)</Text>
-        </View>
-        
-        <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
-          <Text className="text-2xl font-bold text-yellow-400 mb-1">
-            {matchHistory.filter(m => m.isDraw).length}
-          </Text>
-          <Text className="text-gray-300 text-sm">مساوی (این صفحه)</Text>
-        </View>
-        
-        <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
-          <Text className="text-2xl font-bold text-gray-400 mb-1">
-            {historyPage}
-          </Text>
-          <Text className="text-gray-300 text-sm">صفحه فعلی</Text>
-        </View>
-      </View>
-
-      {/* Match List */}
-      <View className="bg-background-light/80 rounded-2xl border border-gray-700/30">
-        <View className="p-6">
-          <FlatList
-            data={matchHistory}
-            keyExtractor={(item) => item.match._id}
-            scrollEnabled={false}
-            renderItem={({ item: matchData, index }) => {
-              const { match, result, participant, opponent, isWinner, isDraw } = matchData;
+            {/* Statistics - Current Page Only */}
+            <View className="flex-row flex-wrap gap-4">
+              <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
+                <Text className="text-2xl font-bold text-accent mb-1">
+                  {matchHistory.filter(m => m.isWinner).length}
+                </Text>
+                <Text className="text-gray-300 text-sm">برد (این صفحه)</Text>
+              </View>
               
-              return (
-                <TouchableOpacity 
-                  onPress={() => router.push(`/(tabs)/results/${match._id}`)}
-                  className="bg-background-light/60 rounded-xl border border-gray-700/30 p-6 mb-4 active:bg-background-light/80"
-                  activeOpacity={0.7}
-                >
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-4 flex-1">
-                      {/* Match Number */}
-                      <View className="w-12 h-12 bg-gray-700/50 rounded-full items-center justify-center">
-                        <Text className="text-white font-bold text-lg">
-                          {(historyPage - 1) * PAGE_SIZE + index + 1}
-                        </Text>
-                      </View>
-                    
-                      {/* Match Info */}
-                      <View className="flex-1">
-                        <View className="flex-row items-center gap-3 mb-2">
-                          <Text className="text-lg font-semibold text-white">
-                            مسابقه با {opponent?.name || "بازیکن ناشناس"}
-                          </Text>
-                          
-                          {/* Result Badge */}
-                          <View className={`px-3 py-1 rounded-full border ${
-                            isDraw
-                              ? "bg-yellow-600/20 border-yellow-500/30"
-                              : isWinner
-                              ? "bg-green-600/20 border-green-500/30"
-                              : "bg-red-600/20 border-red-500/30"
-                          }`}>
-                            <Text className={`text-sm font-semibold ${
-                              isDraw ? "text-yellow-400" : isWinner ? "text-green-400" : "text-red-400"
-                            }`}>
-                              {isDraw ? "مساوی" : isWinner ? "برد" : "باخت"}
-                            </Text>
-                          </View>
-                        </View>
-                        
-                        <View className="flex-row items-center gap-4">
-                          <Text className="text-sm text-gray-400">
-                            {new Date(match.completedAt!).toLocaleDateString('fa-IR')}
-                          </Text>
-                          <Text className="text-sm text-gray-400">
-                            {new Date(match.completedAt!).toLocaleTimeString('fa-IR', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                            })}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                    
-                    {/* View Button */}
-                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-                  </View>
-                  
-                  {/* Score Comparison */}
-                  <View className="mt-4">
-                    <View className="flex-row items-center gap-4 mb-2">
-                      <View className="items-center">
-                        <Text className="text-xl font-bold text-accent">
-                          {participant.totalScore}
-                        </Text>
-                        <Text className="text-xs text-gray-400">شما</Text>
-                      </View>
-                      
-                      <Text className="text-gray-500 text-lg">-</Text>
-                      
-                      <View className="items-center">
-                        <Text className="text-xl font-bold text-gray-400">
-                          {result.player1Id === participant.userId ? result.player2Score : result.player1Score}
-                        </Text>
-                        <Text className="text-xs text-gray-400">حریف</Text>
-                      </View>
-                    </View>
-                    
-                    <Text className="text-xs text-gray-500">
-                      دقت: {getAccuracy(participant)}% | 
-                      زمان: {formatTime(participant.totalTime || 0)}
+              <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
+                <Text className="text-2xl font-bold text-red-400 mb-1">
+                  {matchHistory.filter(m => !m.isWinner && !m.isDraw).length}
+                </Text>
+                <Text className="text-gray-300 text-sm">باخت (این صفحه)</Text>
+              </View>
+              
+              <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
+                <Text className="text-2xl font-bold text-yellow-400 mb-1">
+                  {matchHistory.filter(m => m.isDraw).length}
+                </Text>
+                <Text className="text-gray-300 text-sm">مساوی (این صفحه)</Text>
+              </View>
+              
+              <View className="flex-1 min-w-[120px] bg-background-light/60 rounded-xl border border-gray-700/30 p-4 items-center">
+                <Text className="text-2xl font-bold text-gray-400 mb-1">
+                  {historyPage}
+                </Text>
+                <Text className="text-gray-300 text-sm">صفحه فعلی</Text>
+              </View>
+            </View>
+          </View>
+        )}
+        renderItem={({ item: matchData, index }) => {
+          const { match, result, participant, opponent, isWinner, isDraw } = matchData;
+          
+          return (
+            <TouchableOpacity 
+              onPress={() => router.push(`/(tabs)/results/${match._id}`)}
+              className="bg-background-light/60 rounded-xl border border-gray-700/30 p-6 mb-4 active:bg-background-light/80"
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-4 flex-1">
+                  {/* Match Number */}
+                  <View className="w-12 h-12 bg-gray-700/50 rounded-full items-center justify-center">
+                    <Text className="text-white font-bold text-lg">
+                      {(historyPage - 1) * PAGE_SIZE + index + 1}
                     </Text>
                   </View>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-
-        {/* Pagination Controls */}
-        <PaginationControls 
-          currentPage={historyPage}
-          isDone={matchHistoryResult?.isDone ?? true}
-          onNext={handleNextHistory}
-          onPrev={handlePrevHistory}
-        />
-      </View>
+                
+                  {/* Match Info */}
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-3 mb-2">
+                      <Text className="text-lg font-semibold text-white">
+                        مسابقه با {opponent?.name ?? "بازیکن ناشناس"}
+                      </Text>
+                      
+                      {/* Result Badge */}
+                      <View className={`px-3 py-1 rounded-full border ${
+                        isDraw
+                          ? "bg-yellow-600/20 border-yellow-500/30"
+                          : isWinner
+                          ? "bg-green-600/20 border-green-500/30"
+                          : "bg-red-600/20 border-red-500/30"
+                      }`}>
+                        <Text className={`text-sm font-semibold ${
+                          isDraw ? "text-yellow-400" : isWinner ? "text-green-400" : "text-red-400"
+                        }`}>
+                          {isDraw ? "مساوی" : isWinner ? "برد" : "باخت"}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View className="flex-row items-center gap-4">
+                      <Text className="text-sm text-gray-400">
+                        {match.completedAt ? new Date(match.completedAt).toLocaleDateString('fa-IR') : 'نامشخص'}
+                      </Text>
+                      <Text className="text-sm text-gray-400">
+                        {match.completedAt ? new Date(match.completedAt).toLocaleTimeString('fa-IR', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        }) : 'نامشخص'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                
+                {/* View Button */}
+                <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+              </View>
+              
+              {/* Score Comparison */}
+              <View className="mt-4">
+                <View className="flex-row items-center gap-4 mb-2">
+                  <View className="items-center">
+                    <Text className="text-xl font-bold text-accent">
+                      {participant.totalScore ?? 0}
+                    </Text>
+                    <Text className="text-xs text-gray-400">شما</Text>
+                  </View>
+                  
+                  <Text className="text-gray-500 text-lg">-</Text>
+                  
+                  <View className="items-center">
+                    <Text className="text-xl font-bold text-gray-400">
+                      {result.player1Id === participant.userId ? (result.player2Score ?? 0) : (result.player1Score ?? 0)}
+                    </Text>
+                    <Text className="text-xs text-gray-400">حریف</Text>
+                  </View>
+                </View>
+                
+                <Text className="text-xs text-gray-500">
+                  دقت: {getAccuracy(participant)}% | 
+                  زمان: {formatTime(participant.totalTime || 0)}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        ListFooterComponent={() => (
+          <View className="mt-6">
+            <PaginationControls 
+              currentPage={historyPage}
+              isDone={matchHistoryResult?.isDone ?? true}
+              onNext={handleNextHistory}
+              onPrev={handlePrevHistory}
+            />
+          </View>
+        )}
+      />
     </View>
   );
 }

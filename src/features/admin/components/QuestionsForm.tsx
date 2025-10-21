@@ -81,6 +81,8 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
           questionId: question._id,
           ...formData,
           rightAnswer: parseInt(formData.rightAnswer),
+          grade: parseFloat(formData.grade.toString()),
+          timeToRespond: parseFloat(formData.timeToRespond.toString()),
           categories: selectedCategories.length > 0 ? selectedCategories : undefined,
         });
         toast.success("سؤال با موفقیت به‌روزرسانی شد");
@@ -89,6 +91,8 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
         await createQuestion({
           ...formData,
           rightAnswer: parseInt(formData.rightAnswer),
+          grade: parseFloat(formData.grade.toString()),
+          timeToRespond: parseFloat(formData.timeToRespond.toString()),
           categories: selectedCategories.length > 0 ? selectedCategories : undefined,
         });
         toast.success("سؤال جدید با موفقیت ایجاد شد");
@@ -445,13 +449,13 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
                     key={grade}
                     onPress={() => handleInputChange("grade", grade.toString())}
                     className={`flex-1 py-3 px-4 rounded-lg border ${
-                      formData.grade === grade
+                      Number(formData.grade) === grade
                         ? "bg-accent/20 border-accent"
                         : "bg-gray-700/50 border-gray-600"
                     }`}
                   >
                     <Text className={`text-center font-medium ${
-                      formData.grade === grade ? "text-accent" : "text-gray-300"
+                      Number(formData.grade) === grade ? "text-accent" : "text-gray-300"
                     }`}>
                       {grade}
                     </Text>
@@ -662,13 +666,13 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
                     key={grade}
                     onPress={() => handleInputChange("grade", grade.toString())}
                     className={`flex-1 py-3 px-4 rounded-lg border ${
-                      formData.grade === grade
+                      Number(formData.grade) === grade
                         ? "bg-accent/20 border-accent"
                         : "bg-gray-700/50 border-gray-600"
                     }`}
                   >
                     <Text className={`text-center font-medium ${
-                      formData.grade === grade ? "text-accent" : "text-gray-300"
+                      Number(formData.grade) === grade ? "text-accent" : "text-gray-300"
                     }`}>
                       {grade}
                     </Text>
