@@ -58,6 +58,22 @@ export default function TournamentDetailScreen() {
   }
 
   const { tournament, participants, matches } = tournamentDetails;
+  
+  // Get match completion status for the current user's active matches
+  const userActiveMatches = matches.filter((m: any) => {
+    const isUserInMatch = m.player1Id === loggedInUser?._id || m.player2Id === loggedInUser?._id;
+    return isUserInMatch && m.match;
+  });
+  
+  // For each active match, we'll query completion status
+  // For now, we'll check if the match has a result
+  const matchesWithCompletion = userActiveMatches.map((matchData: any) => {
+    // If match is completed, we know the user has completed it
+    return {
+      matchData,
+      userCompleted: matchData.match?.status === "completed"
+    };
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -249,8 +265,12 @@ export default function TournamentDetailScreen() {
                     shouldShowJoinButton = userWonSemi1 || userWonSemi2;
                   }
                 } else if (match) {
-                  // Regular match (not final placeholder)
-                  shouldShowJoinButton = isUserInMatch;
+                  // Regular match - check if user has completed their part
+                  // Don't show button if user has already completed the match
+                  const userCompleted = matchData.currentUserCompleted;
+                  
+                  // Show button only if user is in match, match is active, and user hasn't completed it
+                  shouldShowJoinButton = isUserInMatch && isMatchActive && !userCompleted;
                 }
 
                 return (

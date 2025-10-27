@@ -17,6 +17,7 @@ export {
   getWaitingTournaments,
   getMyWaitingTournaments,
   leaveTournament,
+  checkTournamentMatch,
 } from "./tournamentCore";
 
 // Results and history

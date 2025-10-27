@@ -483,13 +483,30 @@ export const getTournamentDetails = query({
       .withIndex("by_tournament", (q: any) => q.eq("tournamentId", args.tournamentId))
       .collect();
     
-    // Enrich matches with match details
+    // Enrich matches with match details and participant info
     const enrichedMatches = await Promise.all(
       tournamentMatches.map(async (tm) => {
         const match = await ctx.db.get(tm.matchId);
+        
+        // Get match participants to check if current user has completed
+        let currentUserCompleted = false;
+        if (match) {
+          const matchParticipants = await ctx.db
+            .query("matchParticipants")
+            .withIndex("by_match", (q: any) => q.eq("matchId", tm.matchId))
+            .collect();
+          
+          const currentUserParticipant = matchParticipants.find(
+            (p: any) => p.userId === currentUserId
+          );
+          
+          currentUserCompleted = currentUserParticipant?.completedAt !== undefined;
+        }
+        
         return {
           ...tm,
           match,
+          currentUserCompleted,
         };
       })
     );

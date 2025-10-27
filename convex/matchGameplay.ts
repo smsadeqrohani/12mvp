@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
+import { getRandomQuestions } from "./utils";
 
 /**
  * Match gameplay operations - answer submission, completion checking
@@ -192,7 +193,6 @@ export const submitAnswer = mutation({
               const winner2Id = semi2.winnerId;
               
               // Create the actual final match using the tournament match creation logic
-              const { getRandomQuestions } = await import("./utils");
               const finalQuestions = await getRandomQuestions(ctx);
               
               const now = Date.now();
