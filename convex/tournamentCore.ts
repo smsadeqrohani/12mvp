@@ -14,13 +14,27 @@ function generateTournamentId(): string {
  */
 
 export const createTournament = mutation({
-  args: {},
+  args: {
+    categoryId: v.optional(v.id("categories")),
+    isRandom: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
+    
+    // If categoryId is provided, validate it exists
+    if (args.categoryId) {
+      const category = await ctx.db.get(args.categoryId);
+      if (!category) {
+        throw new Error("Invalid category ID");
+      }
+    }
     
     const now = Date.now();
     const expiresAt = now + (24 * 60 * 60 * 1000); // 24 hours from now
     const tournamentId = generateTournamentId();
+    
+    // Determine if random (if no category specified, default to random)
+    const isRandom = args.isRandom ?? (!args.categoryId);
     
     // Create new tournament in waiting state
     const tournamentDocId = await ctx.db.insert("tournaments", {
@@ -29,6 +43,8 @@ export const createTournament = mutation({
       expiresAt,
       creatorId: currentUserId,
       tournamentId,
+      categoryId: args.categoryId,
+      isRandom,
     });
     
     // Add creator as first participant
@@ -146,6 +162,16 @@ export const joinTournament = mutation({
 });
 
 async function startTournament(ctx: any, tournamentId: string) {
+  // Get tournament details to check category
+  const tournamentDoc = await ctx.db
+    .query("tournaments")
+    .filter((q: any) => q.eq(q.field("tournamentId"), tournamentId))
+    .unique();
+  
+  if (!tournamentDoc) {
+    throw new Error("Tournament not found");
+  }
+  
   // Get all participants
   const participants = await ctx.db
     .query("tournamentParticipants")
@@ -159,11 +185,14 @@ async function startTournament(ctx: any, tournamentId: string) {
   // Shuffle participants
   const shuffled = [...participants].sort(() => Math.random() - 0.5);
   
+  // Get questions based on tournament category (or random if isRandom is true)
+  const categoryId = tournamentDoc.isRandom ? undefined : tournamentDoc.categoryId;
+  
   // Get random questions for semi-finals (same set for both)
-  const semiQuestions = await getRandomQuestions(ctx);
+  const semiQuestions = await getRandomQuestions(ctx, categoryId);
   
   // Get random questions for final (different from semi-finals)
-  const finalQuestions = await getRandomQuestions(ctx);
+  const finalQuestions = await getRandomQuestions(ctx, categoryId);
   
   // Create semi-final 1: player 1 vs player 2
   const semi1MatchId = await createTournamentMatch(
@@ -188,15 +217,6 @@ async function startTournament(ctx: any, tournamentId: string) {
   // Don't create final match yet - will be created when both semifinals complete
   
   // Update tournament status
-  const tournamentDoc = await ctx.db
-    .query("tournaments")
-    .filter((q: any) => q.eq(q.field("tournamentId"), tournamentId))
-    .unique();
-  
-  if (!tournamentDoc) {
-    throw new Error("Tournament not found");
-  }
-  
   await ctx.db.patch(tournamentDoc._id, {
     status: "active",
     startedAt: Date.now(),
@@ -511,8 +531,17 @@ export const getTournamentDetails = query({
       })
     );
     
+    // Get category information if exists
+    let category = null;
+    if (tournament.categoryId) {
+      category = await ctx.db.get(tournament.categoryId);
+    }
+    
     return {
-      tournament,
+      tournament: {
+        ...tournament,
+        category,
+      },
       participants: participantsWithProfiles,
       matches: enrichedMatches,
     };

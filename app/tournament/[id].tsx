@@ -188,7 +188,7 @@ export default function TournamentDetailScreen() {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-between mb-3">
               <View className="flex-row items-center">
                 <Clock size={20} color="#ff701a" />
                 <Text className="text-white text-lg font-bold mr-2">
@@ -202,6 +202,62 @@ export default function TournamentDetailScreen() {
                 </Text>
               </View>
             </View>
+
+            {/* Category */}
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <Users size={20} color="#ff701a" />
+                <Text className="text-white text-lg font-bold mr-2">
+                  دسته‌بندی
+                </Text>
+              </View>
+              <Text className="text-gray-400 text-lg">
+                {tournament.category 
+                  ? tournament.category.persianName 
+                  : tournament.isRandom 
+                    ? "سوالات تصادفی" 
+                    : "نامشخص"}
+              </Text>
+            </View>
+
+            {/* Tournament Winner */}
+            {tournament.status === "completed" && (() => {
+              // Find the final match and its winner
+              const finalMatch = matches.find((m: any) => m.round === "final");
+              const winnerId = finalMatch?.winnerId;
+              
+              if (winnerId) {
+                const winner = participants.find((p: any) => p.userId === winnerId);
+                if (winner) {
+                  return (
+                    <View className="border-t border-gray-700 pt-3 mt-3">
+                      <View className="flex-row items-center justify-between">
+                        <View className="flex-row items-center">
+                          <Trophy size={20} color="#ff701a" />
+                          <Text className="text-white text-lg font-bold mr-2">
+                            برنده تورنومنت
+                          </Text>
+                        </View>
+                        <View className="flex-row items-center">
+                          <View className="w-8 h-8 bg-yellow-500 rounded-full items-center justify-center mr-2">
+                            <Trophy size={16} color="#fff" />
+                          </View>
+                          <Text className="text-yellow-400 text-lg font-bold">
+                            {winner.profile?.name || "Unknown"}
+                          </Text>
+                          {winner.userId === loggedInUser?._id && (
+                            <Text className="text-orange-500 text-xs mr-2">
+                              (شما)
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  );
+                }
+              }
+              return null;
+            })()}
           </View>
 
           {/* Participants List */}
@@ -268,6 +324,15 @@ export default function TournamentDetailScreen() {
                   // Regular match - check if user has completed their part
                   // Don't show button if user has already completed the match
                   const userCompleted = matchData.currentUserCompleted;
+                  
+                  console.log("Match details:", {
+                    round: matchData.round,
+                    isUserInMatch,
+                    isMatchActive,
+                    userCompleted,
+                    matchStatus: match.status,
+                    tournamentMatchStatus: matchData.status,
+                  });
                   
                   // Show button only if user is in match, match is active, and user hasn't completed it
                   shouldShowJoinButton = isUserInMatch && isMatchActive && !userCompleted;
@@ -343,13 +408,19 @@ export default function TournamentDetailScreen() {
                       </TouchableOpacity>
                     )}
                     
+                    {isUserInMatch && !shouldShowJoinButton && !isMatchCompleted && (
+                      <Text className="text-gray-400 text-center py-3">
+                        شما بازی خود را تمام کرده‌اید. منتظر حریف خود باشید...
+                      </Text>
+                    )}
+                    
                     {!match && !shouldShowJoinButton && isFinal && (
                       <Text className="text-gray-400 text-center py-3">
                         در انتظار پایان نیمه‌نهایی‌ها...
                       </Text>
                     )}
                     
-                    {!shouldShowJoinButton && !isMatchCompleted && !isFinal && (
+                    {!isUserInMatch && !shouldShowJoinButton && !isMatchCompleted && !isFinal && (
                       <Text className="text-gray-400 text-center py-3">
                         در انتظار بازیکنان...
                       </Text>

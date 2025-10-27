@@ -26,12 +26,36 @@ export const validateQuestion = (args: any) => {
   if (args.rightAnswer < 1 || args.rightAnswer > 4) throw new Error("Right answer must be between 1 and 4");
 };
 
-export const getRandomQuestions = async (ctx: any) => {
-  const allQuestions = await ctx.db.query("questions").collect();
-  if (allQuestions.length < 5) {
-    throw new Error("Not enough questions in database");
+export const getRandomQuestions = async (ctx: any, categoryId?: any) => {
+  let questions;
+  
+  if (categoryId) {
+    // Get questions for specific category
+    const questionCategories = await ctx.db
+      .query("questionCategories")
+      .withIndex("by_category", (q: any) => q.eq("categoryId", categoryId))
+      .collect();
+    
+    const questionIds = questionCategories.map((qc: any) => qc.questionId);
+    
+    if (questionIds.length === 0) {
+      throw new Error(`No questions found for the selected category`);
+    }
+    
+    questions = await Promise.all(
+      questionIds.map((id: any) => ctx.db.get(id))
+    );
+    questions = questions.filter((q: any) => q !== null);
+  } else {
+    // Get all questions for random
+    questions = await ctx.db.query("questions").collect();
   }
-  const shuffled = allQuestions.sort(() => 0.5 - Math.random());
+  
+  if (questions.length < 5) {
+    throw new Error("Not enough questions available");
+  }
+  
+  const shuffled = questions.sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 5).map((q: any) => q._id);
 };
 

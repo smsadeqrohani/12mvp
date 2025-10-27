@@ -15,12 +15,15 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const [isCreating, setIsCreating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
   const router = useRouter();
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const waitingTournaments = useQuery(api.tournaments.getWaitingTournaments);
   const myWaitingTournaments = useQuery(api.tournaments.getMyWaitingTournaments);
   const activeTournaments = useQuery(api.tournaments.getUserActiveTournaments);
+  const categories = useQuery(api.questionCategories.getCategoriesWithCounts);
   
   const createTournament = useMutation(api.tournaments.createTournament);
   const joinTournament = useMutation(api.tournaments.joinTournament);
@@ -38,9 +41,17 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const handleCreateTournament = async () => {
     try {
       setIsCreating(true);
-      const tournamentId = await createTournament();
+      // Only pass categoryId if selected, otherwise omit it (don't pass null)
+      const args: any = {
+        isRandom: !selectedCategory,
+      };
+      if (selectedCategory) {
+        args.categoryId = selectedCategory;
+      }
+      const tournamentId = await createTournament(args);
       toast.success("تورنومنت ایجاد شد! منتظر بازیکنان دیگر باشید");
       setIsCreating(false);
+      setSelectedCategory(null);
     } catch (error) {
       console.error("Error creating tournament:", error);
       toast.error("خطا در ایجاد تورنومنت: " + (error as Error).message);
@@ -122,6 +133,55 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
           <Text className="text-xl font-semibold text-white mb-4">
             ایجاد تورنومنت جدید
           </Text>
+          
+          {/* Category Selector */}
+          <TouchableOpacity
+            onPress={() => setShowCategorySelector(!showCategorySelector)}
+            className="bg-gray-800/50 rounded-xl p-4 mb-4 flex-row items-center justify-between"
+            activeOpacity={0.7}
+          >
+            <Text className="text-white font-semibold">
+              {selectedCategory 
+                ? categories?.find((c: any) => c._id === selectedCategory)?.persianName 
+                : "انتخاب دسته‌بندی (تصادفی)"}
+            </Text>
+            <Ionicons 
+              name={showCategorySelector ? "chevron-up" : "chevron-down"} 
+              size={20} 
+              color="#fff" 
+            />
+          </TouchableOpacity>
+
+          {showCategorySelector && (
+            <View className="bg-gray-900/80 rounded-xl p-2 mb-4 max-h-48">
+              <ScrollView className="flex-1">
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedCategory(null);
+                    setShowCategorySelector(false);
+                  }}
+                  className={`p-3 rounded-lg mb-2 ${!selectedCategory ? 'bg-accent' : 'bg-gray-800'}`}
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-white font-semibold">سوالات تصادفی</Text>
+                </TouchableOpacity>
+                {categories?.map((category: any) => (
+                  <TouchableOpacity
+                    key={category._id}
+                    onPress={() => {
+                      setSelectedCategory(category._id);
+                      setShowCategorySelector(false);
+                    }}
+                    className={`p-3 rounded-lg mb-2 ${selectedCategory === category._id ? 'bg-accent' : 'bg-gray-800'}`}
+                    activeOpacity={0.7}
+                  >
+                    <Text className="text-white font-semibold">{category.persianName}</Text>
+                    <Text className="text-gray-400 text-xs">{category.questionCount} سوال</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
           
           <TouchableOpacity
             onPress={handleCreateTournament}

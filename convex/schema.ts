@@ -97,6 +97,8 @@ const applicationTables = {
     expiresAt: v.number(),
     creatorId: v.id("users"),
     tournamentId: v.string(), // Unique tournament identifier
+    categoryId: v.optional(v.id("categories")), // Tournament category, null for random
+    isRandom: v.boolean(), // Whether tournament uses random questions
   }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]),
   
   tournamentParticipants: defineTable({
