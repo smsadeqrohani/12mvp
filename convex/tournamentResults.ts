@@ -78,16 +78,36 @@ export const getUserTournamentHistory = query({
         }
       }
       
+      // Get tournament winner
+      let winnerId = undefined;
+      if (tournament.status === "completed" && enrichedMatches.length > 0) {
+        const finalMatch = enrichedMatches.find(m => m.round === "final");
+        if (finalMatch?.result?.winnerId) {
+          winnerId = finalMatch.result.winnerId;
+        }
+      }
+
+      // Get category if exists
+      let category = null;
+      if (tournament.categoryId) {
+        category = await ctx.db.get(tournament.categoryId);
+      }
+      
       tournamentHistory.push({
-        tournament,
-        participants: participantsWithProfiles,
-        matches: enrichedMatches,
-        userWon,
+        _id: tournament._id,
+        tournamentId: tournament.tournamentId,
+        status: tournament.status,
+        createdAt: tournament.createdAt,
+        completedAt: tournament.completedAt,
+        totalMatches: enrichedMatches.length,
+        totalPlayers: participantsWithProfiles.length,
+        winnerId,
+        category,
       });
     }
     
     // Sort by createdAt (most recent first)
-    return tournamentHistory.sort((a, b) => b.tournament.createdAt - a.tournament.createdAt);
+    return tournamentHistory.sort((a, b) => b.createdAt - a.createdAt);
   },
 });
 
