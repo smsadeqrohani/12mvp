@@ -83,6 +83,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="tournaments"
+        options={{
+          title: "تورنومنت‌ها",
+        }}
+      />
+      <Tabs.Screen
         name="play"
         options={{
           title: "بازی",

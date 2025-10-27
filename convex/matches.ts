@@ -13,6 +13,7 @@ export {
   createMatch,
   joinMatch,
   cancelMatch,
+  checkMatchParticipation,
   getMatchDetails,
   getUserActiveMatch,
   getUserActiveMatches,

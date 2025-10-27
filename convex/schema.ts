@@ -88,6 +88,32 @@ const applicationTables = {
     player2Time: v.number(),
     completedAt: v.number(),
   }).index("by_match", ["matchId"]).index("by_player", ["player1Id", "player2Id"]),
+  
+  tournaments: defineTable({
+    status: v.union(v.literal("waiting"), v.literal("active"), v.literal("completed"), v.literal("cancelled")),
+    createdAt: v.number(),
+    startedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    expiresAt: v.number(),
+    creatorId: v.id("users"),
+    tournamentId: v.string(), // Unique tournament identifier
+  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]),
+  
+  tournamentParticipants: defineTable({
+    tournamentId: v.string(),
+    userId: v.id("users"),
+    joinedAt: v.number(),
+  }).index("by_tournament", ["tournamentId"]).index("by_user", ["userId"]),
+  
+  tournamentMatches: defineTable({
+    tournamentId: v.string(),
+    matchId: v.id("matches"),
+    round: v.union(v.literal("semi1"), v.literal("semi2"), v.literal("final")),
+    player1Id: v.id("users"),
+    player2Id: v.id("users"),
+    status: v.union(v.literal("waiting"), v.literal("active"), v.literal("completed")),
+    winnerId: v.optional(v.id("users")),
+  }).index("by_tournament", ["tournamentId"]).index("by_match", ["matchId"]),
 };
 
 export default defineSchema({

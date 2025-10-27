@@ -11,7 +11,7 @@ import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/compon
 import { useResponsive } from "../src/hooks";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "categories" | "files" | "matches";
+type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments";
 
 // Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
@@ -100,6 +100,7 @@ export default function AdminScreen() {
   const allMatches = useQuery(api.matches.getAllMatches, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: matchesCursor },
   });
+  const allTournaments = useQuery(api.tournaments.getAllTournaments);
 
   const makeUserAdmin = useMutation(api.auth.makeUserAdmin);
   const updateUserName = useMutation(api.auth.updateUserName);
@@ -109,6 +110,7 @@ export default function AdminScreen() {
   const deleteQuestion = useMutation(api.questions.deleteQuestion);
   const deleteCategory = useMutation(api.categories.deleteCategory);
   const cancelMatch = useMutation(api.matches.cancelMatch);
+  const cancelTournament = useMutation(api.tournaments.cancelTournament);
 
   console.log("cancelMatch mutation:", cancelMatch);
 
@@ -395,6 +397,20 @@ export default function AdminScreen() {
     } catch (error) {
       console.error("cancelMatch error:", error);
       toast.error("خطا در لغو مسابقه: " + (error as Error).message);
+    }
+  };
+
+  const handleCancelTournament = async (tournamentId: string) => {
+    console.log("handleCancelTournament called with tournamentId:", tournamentId);
+    
+    try {
+      console.log("Calling cancelTournament mutation...");
+      await cancelTournament({ tournamentId });
+      console.log("cancelTournament successful");
+      toast.success("تورنومنت با موفقیت لغو شد");
+    } catch (error) {
+      console.error("cancelTournament error:", error);
+      toast.error("خطا در لغو تورنومنت: " + (error as Error).message);
     }
   };
 
@@ -1215,6 +1231,152 @@ export default function AdminScreen() {
     );
   };
 
+  const renderTournamentsTab = () => {
+    // Show skeleton while loading
+    if (allTournaments === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    const tournamentsColumns: Column<typeof allTournaments[0]>[] = [
+      {
+        key: 'id',
+        header: 'شناسه تورنومنت',
+        render: (tournamentData) => (
+          <Text className="text-gray-400 text-sm font-mono" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {tournamentData.tournament.tournamentId.slice(-12)}
+          </Text>
+        ),
+      },
+      {
+        key: 'creator',
+        header: 'سازنده',
+        render: (tournamentData) => (
+          <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            {tournamentData.creator?.name || "ناشناس"}
+          </Text>
+        ),
+      },
+      {
+        key: 'participants',
+        header: 'شرکت‌کنندگان',
+        render: (tournamentData) => (
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {tournamentData.participants.length} / 4
+          </Text>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'وضعیت',
+        render: (tournamentData) => {
+          const status = tournamentData.tournament.status;
+          const color = status === 'active' ? 'green' : status === 'completed' ? 'blue' : status === 'cancelled' ? 'red' : 'yellow';
+          const bgColor = status === 'active' ? 'bg-green-900/20' : status === 'completed' ? 'bg-blue-900/20' : status === 'cancelled' ? 'bg-red-900/20' : 'bg-yellow-900/20';
+          const borderColor = status === 'active' ? 'border-green-500/30' : status === 'completed' ? 'border-blue-500/30' : status === 'cancelled' ? 'border-red-500/30' : 'border-yellow-500/30';
+          const textColor = status === 'active' ? 'text-green-400' : status === 'completed' ? 'text-blue-400' : status === 'cancelled' ? 'text-red-400' : 'text-yellow-400';
+          
+          const statusText = status === 'waiting' ? 'در انتظار' : status === 'active' ? 'فعال' : status === 'completed' ? 'تمام شده' : 'لغو شده';
+          
+          return (
+            <View className={`px-3 py-1 rounded-full border ${bgColor} ${borderColor}`}>
+              <Text className={`text-xs font-semibold ${textColor}`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                {statusText}
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'matches',
+        header: 'مسابقات',
+        render: (tournamentData) => (
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {tournamentData.matches.length} مسابقه
+          </Text>
+        ),
+      },
+      {
+        key: 'created',
+        header: 'تاریخ ایجاد',
+        render: (tournamentData) => {
+          const date = new Date(tournamentData.tournament.createdAt);
+          return (
+            <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              {date.toLocaleDateString('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </Text>
+          );
+        },
+      },
+      {
+        key: 'actions',
+        header: 'عملیات',
+        width: 200,
+        render: (tournamentData) => {
+          const { tournament } = tournamentData;
+          return (
+            <View className="flex-row items-center gap-2">
+              {(tournament.status === "waiting" || tournament.status === "active") && (
+                <TouchableOpacity
+                  onPress={(e) => {
+                    console.log("Cancel button pressed for tournament:", tournament.tournamentId);
+                    console.log("Tournament status:", tournament.status);
+                    e.stopPropagation();
+                    handleCancelTournament(tournament.tournamentId);
+                  }}
+                  className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+                  style={{ minHeight: touchTargetSize }}
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    لغو تورنومنت
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        },
+      },
+    ];
+
+    return (
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="mb-6">
+          <View className="flex-row items-center justify-between mb-4">
+            <View>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                مدیریت تورنومنت‌ها
+              </Text>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مشاهده و مدیریت تمام تورنومنت‌ها
+              </Text>
+            </View>
+            <View className="flex-row items-center gap-3">
+              <View className="bg-background-light/50 rounded-lg px-4 py-2 border border-gray-700/30">
+                <Text className="text-gray-400 text-sm">تعداد:</Text>
+                <Text className="text-white font-semibold mr-2">{allTournaments?.length || 0}</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      
+      {/* Tournaments Table */}
+      <DataTableRN
+        columns={tournamentsColumns}
+        data={allTournaments || []}
+        keyExtractor={(tournamentData) => tournamentData.tournament.tournamentId}
+        emptyState={{
+          icon: <Ionicons name="medal" size={32} color="#6b7280" />,
+          title: "تورنومنتی یافت نشد",
+          description: "هنوز هیچ تورنومنتی در سیستم ثبت نشده است",
+        }}
+      />
+      </ScrollView>
+    );
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 flex-row">
@@ -1354,6 +1516,29 @@ export default function AdminScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setActiveTab("tournaments")}
+                className={`p-4 rounded-xl ${
+                  activeTab === "tournaments"
+                    ? "bg-accent/20 border border-accent/30"
+                    : "bg-transparent"
+                }`}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
+                    activeTab === "tournaments" ? "bg-accent" : "bg-gray-700"
+                  }`}>
+                    <Ionicons name="medal" size={20} color={activeTab === "tournaments" ? "#fff" : "#9ca3af"} />
+                  </View>
+                  <Text className={`font-medium ${
+                    activeTab === "tournaments" ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    مدیریت تورنومنت‌ها
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* Back to Main Button */}
@@ -1386,6 +1571,7 @@ export default function AdminScreen() {
           {activeTab === "categories" && renderCategoriesTab()}
           {activeTab === "files" && renderFilesTab()}
           {activeTab === "matches" && renderMatchesTab()}
+          {activeTab === "tournaments" && renderTournamentsTab()}
         </View>
       </View>
 

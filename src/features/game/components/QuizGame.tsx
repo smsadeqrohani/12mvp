@@ -25,8 +25,18 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   const userProfile = useQuery(api.auth.getUserProfile);
-  const matchDetails = useQuery(api.matches.getMatchDetails, { matchId });
-  const matchCompletion = useQuery(api.matches.checkMatchCompletion, { matchId });
+  const isParticipant = useQuery(
+    api.matches.checkMatchParticipation,
+    userProfile ? { matchId } : "skip"
+  );
+  const matchDetails = useQuery(
+    api.matches.getMatchDetails, 
+    userProfile && isParticipant ? { matchId } : "skip"
+  );
+  const matchCompletion = useQuery(
+    api.matches.checkMatchCompletion, 
+    userProfile && isParticipant ? { matchId } : "skip"
+  );
   const submitAnswer = useMutation(api.matches.submitAnswer);
   const leaveMatch = useMutation(api.matches.leaveMatch);
 
@@ -198,10 +208,45 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     }
   };
 
-  if (!userProfile || !matchDetails || !currentQuestion) {
+  // Show loading while data is being fetched
+  if (!userProfile || isParticipant === undefined) {
     return (
       <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#ff701a" />
+        <Text className="text-gray-400 mt-4">در حال بارگذاری...</Text>
+      </View>
+    );
+  }
+
+  // Check if user is a participant in this match
+  if (isParticipant === false) {
+    return (
+      <View className="flex-1 justify-center items-center px-6">
+        <View className="w-24 h-24 bg-red-600/20 rounded-full items-center justify-center mb-6">
+          <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+        </View>
+        <Text className="text-2xl font-bold text-red-400 mb-4 text-center">
+          خطا در دسترسی
+        </Text>
+        <Text className="text-gray-400 mb-6 text-center">
+          شما در این بازی شرکت نکرده‌اید
+        </Text>
+        <TouchableOpacity
+          onPress={onLeaveMatch}
+          className="px-6 py-3 bg-accent rounded-lg"
+        >
+          <Text className="text-white font-semibold">بازگشت</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Show loading while match details are being fetched
+  if (!matchDetails || !currentQuestion) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#ff701a" />
+        <Text className="text-gray-400 mt-4">در حال بارگذاری...</Text>
       </View>
     );
   }

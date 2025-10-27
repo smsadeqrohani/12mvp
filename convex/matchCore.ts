@@ -55,6 +55,31 @@ export const createMatch = mutation({
   },
 });
 
+export const checkMatchParticipation = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return false;
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      return false;
+    }
+    
+    // Check if user is participant
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    return !!participant;
+  },
+});
+
 export const getMatchDetails = query({
   args: { matchId: v.id("matches") },
   handler: async (ctx, args) => {
@@ -175,7 +200,7 @@ export const getUserActiveMatches = query({
     }
     
     // Sort by startedAt (most recent first)
-    return activeMatches.sort((a, b) => b.startedAt - a.startedAt);
+    return activeMatches.sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
   },
 });
 

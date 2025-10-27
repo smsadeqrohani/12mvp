@@ -26,6 +26,10 @@ import type * as matches from "../matches.js";
 import type * as questionCategories from "../questionCategories.js";
 import type * as questions from "../questions.js";
 import type * as router from "../router.js";
+import type * as tournamentAdmin from "../tournamentAdmin.js";
+import type * as tournamentCore from "../tournamentCore.js";
+import type * as tournamentResults from "../tournamentResults.js";
+import type * as tournaments from "../tournaments.js";
 import type * as utils from "../utils.js";
 
 /**
@@ -50,6 +54,10 @@ declare const fullApi: ApiFromModules<{
   questionCategories: typeof questionCategories;
   questions: typeof questions;
   router: typeof router;
+  tournamentAdmin: typeof tournamentAdmin;
+  tournamentCore: typeof tournamentCore;
+  tournamentResults: typeof tournamentResults;
+  tournaments: typeof tournaments;
   utils: typeof utils;
 }>;
 export declare const api: FilterApi<
