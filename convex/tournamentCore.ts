@@ -185,16 +185,7 @@ async function startTournament(ctx: any, tournamentId: string) {
     semiQuestions
   );
   
-  // Create final match (placeholder - will be updated when winners are determined)
-  // We don't create an actual match yet, just a tournament match entry
-  const finalTournamentMatchId = await ctx.db.insert("tournamentMatches", {
-    tournamentId,
-    matchId: semi1MatchId, // Placeholder - no actual match until semifinals complete
-    round: "final",
-    player1Id: shuffled[0].userId, // Placeholder - Winner of Semi 1
-    player2Id: shuffled[2].userId, // Placeholder - Winner of Semi 2
-    status: "waiting",
-  });
+  // Don't create final match yet - will be created when both semifinals complete
   
   // Update tournament status
   const tournamentDoc = await ctx.db
@@ -605,3 +596,23 @@ export const leaveTournament = mutation({
     return true;
   },
 });
+
+export const checkTournamentMatch = query({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return null;
+    }
+    
+    // Get tournament match entry
+    const tournamentMatch = await ctx.db
+      .query("tournamentMatches")
+      .withIndex("by_match", (q: any) => q.eq("matchId", args.matchId))
+      .unique();
+    
+    return tournamentMatch;
+  },
+});
+
+

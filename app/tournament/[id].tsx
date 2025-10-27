@@ -116,25 +116,21 @@ export default function TournamentDetailScreen() {
       const semi2 = matches.find((m: any) => m.round === "semi2");
       
       // Check if semifinals are completed and we have winners
-      if (semi1?.match?.status === "completed" && semi1.winnerId) {
-        if (matchData.player1Id === semi1.player1Id || matchData.player1Id === semi1.player2Id) {
-          const winner = participants.find((p) => p.userId === semi1.winnerId);
-          if (winner) return winner.profile?.name || "برنده نیمه‌نهایی ۱";
-        }
+      if (semi1?.match?.status === "completed" && semi1.winnerId && userId === semi1.winnerId) {
+        const winner = participants.find((p) => p.userId === semi1.winnerId);
+        if (winner) return winner.profile?.name || "برنده نیمه‌نهایی ۱";
       }
       
-      if (semi2?.match?.status === "completed" && semi2.winnerId) {
-        if (matchData.player2Id === semi2.player1Id || matchData.player2Id === semi2.player2Id) {
-          const winner = participants.find((p) => p.userId === semi2.winnerId);
-          if (winner) return winner.profile?.name || "برنده نیمه‌نهایی ۲";
-        }
+      if (semi2?.match?.status === "completed" && semi2.winnerId && userId === semi2.winnerId) {
+        const winner = participants.find((p) => p.userId === semi2.winnerId);
+        if (winner) return winner.profile?.name || "برنده نیمه‌نهایی ۲";
       }
       
-      // Fallback: show placeholder text
-      if (matchData.player1Id === semi1?.player1Id || matchData.player1Id === semi1?.player2Id) {
+      // Show placeholder if semifinals not completed
+      if (userId === semi1?.player1Id || userId === semi1?.player2Id) {
         return "برنده نیمه‌نهایی ۱";
       }
-      if (matchData.player2Id === semi2?.player1Id || matchData.player2Id === semi2?.player2Id) {
+      if (userId === semi2?.player1Id || userId === semi2?.player2Id) {
         return "برنده نیمه‌نهایی ۲";
       }
     }
@@ -233,21 +229,29 @@ export default function TournamentDetailScreen() {
                 const isUserInMatch = 
                   matchData.player1Id === loggedInUser?._id ||
                   matchData.player2Id === loggedInUser?._id;
-                const isMatchCompleted = match?.status === "completed";
-                const isMatchActive = match?.status === "active";
+                const isMatchCompleted = match?.status === "completed" || matchData.status === "completed";
+                const isMatchActive = match?.status === "active" || matchData.status === "active";
+                const isMatchWaiting = match?.status === "waiting" || matchData.status === "waiting";
                 const isFinal = matchData.round === "final";
                 
-                // For final match without actual match data, check if user is in semis
-                let userCanPlayFinal = false;
-                if (isFinal && !match) {
-                  // Check if user won one of the semi-finals
-                  const semi1 = matches.find((m: any) => m.round === "semi1" && m.winnerId === loggedInUser?._id);
-                  const semi2 = matches.find((m: any) => m.round === "semi2" && m.winnerId === loggedInUser?._id);
-                  userCanPlayFinal = !!semi1 || !!semi2;
-                }
+                // Determine if should show join button
+                let shouldShowJoinButton = false;
                 
-                // Show button only if user is in the match OR if it's final and user won semis
-                const shouldShowJoinButton = isUserInMatch || (isFinal && userCanPlayFinal);
+                if (isFinal && !match && matchData.status === "waiting") {
+                  const semi1 = matches.find((m: any) => m.round === "semi1");
+                  const semi2 = matches.find((m: any) => m.round === "semi2");
+                  
+                  // Both semifinals completed, check if user won
+                  if (semi1?.match?.status === "completed" && semi2?.match?.status === "completed" &&
+                      semi1.winnerId && semi2.winnerId) {
+                    const userWonSemi1 = semi1.winnerId === loggedInUser?._id;
+                    const userWonSemi2 = semi2.winnerId === loggedInUser?._id;
+                    shouldShowJoinButton = userWonSemi1 || userWonSemi2;
+                  }
+                } else if (match) {
+                  // Regular match (not final placeholder)
+                  shouldShowJoinButton = isUserInMatch;
+                }
 
                 return (
                   <View
@@ -304,13 +308,17 @@ export default function TournamentDetailScreen() {
                       </View>
                     </View>
 
-                    {shouldShowJoinButton && !isMatchCompleted && match && (
+                    {shouldShowJoinButton && !isMatchCompleted && (
                       <TouchableOpacity
-                        onPress={() => handleJoinMatch(matchData.matchId)}
+                        onPress={() => {
+                          if (match) {
+                            handleJoinMatch(matchData.matchId);
+                          }
+                        }}
                         className="bg-orange-500 py-3 rounded-xl mt-2"
                       >
                         <Text className="text-white text-center font-bold">
-                          {isMatchActive ? "ورود به بازی" : "در انتظار شروع..."}
+                          {match && isMatchActive ? "ورود به بازی" : "در انتظار شروع..."}
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -321,7 +329,7 @@ export default function TournamentDetailScreen() {
                       </Text>
                     )}
                     
-                    {!match && !shouldShowJoinButton && !isFinal && (
+                    {!shouldShowJoinButton && !isMatchCompleted && !isFinal && (
                       <Text className="text-gray-400 text-center py-3">
                         در انتظار بازیکنان...
                       </Text>

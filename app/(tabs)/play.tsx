@@ -15,6 +15,12 @@ export default function PlayScreen() {
     api.matches.checkMatchCompletion,
     matchId ? { matchId: matchId as Id<"matches"> } : "skip"
   );
+  
+  // Check if this is a tournament match
+  const tournamentMatch = useQuery(
+    api.tournaments.checkTournamentMatch,
+    matchId ? { matchId: matchId as Id<"matches"> } : "skip"
+  );
 
   // Authentication guard
   if (loggedInUser === null) {
@@ -35,7 +41,21 @@ export default function PlayScreen() {
   }
 
   const handleGameComplete = () => {
-    // Check if match is fully completed (both players done)
+    // Check if this is a tournament match
+    if (tournamentMatch) {
+      // If match is fully completed, go to tournament detail page
+      if (matchCompletion?.isCompleted) {
+        console.log("Tournament match completed, redirecting to tournament detail page");
+        router.replace(`/tournament/${tournamentMatch.tournamentId}`);
+      } else {
+        // User finished first - still go to tournament detail page
+        console.log("User finished tournament match, showing tournament details");
+        router.replace(`/tournament/${tournamentMatch.tournamentId}`);
+      }
+      return;
+    }
+    
+    // Regular match (not part of tournament)
     if (matchCompletion?.isCompleted) {
       // Match is fully completed - show results
       console.log("Match completed, showing results");

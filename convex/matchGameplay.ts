@@ -1,6 +1,7 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 
 /**
  * Match gameplay operations - answer submission, completion checking
@@ -156,6 +157,112 @@ export const submitAnswer = mutation({
           status: "completed",
           completedAt: Date.now(),
         });
+        
+        // Check if this is a tournament match and update tournament match status
+        const tournamentMatch = await ctx.db
+          .query("tournamentMatches")
+          .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+          .unique();
+        
+        if (tournamentMatch) {
+          // Update tournament match status and set winner
+          await ctx.db.patch(tournamentMatch._id, {
+            status: "completed",
+            winnerId: winnerId || undefined,
+          });
+          
+          // If this is a semifinal, check if we should create the final match
+          if (tournamentMatch.round === "semi1" || tournamentMatch.round === "semi2") {
+            // Get all tournament matches
+            const tournamentMatches = await ctx.db
+              .query("tournamentMatches")
+              .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentMatch.tournamentId))
+              .collect();
+            
+            const semi1 = tournamentMatches.find((m: any) => m.round === "semi1");
+            const semi2 = tournamentMatches.find((m: any) => m.round === "semi2");
+            const final = tournamentMatches.find((m: any) => m.round === "final");
+            
+            // Check if both semifinals are completed
+            if (semi1?.status === "completed" && semi1.winnerId && 
+                semi2?.status === "completed" && semi2.winnerId) {
+              
+              // Get winner IDs
+              const winner1Id = semi1.winnerId;
+              const winner2Id = semi2.winnerId;
+              
+              // Create the actual final match using the tournament match creation logic
+              const { getRandomQuestions } = await import("./utils");
+              const finalQuestions = await getRandomQuestions(ctx);
+              
+              const now = Date.now();
+              const expiresAt = now + (24 * 60 * 60 * 1000);
+              
+              const finalMatchId = await ctx.db.insert("matches", {
+                status: "waiting",
+                createdAt: now,
+                expiresAt,
+                questions: finalQuestions,
+                creatorId: winner1Id as Id<"users">,
+              });
+              
+              await ctx.db.insert("matchParticipants", {
+                matchId: finalMatchId,
+                userId: winner1Id as Id<"users">,
+                joinedAt: now,
+              });
+              
+              await ctx.db.insert("matchParticipants", {
+                matchId: finalMatchId,
+                userId: winner2Id as Id<"users">,
+                joinedAt: now,
+              });
+              
+              // Both players are already added, so match can be active
+              await ctx.db.patch(finalMatchId, {
+                status: "active",
+                startedAt: now,
+              });
+              
+              // Create or update final tournament match entry
+              if (final) {
+                // Update existing final entry
+                await ctx.db.patch(final._id, {
+                  matchId: finalMatchId,
+                  player1Id: winner1Id as Id<"users">,
+                  player2Id: winner2Id as Id<"users">,
+                  status: "active",
+                });
+              } else {
+                // Create new final entry
+                await ctx.db.insert("tournamentMatches", {
+                  tournamentId: tournamentMatch.tournamentId,
+                  matchId: finalMatchId,
+                  round: "final",
+                  player1Id: winner1Id as Id<"users">,
+                  player2Id: winner2Id as Id<"users">,
+                  status: "active",
+                });
+              }
+            }
+          }
+          
+          // For final match, we also need to update the tournament status
+          if (tournamentMatch.round === "final") {
+            // Find the tournament and mark it as completed
+            const tournament = await ctx.db
+              .query("tournaments")
+              .filter((q) => q.eq(q.field("tournamentId"), tournamentMatch.tournamentId))
+              .unique();
+            
+            if (tournament) {
+              await ctx.db.patch(tournament._id, {
+                status: "completed",
+                completedAt: Date.now(),
+              });
+            }
+          }
+        }
       }
     }
     

@@ -131,6 +131,27 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const handleAnswerSubmit = async (answer: number) => {
     if (isAnswered || !currentQuestion) return;
     
+    // Get current participant to check if already answered
+    const currentParticipant = matchCompletion?.participants?.find(
+      p => p.userId === userProfile?.userId
+    );
+    
+    // Check if user has already completed this match
+    if (currentParticipant?.completedAt) {
+      console.log("User has already completed this match, skipping answer submission");
+      return;
+    }
+    
+    // Check if user has already answered this question
+    const existingAnswer = currentParticipant?.answers?.find(
+      (a: any) => a.questionId === currentQuestion._id
+    );
+    
+    if (existingAnswer) {
+      console.log("User has already answered this question, skipping submission");
+      return;
+    }
+    
     setIsAnswered(true);
     setSelectedAnswer(answer);
     

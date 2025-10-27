@@ -386,14 +386,22 @@ export const cancelMatch = mutation({
       throw new Error("Match not found");
     }
     
-    // Check if user is the creator
-    if (match.creatorId !== currentUserId) {
-      throw new Error("Only the creator can cancel the match");
+    // Check if user is the creator or admin
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .unique();
+    
+    const isCreator = match.creatorId === currentUserId;
+    const isAdmin = profile?.isAdmin || false;
+    
+    if (!isCreator && !isAdmin) {
+      throw new Error("Only the creator or admin can cancel the match");
     }
     
-    // Check if match is still waiting
-    if (match.status !== "waiting") {
-      throw new Error("Can only cancel waiting matches");
+    // Check if match can be cancelled
+    if (match.status === "completed" || match.status === "cancelled") {
+      throw new Error("Cannot cancel a completed or already cancelled match");
     }
     
     // Update match status
