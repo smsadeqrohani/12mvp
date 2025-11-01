@@ -192,8 +192,17 @@ export const submitAnswer = mutation({
               const winner1Id = semi1.winnerId;
               const winner2Id = semi2.winnerId;
               
+              // Get tournament to check category
+              const tournament = await ctx.db
+                .query("tournaments")
+                .filter((q) => q.eq(q.field("tournamentId"), tournamentMatch.tournamentId))
+                .unique();
+              
+              // Get questions based on tournament category (or random if isRandom is true)
+              const categoryId = tournament?.isRandom ? undefined : tournament?.categoryId;
+              
               // Create the actual final match using the tournament match creation logic
-              const finalQuestions = await getRandomQuestions(ctx);
+              const finalQuestions = await getRandomQuestions(ctx, categoryId);
               
               const now = Date.now();
               const expiresAt = now + (24 * 60 * 60 * 1000);
