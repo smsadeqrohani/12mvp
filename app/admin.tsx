@@ -1110,18 +1110,41 @@ export default function AdminScreen() {
         render: (matchData) => {
           const { tournamentInfo } = matchData;
           if (tournamentInfo) {
+            return (
+              <View className="items-center">
+                <View className="bg-purple-900/30 border border-purple-800/30 rounded-lg px-2 py-1">
+                  <Ionicons name="trophy" size={14} color="#a78bfa" />
+                </View>
+              </View>
+            );
+          }
+          return (
+            <View className="px-3 py-1 rounded-full bg-gray-700/50 border border-gray-600/30">
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                عادی
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
+        key: 'tournament',
+        header: 'تورنومنت',
+        render: (matchData) => {
+          const { tournamentInfo } = matchData;
+          if (tournamentInfo) {
             const roundText = {
               semi1: "نیمه‌نهایی ۱",
               semi2: "نیمه‌نهایی ۲",
               final: "فینال",
             };
             return (
-              <View className="items-center">
-                <View className="bg-purple-900/30 border border-purple-800/30 rounded-lg px-2 py-1">
-                  <Ionicons name="trophy" size={14} color="#a78bfa" />
-                </View>
-                <Text className="text-purple-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <View className="flex-1">
+                <Text className="text-purple-400 text-sm font-medium mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
                   {roundText[tournamentInfo.round]}
+                </Text>
+                <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  {tournamentInfo.tournamentId.slice(-12)}
                 </Text>
               </View>
             );
@@ -1129,7 +1152,7 @@ export default function AdminScreen() {
           return (
             <View className="px-3 py-1 rounded-full bg-gray-700/50 border border-gray-600/30">
               <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                مسابقه عادی
+                ندارد
               </Text>
             </View>
           );
