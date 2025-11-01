@@ -60,6 +60,7 @@ export const createProfile = mutation({
       userId,
       name: args.name,
       isAdmin: false,
+      points: 0,
     });
   },
 });
@@ -106,6 +107,7 @@ export const getAllUsers = query({
           emailVerified,
           name: profile.name,
           isAdmin: profile.isAdmin,
+          points: profile.points ?? 0,
         };
       })
     );
@@ -208,5 +210,47 @@ export const resetUserPassword = mutation({
     // In a real implementation, you'd send a password reset email
     // or generate a temporary password
     return { success: true, message: "Password reset initiated" };
+  },
+});
+
+export const getTopUsers = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit ?? 5;
+    
+    // Get all profiles
+    const allProfiles = await ctx.db.query("profiles").collect();
+    
+    // Get user data and sort by points, then by creation time
+    const usersWithData = await Promise.all(
+      allProfiles.map(async (profile) => {
+        const user = await ctx.db.get(profile.userId);
+        const points = profile.points ?? 0;
+        const creationTime = user?._creationTime ?? 0;
+        
+        return {
+          userId: profile.userId,
+          name: profile.name,
+          points,
+          creationTime,
+        };
+      })
+    );
+    
+    // Sort by points (descending), then by creation time (ascending - oldest first for tiebreaker)
+    usersWithData.sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      // For equal points, older users (lower creation time) rank higher
+      return a.creationTime - b.creationTime;
+    });
+    
+    // Return top N users with rank
+    return usersWithData.slice(0, limit).map((user, index) => ({
+      rank: index + 1,
+      name: user.name,
+      points: user.points,
+    }));
   },
 });

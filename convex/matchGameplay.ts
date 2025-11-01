@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { getRandomQuestions } from "./utils";
+import { getRandomQuestions, awardPoints } from "./utils";
 
 /**
  * Match gameplay operations - answer submission, completion checking
@@ -172,6 +172,11 @@ export const submitAnswer = mutation({
             winnerId: winnerId || undefined,
           });
           
+          // Award 10 points for winning a tournament match (semi or final)
+          if (winnerId && !isDraw) {
+            await awardPoints(ctx, winnerId, 10);
+          }
+          
           // If this is a semifinal, check if we should create the final match
           if (tournamentMatch.round === "semi1" || tournamentMatch.round === "semi2") {
             // Get all tournament matches
@@ -269,7 +274,18 @@ export const submitAnswer = mutation({
                 status: "completed",
                 completedAt: Date.now(),
               });
+              
+              // Award 30 additional points for winning the tournament itself
+              if (winnerId && !isDraw) {
+                await awardPoints(ctx, winnerId, 30);
+              }
             }
+          }
+        } else {
+          // This is a single match (not a tournament match)
+          // Award 10 points for winning a single match
+          if (winnerId && !isDraw) {
+            await awardPoints(ctx, winnerId, 10);
           }
         }
       }

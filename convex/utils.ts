@@ -60,6 +60,27 @@ export const getRandomQuestions = async (ctx: any, categoryId?: any) => {
 };
 
 /**
+ * Award points to a user
+ */
+export const awardPoints = async (ctx: any, userId: any, points: number) => {
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .unique();
+  
+  if (!profile) {
+    // Profile should exist, but if not, we'll skip awarding points
+    console.error(`Profile not found for user ${userId}`);
+    return;
+  }
+  
+  const currentPoints = profile.points ?? 0;
+  await ctx.db.patch(profile._id, {
+    points: currentPoints + points,
+  });
+};
+
+/**
  * Admin-only wrapper for mutations and queries
  */
 export const adminOnly = <T extends any[]>(

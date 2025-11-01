@@ -560,6 +560,19 @@ export default function AdminScreen() {
         ),
       },
       {
+        key: 'points',
+        header: 'امتیاز',
+        render: (user) => (
+          <View className="flex-row items-center gap-2">
+            <View className="bg-accent/20 rounded-lg px-3 py-1 border border-accent/30">
+              <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {(user.points ?? 0).toLocaleString('fa-IR')}
+              </Text>
+            </View>
+          </View>
+        ),
+      },
+      {
         key: 'adminStatus',
         header: 'دسترسی مدیر',
         render: (user) => (
