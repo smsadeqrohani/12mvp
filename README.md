@@ -28,8 +28,11 @@ This app has been converted to **React Native** and now runs on:
 
 ### 🎮 Quiz & Matchmaking
 - **Real-time Multiplayer**: 1v1 quiz matches with automatic matchmaking
+- **Tournaments**: 4-player tournaments with semi-finals and finals
+- **Question Categories**: Admin-managed categories for organizing questions
 - **Question Bank**: Admin-managed questions with categories and difficulty levels
 - **Match History**: Complete history of played matches with detailed results
+- **Tournament History**: View past tournaments and results
 - **Live Scoring**: Real-time score calculation and winner determination
 
 ### 🔐 Authentication & Users
@@ -41,8 +44,10 @@ This app has been converted to **React Native** and now runs on:
 ### ⚙️ Admin Features
 - **User Management**: View, edit, and manage user accounts
 - **Question Management**: Create, edit, delete quiz questions
+- **Category Management**: Create and manage question categories
 - **File Management**: Upload and manage media files
 - **Match Monitoring**: View and manage all matches in the system
+- **Tournament Monitoring**: View and manage all tournaments
 
 ### 🎨 UI/UX
 - **Persian Language**: Full RTL (Right-to-Left) support
@@ -215,32 +220,49 @@ This project follows a clear documentation pattern. All documentation is organiz
 
 ```
 12mvp/
-├── src/                    # Frontend application
-│   ├── pages/             # Route pages (3 pages)
-│   ├── features/          # Feature modules (auth, game, admin)
-│   ├── components/        # Shared components
-│   │   ├── ui/           # UI components (11 components - NEW!)
-│   │   ├── match/        # Match components (3 components)
-│   │   └── layout/       # Layout components (4 components)
-│   ├── hooks/            # Custom React hooks (2 hooks)
-│   └── lib/              # Utilities and constants
-│       ├── utils.ts      # Main utilities
-│       ├── validation.ts # Validation helpers
-│       ├── formatting.ts # Formatting helpers
-│       ├── storage.ts    # LocalStorage helpers
-│       └── helpers.ts    # General helpers
+├── app/                   # Expo Router file-based routing
+│   ├── _layout.tsx       # Root layout with Convex provider
+│   ├── (auth)/           # Authentication routes
+│   │   ├── login.tsx
+│   │   └── profile-setup.tsx
+│   ├── (tabs)/           # Tab navigation group
+│   │   ├── index.tsx     # Dashboard
+│   │   ├── new-match.tsx # Match lobby
+│   │   ├── tournaments.tsx # Tournament lobby
+│   │   ├── history.tsx   # Match history
+│   │   ├── play.tsx      # Active game screen
+│   │   └── results/     # Match results
+│   ├── tournament/[id].tsx # Tournament detail
+│   └── admin.tsx         # Admin panel
 │
-├── convex/                # Backend (Convex)
-│   ├── schema.ts         # Database schema
-│   ├── auth.ts           # Authentication
-│   ├── questions.ts      # Questions API
-│   ├── matchCore.ts      # Core match operations
-│   ├── matchGameplay.ts  # Gameplay logic
-│   ├── matchResults.ts   # Results & history
-│   ├── matchAdmin.ts     # Admin operations
-│   └── files.ts          # File management
+├── src/                  # Shared frontend code (web + mobile)
+│   ├── features/         # Feature modules (auth, game, admin)
+│   │   ├── auth/        # Authentication components
+│   │   ├── game/        # Game components (matches, tournaments)
+│   │   └── admin/       # Admin components
+│   ├── components/      # Shared components
+│   │   ├── ui/         # UI components (Button, Modal, etc.)
+│   │   ├── match/      # Match-specific components
+│   │   └── layout/     # Layout components
+│   ├── hooks/          # Custom React hooks
+│   └── lib/            # Utilities and constants
 │
-├── public/               # Static assets
+├── convex/              # Backend (Convex)
+│   ├── schema.ts       # Database schema
+│   ├── auth.ts        # Authentication
+│   ├── questions.ts   # Questions API
+│   ├── categories.ts  # Categories API
+│   ├── matchCore.ts   # Core match operations
+│   ├── matchGameplay.ts # Gameplay logic
+│   ├── matchResults.ts # Match results & history
+│   ├── matchAdmin.ts  # Match admin operations
+│   ├── tournaments.ts # Tournament barrel export
+│   ├── tournamentCore.ts # Core tournament operations
+│   ├── tournamentResults.ts # Tournament results
+│   ├── tournamentAdmin.ts  # Tournament admin
+│   └── files.ts       # File management
+│
+├── assets/             # Static assets (fonts, images)
 └── [README.md, DESIGN.md, STRUCTURE.md] # Documentation
 ```
 
@@ -314,12 +336,15 @@ This project is connected to Convex deployment: [`precious-horse-758`](https://d
 **Game Flow:**
 - [ ] Dashboard loads and shows user name
 - [ ] Can navigate between tabs
-- [ ] Can start new match
-- [ ] Waiting screen appears
+- [ ] Can start new match (1v1)
+- [ ] Can create/join tournaments (4 players)
+- [ ] Waiting screen appears for matches
+- [ ] Tournament lobby shows available tournaments
 - [ ] Questions display correctly with timer
 - [ ] Can select and submit answers
 - [ ] Results display correctly
 - [ ] Match history shows completed matches
+- [ ] Tournament results show bracket and winner
 
 **UI/UX:**
 - [ ] Text aligns right (RTL)

@@ -39,83 +39,115 @@ The project follows a **feature-based architecture** where code is organized by 
 
 ## 📁 Frontend Structure
 
+### Expo Router File-Based Routing
+
+The app uses **Expo Router** for file-based navigation, replacing traditional React Router:
+
+```
+app/
+├── _layout.tsx                    # Root layout (Convex provider, fonts, RTL)
+├── (auth)/                       # 🔐 Authentication group
+│   ├── login.tsx                 # Login screen
+│   └── profile-setup.tsx         # Profile setup screen
+│
+├── (tabs)/                       # 📱 Tab navigation group
+│   ├── _layout.tsx               # Tab bar configuration
+│   ├── index.tsx                 # Dashboard (HelloPage)
+│   ├── new-match.tsx             # Match lobby (MatchLobby)
+│   ├── tournaments.tsx           # Tournament lobby (TournamentLobby)
+│   ├── history.tsx               # Match history (MatchHistory)
+│   ├── play.tsx                  # Active game (QuizGame) - hidden tab
+│   └── results/
+│       └── [id].tsx              # Match results - hidden tab
+│
+├── tournament/
+│   └── [id].tsx                  # Tournament detail view
+│
+└── admin.tsx                     # Admin panel (admin only)
+```
+
+### Shared Code Structure
+
 ```
 src/
-├── App.tsx                         # Main app with routing & layout
-├── main.tsx                        # Application entry point
-├── index.css                       # Global styles & RTL config
-│
-├── pages/                          # 📄 Top-level route pages
-│   ├── HomePage.tsx               # Main dashboard with game tabs
-│   ├── LoginPage.tsx              # Authentication page
-│   └── AdminPage.tsx              # Admin management panel
-│
-├── features/                       # 🎯 Feature modules
+├── features/                      # 🎯 Feature modules
 │   │
-│   ├── auth/                      # 🔐 Authentication Feature
-│   │   ├── index.ts              # Barrel export
+│   ├── auth/                     # 🔐 Authentication Feature
+│   │   ├── index.ts             # Barrel export
 │   │   └── components/
-│   │       ├── SignInForm.tsx    # Email/password sign-in
-│   │       ├── SignUpForm.tsx    # User registration
+│   │       ├── SignInForm.tsx   # Email/password sign-in
+│   │       ├── SignUpForm.tsx   # User registration
 │   │       ├── SignOutButton.tsx # Logout functionality
-│   │       └── ProfileSetup.tsx  # User profile creation
+│   │       └── ProfileSetup.tsx # User profile creation
 │   │
-│   ├── game/                      # 🎮 Game/Match Feature
-│   │   ├── index.ts              # Barrel export
+│   ├── game/                     # 🎮 Game/Match Feature
+│   │   ├── index.ts             # Barrel export
 │   │   └── components/
-│   │       ├── QuizGame.tsx      # Quiz gameplay logic
-│   │       ├── MatchLobby.tsx    # Matchmaking & waiting
-│   │       ├── MatchResults.tsx  # Results display
-│   │       ├── MatchHistory.tsx  # User match history
-│   │       └── HelloPage.tsx     # Dashboard welcome
+│   │       ├── QuizGame.tsx     # Quiz gameplay logic
+│   │       ├── MatchLobby.tsx   # Matchmaking & waiting
+│   │       ├── MatchResults.tsx # Results display
+│   │       ├── MatchHistory.tsx # User match history
+│   │       ├── TournamentLobby.tsx # Tournament lobby & creation
+│   │       └── HelloPage.tsx    # Dashboard welcome
 │   │
-│   └── admin/                     # ⚙️ Admin Feature
-│       ├── index.ts              # Barrel export
+│   └── admin/                    # ⚙️ Admin Feature
+│       ├── index.ts             # Barrel export
 │       └── components/
-│           ├── QuestionsForm.tsx  # Question CRUD form
-│           ├── FilesTable.tsx     # File management
+│           ├── QuestionsForm.tsx # Question CRUD form
+│           ├── CategoryForm.tsx  # Category CRUD form
+│           ├── FilesTable.tsx    # File management
+│           ├── FileUpload.tsx    # File upload component
 │           ├── FilePreview.tsx    # File preview modal
 │           └── MatchDetailsAdmin.tsx # Match monitoring
 │
-├── components/                     # 🧩 Shared components
-│   ├── ui/                        # Reusable UI components
-│   │   ├── index.ts              # Barrel export
+├── components/                    # 🧩 Shared components
+│   ├── ui/                       # Reusable UI components
+│   │   ├── index.ts             # Barrel export
 │   │   ├── PaginationControls.tsx # Pagination component
-│   │   ├── DataTable.tsx         # Generic data table
-│   │   ├── Modal.tsx             # Modal/Dialog component
-│   │   ├── Badge.tsx             # Status badges
-│   │   ├── Button.tsx            # Button variants
-│   │   ├── FormField.tsx         # Form input components
-│   │   ├── LoadingSpinner.tsx    # Loading states
-│   │   ├── PageLoader.tsx        # Full page loading (NEW!)
-│   │   ├── Skeleton.tsx          # Loading placeholders (NEW!)
-│   │   └── ErrorBoundary.tsx     # Error handling (NEW!)
+│   │   ├── DataTable.tsx       # Generic data table (web)
+│   │   ├── DataTableRN.tsx     # React Native data table
+│   │   ├── Modal.tsx           # Modal/Dialog component
+│   │   ├── Badge.tsx           # Status badges
+│   │   ├── Button.tsx          # Button variants
+│   │   ├── FormField.tsx       # Form input wrapper
+│   │   ├── TextInput.tsx       # Text input component
+│   │   ├── LoadingSpinner.tsx  # Loading states
+│   │   ├── PageLoader.tsx      # Full page loading
+│   │   ├── Skeleton.tsx        # Loading placeholders
+│   │   ├── ErrorBoundary.tsx    # Error handling
+│   │   ├── KeyboardAvoidingContainer.tsx # Keyboard handling
+│   │   └── RTLView.tsx          # RTL wrapper
 │   │
-│   ├── match/                     # Match-specific shared components
-│   │   ├── index.ts              # Barrel export
-│   │   ├── WaitingScreen.tsx     # Waiting for opponent screen
-│   │   ├── PlayerCard.tsx        # Player display card
-│   │   └── MatchStatusBadge.tsx  # Match status indicator
+│   ├── match/                   # Match-specific shared components
+│   │   ├── index.ts            # Barrel export
+│   │   ├── WaitingScreen.tsx   # Waiting for opponent screen
+│   │   ├── PlayerCard.tsx     # Player display card
+│   │   └── MatchStatusBadge.tsx # Match status indicator
 │   │
-│   └── layout/                    # Layout components
-│       ├── index.ts              # Barrel export
-│       ├── PageContainer.tsx     # Page wrapper with padding
-│       ├── PageHeader.tsx        # Page title/subtitle component
-│       ├── TabNavigation.tsx     # Reusable tab navigation
-│       └── Section.tsx           # Content section wrapper
+│   └── layout/                  # Layout components
+│       ├── index.ts            # Barrel export
+│       ├── PageContainer.tsx   # Page wrapper with padding
+│       ├── PageHeader.tsx      # Page title/subtitle component
+│       ├── TabNavigation.tsx   # Reusable tab navigation
+│       └── Section.tsx         # Content section wrapper
 │
-├── hooks/                         # 🪝 Custom React hooks
-│   ├── index.ts                  # Barrel export
-│   ├── useGameState.ts           # Game state machine hook
-│   └── useMatchStatusMonitor.ts  # Match status monitoring
+├── hooks/                        # 🪝 Custom React hooks
+│   ├── index.ts                # Barrel export
+│   ├── useGameState.ts         # Game state machine hook
+│   ├── useMatchStatusMonitor.ts # Match status monitoring
+│   └── useResponsive.ts        # Responsive breakpoint hook
 │
-└── lib/                           # 🔧 Utilities
-    ├── utils.ts                   # Main utilities (cn, re-exports)
-    ├── constants.ts               # App-wide constants
-    ├── validation.ts              # Input validation utilities
-    ├── formatting.ts              # Display formatting utilities
-    ├── storage.ts                 # LocalStorage utilities
-    └── helpers.ts                 # General helper functions
+└── lib/                          # 🔧 Utilities
+    ├── utils.ts                 # Main utilities (cn, re-exports)
+    ├── constants.ts             # App-wide constants
+    ├── validation.ts            # Input validation utilities
+    ├── formatting.ts            # Display formatting utilities
+    ├── storage.ts               # AsyncStorage utilities
+    ├── helpers.ts               # General helper functions
+    ├── toast.tsx                # Toast notification config
+    ├── rtl.ts                   # RTL utilities
+    ├── platform.ts             # Platform detection
+    └── filePicker.ts            # File picker utilities
 ```
 
 ### Feature Module Structure
@@ -139,14 +171,27 @@ export { SignOutButton } from './components/SignOutButton';
 export { ProfileSetup } from './components/ProfileSetup';
 ```
 
-### Pages Organization
+### Route Organization
 
-Pages are **top-level route components**:
-- `HomePage.tsx` - Main app dashboard (contains tabs for game features)
-- `LoginPage.tsx` - Authentication flow
-- `AdminPage.tsx` - Admin panel (restricted to admin users)
+Routes are defined by **file structure** in `app/` directory:
 
-Pages orchestrate features and don't contain business logic.
+**Tab Routes** (`app/(tabs)/`):
+- `index.tsx` - Dashboard (HelloPage component)
+- `new-match.tsx` - Match lobby (MatchLobby component)
+- `tournaments.tsx` - Tournament lobby (TournamentLobby component)
+- `history.tsx` - Match history (MatchHistory component)
+- `play.tsx` - Active game screen (QuizGame component) - Hidden from tab bar
+- `results/[id].tsx` - Match results - Hidden from tab bar
+
+**Auth Routes** (`app/(auth)/`):
+- `login.tsx` - Authentication flow (SignInForm/SignUpForm)
+- `profile-setup.tsx` - Profile setup (ProfileSetup component)
+
+**Other Routes**:
+- `admin.tsx` - Admin panel (restricted to admin users)
+- `tournament/[id].tsx` - Tournament detail view
+
+Routes are simple wrappers that render feature components and handle navigation/authentication guards.
 
 ## 📦 Backend Structure (Convex)
 
@@ -188,7 +233,7 @@ convex/
 │
 ├── matchGameplay.ts                # 🎲 Gameplay Operations
 │   ├── submitAnswer()            # Submit answer (validates)
-│   └── checkMatchCompletion()    # Check if completed
+│   └── checkMatchCompletion()    # Check if completed (handles tournament progression)
 │
 ├── matchResults.ts                 # 🏆 Results & History
 │   ├── getMatchResults()         # Get results (with answers)
@@ -199,18 +244,52 @@ convex/
 │   ├── getAllMatches() [admin]   # List all matches
 │   └── cancelMatch() [admin]     # Cancel match
 │
+├── tournaments.ts                  # 🏟️ Tournament API (Barrel export)
+│   └── Re-exports from specialized modules
+│
+├── tournamentCore.ts               # 🎯 Core Tournament Operations
+│   ├── createTournament()        # Create tournament
+│   ├── joinTournament()          # Join waiting tournament
+│   ├── leaveTournament()         # Leave tournament
+│   ├── cancelTournament()        # Cancel tournament (creator only)
+│   ├── getTournamentDetails()    # Get tournament info
+│   ├── getUserActiveTournaments() # Get user's active tournaments
+│   ├── getWaitingTournaments()   # Get all waiting tournaments
+│   ├── getMyWaitingTournaments()  # Get user's waiting tournaments
+│   ├── checkTournamentParticipation() # Check if user is in tournament
+│   └── checkTournamentMatch()    # Check user's match in tournament
+│
+├── tournamentResults.ts            # 🏆 Tournament Results & History
+│   ├── getUserTournamentHistory() # User's tournament history
+│   └── getTournamentResults()    # Get full tournament results (bracket)
+│
+├── tournamentAdmin.ts              # ⚙️ Admin Tournament Operations
+│   ├── getAllTournaments() [admin] # List all tournaments
+│   └── getTournamentDetailsAdmin() [admin] # Get tournament details with all data
+│
+├── categories.ts                   # 📂 Category Management
+│   ├── getCategories()            # List all categories
+│   ├── getCategoryWithCount()     # Get category with question count
+│   └── createCategory() [admin]   # Create category
+│
+├── questionCategories.ts           # 🔗 Question-Category Links
+│   └── getCategoriesWithCounts() # Get categories with question counts
+│
 ├── files.ts                        # 📁 File Management API
 │   ├── getAllFiles() [admin]     # List all files
 │   ├── uploadFile() [admin]      # Upload file
 │   ├── renameFile() [admin]      # Rename file
 │   └── deleteFile() [admin]      # Delete file
 │
+├── crons.ts                        # ⏰ Scheduled Tasks
+│   └── Expiration cleanup cron jobs
+│
 ├── utils.ts                        # 🛠️ Backend Utilities
 │   ├── requireAuth()             # Ensure authenticated
 │   ├── requireAdmin()            # Ensure admin
 │   ├── adminOnly()               # Admin-only wrapper
 │   ├── validateQuestion()        # Validate question data
-│   └── getRandomQuestions()      # Get random questions
+│   └── getRandomQuestions()      # Get random questions (category support)
 │
 ├── auth.config.ts                  # Auth configuration
 ├── http.ts                         # HTTP endpoints
@@ -225,16 +304,25 @@ convex/
    - `users` (Convex Auth) - Authentication
    - `profiles` - User profiles, admin status
 
-2. **Questions**
+2. **Categories**
+   - `categories` - Question categories
+
+3. **Questions**
    - `questions` - Question data (no answers)
    - `questionAnswers` - Correct answers (secure)
+   - `questionCategories` - Question-category links
 
-3. **Matches**
+4. **Matches**
    - `matches` - Match metadata
    - `matchParticipants` - Players & answers
    - `matchResults` - Final results
 
-4. **Files**
+5. **Tournaments**
+   - `tournaments` - Tournament metadata
+   - `tournamentParticipants` - Tournament players
+   - `tournamentMatches` - Tournament match links (semi-finals, final)
+
+6. **Files**
    - `files` - File metadata
    - `_storage` - Convex storage (media)
 
@@ -290,11 +378,14 @@ import { SignInForm, SignUpForm } from "../features/auth";
 
 ### Import Rules
 
-**Pages import from features:**
+**Routes import from features:**
 ```typescript
-// pages/HomePage.tsx
-import { ProfileSetup } from "../features/auth";
-import { QuizGame, MatchLobby } from "../features/game";
+// app/(tabs)/index.tsx
+import { HelloPage } from "../../src/features/game";
+import { SignOutButton } from "../../src/features/auth";
+
+// app/(tabs)/tournaments.tsx
+import { TournamentLobby } from "../../src/features/game";
 ```
 
 **Features can import from other features:**
@@ -310,8 +401,12 @@ import { PaginationControls } from "../components/ui";
 
 **Backend imports:**
 ```typescript
+// In routes (app/)
 import { api } from "../../convex/_generated/api";
-import { Id } from "../../convex/_generated/dataModel";
+
+// In features/components (src/)
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 ```
 
 ### Creating Barrel Exports
@@ -976,22 +1071,23 @@ import { PaginationControls } from "../components/ui";
 ## 📊 Statistics
 
 ### Frontend
-- **Total Components**: 48+ files
-- **Pages**: 3 route components
+- **Total Components**: 50+ files
+- **Routes**: 10+ route files (Expo Router)
 - **Features**: 3 modules (auth, game, admin)
-- **Shared UI Components**: 11 reusable components (NEW!)
+- **Shared UI Components**: 13+ reusable components
 - **Layout Components**: 4 layout components
 - **Match Components**: 3 specialized components
-- **Custom Hooks**: 2 state management hooks
-- **Utility Files**: 5 utility modules
-- **Barrel Exports**: 8 index files
+- **Custom Hooks**: 3 state management hooks
+- **Utility Files**: 8 utility modules
+- **Barrel Exports**: 8+ index files
 
 ### Backend (Convex)
-- **API Files**: 10 feature files (modularized)
-- **Database Tables**: 8 tables
-- **Queries**: 15+ read operations
-- **Mutations**: 20+ write operations
-- **Code Organization**: Separated by responsibility
+- **API Files**: 15+ feature files (modularized)
+- **Database Tables**: 11 tables (including tournaments)
+- **Queries**: 25+ read operations
+- **Mutations**: 30+ write operations
+- **Tournament System**: Full 4-player tournament with brackets
+- **Code Organization**: Separated by responsibility (matches, tournaments, etc.)
 
 ## 🔄 Adding New Features
 
@@ -1013,23 +1109,25 @@ import { PaginationControls } from "../components/ui";
    export { Component1 } from './components/Component1';
    ```
 
-4. **Use in pages:**
+4. **Create route file (if new page):**
    ```typescript
-   import { Component1 } from "../features/[feature-name]";
+   // app/new-page.tsx
+   import { NewPageComponent } from "../src/features/new-feature";
+   
+   export default function NewPageScreen() {
+     return <NewPageComponent />;
+   }
    ```
-
-5. **Add lazy loading (if new page):**
+   
+   Or if it needs to be in a tab:
    ```typescript
-   // App.tsx
-   // Ensure you have: import { lazy } from "react";
-   
-   const NewPage = lazy(() => 
-     import("./pages/NewPage").then(m => ({ default: m.NewPage }))
-   );
-   
-   // Add to routes (already wrapped in Suspense)
-   <Route path="/new" element={<NewPage />} />
+   // app/(tabs)/new-page.tsx
+   export default function NewPageScreen() {
+     return <NewPageComponent />;
+   }
    ```
+   
+   Then configure in `app/(tabs)/_layout.tsx` if needed.
 
 ### Backend Feature
 
@@ -1132,78 +1230,38 @@ import { PaginationControls } from "../components/ui";
 
 ---
 
-## 📱 React Native Architecture
+## 📱 React Native Architecture (Current Implementation)
 
-### Cross-Platform Structure
+### Expo Router File-Based Routing
 
-The app now uses **Expo with React Native Web** for unified web and mobile support:
+The app uses **Expo Router** (not React Router) for navigation:
 
-```
-12mvp/
-├── app/                         # 📱 Expo Router (File-based routing)
-│   ├── _layout.tsx             # Root layout with Convex + fonts
-│   ├── (tabs)/                 # Tab navigation group
-│   │   ├── _layout.tsx        # Tab bar configuration
-│   │   ├── index.tsx          # Dashboard (HelloPage)
-│   │   ├── new-match.tsx      # Match lobby
-│   │   └── history.tsx        # Match history
-│   ├── (auth)/                # Auth group
-│   │   └── login.tsx          # Login screen
-│   └── admin.tsx              # Admin panel
-│
-├── src/                        # Shared code (web + mobile)
-│   ├── components/            # React Native components
-│   ├── features/              # Feature modules
-│   ├── pages/                 # Page components
-│   ├── hooks/                 # Custom hooks
-│   └── lib/                   # Utilities
-│       └── toast.tsx          # Toast for RN
-│
-├── assets/                     # Static assets
-│   └── fonts/                 # Vazirmatn fonts
-│
-├── global.css                  # NativeWind styles
-├── metro.config.js            # Metro bundler config
-├── babel.config.js            # Babel config (NativeWind)
-└── app.json                   # Expo configuration
-```
+**Key Differences:**
+- File-based routing instead of route definitions
+- Groups `(auth)`, `(tabs)` for route organization
+- Dynamic routes `[id].tsx` for parameters
+- Automatic navigation guards via route structure
 
-### Expo Router vs React Router
+### Expo Router Navigation
 
-**Before (Web only):**
-```tsx
-// src/App.tsx
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+**File = Route:**
+- `app/(tabs)/index.tsx` → `/` (Dashboard)
+- `app/(tabs)/new-match.tsx` → `/new-match` (Match Lobby)
+- `app/(tabs)/tournaments.tsx` → `/tournaments` (Tournament Lobby)
+- `app/(tabs)/history.tsx` → `/history` (Match History)
+- `app/(tabs)/play.tsx` → `/play` (Active Game - hidden tab)
+- `app/(tabs)/results/[id].tsx` → `/results/:id` (Match Results - hidden tab)
+- `app/(auth)/login.tsx` → `/login` (Login)
+- `app/(auth)/profile-setup.tsx` → `/profile-setup` (Profile Setup)
+- `app/tournament/[id].tsx` → `/tournament/:id` (Tournament Detail)
+- `app/admin.tsx` → `/admin` (Admin Panel)
 
-<Routes>
-  <Route path="/" element={<HomePage />} />
-  <Route path="/login" element={<LoginPage />} />
-</Routes>
-```
+**Route Groups:**
+- `(tabs)` - Tab navigation group (visible in tab bar)
+- `(auth)` - Authentication group (not in tab bar)
 
-**After (Cross-platform):**
-```tsx
-// app/_layout.tsx - Root layout
-export default function RootLayout() {
-  return <Slot />;  // Renders matched route
-}
-
-// app/(tabs)/index.tsx - File = Route
-export default function DashboardScreen() {
-  return <HelloPage />;
-}
-
-// app/(tabs)/new-match.tsx
-export default function NewMatchScreen() {
-  return <MatchLobby />;
-}
-```
-
-**File-based routing:**
-- `app/(tabs)/index.tsx` → `/`
-- `app/(tabs)/new-match.tsx` → `/new-match`
-- `app/(auth)/login.tsx` → `/login`
-- `app/admin.tsx` → `/admin`
+**Hidden Tabs:**
+- `play.tsx` and `results/[id].tsx` have `href: null` in tab config
 
 ### Navigation Patterns
 
@@ -1213,9 +1271,11 @@ import { useRouter } from "expo-router";
 
 const router = useRouter();
 
-router.push("/admin");      // Navigate to route
-router.replace("/login");   // Replace current route
-router.back();              // Go back
+router.push("/admin");              // Navigate to route
+router.push("/tournament/abc123");  // Navigate with params
+router.replace("/login");           // Replace current route
+router.back();                      // Go back
+router.push("/(tabs)");             // Navigate to tab group
 ```
 
 **Tab Navigation:**
@@ -1224,8 +1284,22 @@ router.back();              // Go back
 <Tabs screenOptions={{ ... }}>
   <Tabs.Screen name="index" options={{ title: "داشبورد" }} />
   <Tabs.Screen name="new-match" options={{ title: "مسابقه جدید" }} />
+  <Tabs.Screen name="tournaments" options={{ title: "تورنومنت‌ها" }} />
   <Tabs.Screen name="history" options={{ title: "تاریخچه" }} />
+  <Tabs.Screen name="play" options={{ href: null }} /> // Hidden
+  <Tabs.Screen name="results/[id]" options={{ href: null }} /> // Hidden
 </Tabs>
+```
+
+**Route Parameters:**
+```tsx
+// app/tournament/[id].tsx
+import { useLocalSearchParams } from "expo-router";
+
+export default function TournamentScreen() {
+  const { id } = useLocalSearchParams();
+  // Use tournament ID
+}
 ```
 
 ### State Management (Unchanged)
@@ -1270,19 +1344,21 @@ export function MyComponent() {
 }
 ```
 
-### Converted Components
+### Component Status
 
-**✅ Fully Converted (React Native):**
-- All UI components (Button, Badge, Modal, etc.)
+**✅ React Native Components:**
+- All UI components (Button, Badge, Modal, DataTableRN, etc.)
 - All layout components (PageContainer, PageHeader, etc.)
-- All match components (WaitingScreen, PlayerCard, etc.)
-- SignOutButton (auth feature)
+- All match components (WaitingScreen, PlayerCard, MatchStatusBadge)
+- All game components (QuizGame, MatchLobby, TournamentLobby, etc.)
+- All auth components (SignInForm, SignUpForm, ProfileSetup, SignOutButton)
+- Admin components (QuestionsForm, CategoryForm, FilesTable, etc.)
 
-**🔄 Need Conversion:**
-- Auth feature components (SignInForm, SignUpForm, ProfileSetup)
-- Game feature components (HelloPage, MatchLobby, QuizGame, etc.)
-- Admin feature components (QuestionsForm, FilesTable, etc.)
-- Additional UI components (DataTable, Skeleton, etc.)
+**Platform Support:**
+- Web: React Native Web renders as HTML
+- iOS: Native iOS components
+- Android: Native Android components
+- One codebase for all platforms
 
 ### Platform Detection
 
@@ -1469,5 +1545,85 @@ eas build --platform android  # Android build (EAS)
 - [React Native Docs](https://reactnative.dev/)
 - [Convex with React Native](https://docs.convex.dev/)
 
-**Last Updated**: October 9, 2025  
+## 🏟️ Tournament Architecture
+
+### Tournament Flow
+
+**1. Tournament Creation:**
+- User creates tournament (with optional category or random)
+- Tournament starts in "waiting" status
+- Expires after 24 hours if not filled
+
+**2. Tournament Joining:**
+- Up to 4 players can join
+- When 4th player joins, tournament automatically starts
+
+**3. Tournament Structure:**
+- **Semi-finals**: 2 matches (Player 1 vs Player 2, Player 3 vs Player 4)
+- **Final**: Winners of semi-finals face each other
+- Final match created automatically when both semi-finals complete
+
+**4. Tournament States:**
+- `waiting` - Waiting for 4 players
+- `active` - Tournament in progress
+- `completed` - Tournament finished
+- `cancelled` - Tournament cancelled
+
+### Tournament Data Model
+
+```typescript
+tournaments: {
+  tournamentId: string,      // Unique identifier
+  status: "waiting" | "active" | "completed" | "cancelled",
+  categoryId?: Id<"categories">, // Optional category
+  isRandom: boolean,         // Random questions if true
+  creatorId: Id<"users">,
+  createdAt: number,
+  expiresAt: number,
+}
+
+tournamentParticipants: {
+  tournamentId: string,
+  userId: Id<"users">,
+  joinedAt: number,
+}
+
+tournamentMatches: {
+  tournamentId: string,
+  matchId: Id<"matches">,
+  round: "semi1" | "semi2" | "final",
+  player1Id: Id<"users">,
+  player2Id: Id<"users">,
+  status: "waiting" | "active" | "completed",
+  winnerId?: Id<"users">,
+}
+```
+
+### Tournament API Flow
+
+**Frontend:**
+```typescript
+// Create tournament
+const tournamentId = await createTournament({ 
+  categoryId: optionalCategoryId,
+  isRandom: !optionalCategoryId 
+});
+
+// Join tournament
+await joinTournament({ tournamentId });
+
+// Get tournament details
+const tournament = await getTournamentDetails({ tournamentId });
+
+// Get tournament results (bracket view)
+const results = await getTournamentResults({ tournamentId });
+```
+
+**Backend:**
+- `tournamentCore.ts` - Core operations (create, join, leave)
+- `tournamentResults.ts` - Results and history
+- `tournamentAdmin.ts` - Admin operations
+- `matchGameplay.ts` - Handles tournament progression when matches complete
+
+**Last Updated**: December 2024  
 **Maintainers**: Development Team

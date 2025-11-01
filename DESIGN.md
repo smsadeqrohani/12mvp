@@ -515,17 +515,21 @@ useEffect(() => {
 - `TabNavigation` - Tab interface
 - `Section` - Content sections
 
-### UI Components (11)
-- `DataTable` - Generic tables
-- `Modal` - Dialogs
+### UI Components (13+)
+- `Button` - Action buttons (React Native compatible)
 - `Badge` - Status indicators
-- `Button` - Action buttons
-- `FormField` - Form inputs
+- `Modal` - Dialogs
+- `DataTable` - Generic tables (web)
+- `DataTableRN` - React Native data table
+- `TextInput` - Text input component
+- `FormField` - Form input wrapper
 - `LoadingSpinner` - Loading states
 - `PageLoader` - Full page loading
 - `Skeleton` - Loading placeholders
 - `ErrorBoundary` - Error handling
 - `PaginationControls` - Pagination
+- `KeyboardAvoidingContainer` - Keyboard handling
+- `RTLView` - RTL wrapper
 
 ### Match Components (3)
 - `WaitingScreen` - Waiting UI
@@ -890,7 +894,7 @@ import { View, Text } from "react-native";
 
 ### Toast Notifications (React Native)
 
-Custom toast implementation for mobile:
+Custom toast implementation using `react-native-toast-message`:
 
 ```tsx
 import { toast } from "../lib/toast";
@@ -905,9 +909,17 @@ toast.warning("هشدار");
 **Configuration in app/_layout.tsx:**
 ```tsx
 import Toast from "react-native-toast-message";
+import { toastConfig } from "../src/lib/toast";
 
-<Toast />  // Add at root level
+// Add at root level
+<Toast config={toastConfig} />
 ```
+
+**Custom toast config** (`src/lib/toast.tsx`):
+- Persian text support
+- RTL layout
+- Custom styling matching app theme
+- Success/Error/Info/Warning variants
 
 ### Button Component (React Native)
 
@@ -1098,5 +1110,39 @@ const [fontsLoaded] = useFonts({
 - ❌ Don't use react-router (use expo-router)
 - ❌ Don't use web-only libraries
 
-**Last Updated**: October 9, 2025
+## 📦 Current Component Library
+
+### Feature Components
+
+**Auth Features:**
+- `SignInForm` - Email/password sign-in
+- `SignUpForm` - User registration
+- `ProfileSetup` - Profile creation
+- `SignOutButton` - Logout button
+
+**Game Features:**
+- `HelloPage` - Dashboard welcome screen
+- `MatchLobby` - 1v1 match lobby and matchmaking
+- `TournamentLobby` - Tournament creation and joining
+- `QuizGame` - Active quiz gameplay
+- `MatchResults` - Match results display
+- `MatchHistory` - User match history
+
+**Admin Features:**
+- `QuestionsForm` - Question CRUD
+- `CategoryForm` - Category CRUD
+- `FilesTable` - File management
+- `FileUpload` - File upload component
+- `FilePreview` - File preview modal
+- `MatchDetailsAdmin` - Match monitoring
+
+### Navigation Components
+
+**Expo Router:**
+- Tab navigation configured in `app/(tabs)/_layout.tsx`
+- Tab bar with Persian labels
+- Hidden tabs (play, results) for internal navigation
+- Route groups for auth and tabs
+
+**Last Updated**: December 2024
 
