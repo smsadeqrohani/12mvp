@@ -29,7 +29,7 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
     option3Text: question?.option3Text || "",
     option4Text: question?.option4Text || "",
     rightAnswer: question?.rightAnswer ? question.rightAnswer.toString() : "1",
-    timeToRespond: question?.timeToRespond || 30,
+    timeToRespond: question?.timeToRespond || 10,
     grade: question?.grade || 1,
   });
 

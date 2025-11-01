@@ -48,8 +48,7 @@ export function TextInput({
       // Handle multiline
       resize: variant === 'multiline' ? 'vertical' : 'none',
       
-      // Override any global RTL that might interfere
-      direction: 'ltr',
+      // Use auto direction for better handling of mixed RTL/LTR text
       textAlign: props.textAlign === 'right' ? 'right' : 'left',
       
       // Merge with custom styles
@@ -91,7 +90,7 @@ export function TextInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
           rows={3}
-          dir={props.textAlign === 'right' ? 'rtl' : 'ltr'}
+          dir="auto"
           autoComplete={props.autoComplete}
           autoCorrect={props.autoCorrect}
           autoFocus={props.autoFocus}
@@ -121,7 +120,7 @@ export function TextInput({
           e.preventDefault();
           props.onSubmitEditing?.(e as any);
         }}
-        dir={props.textAlign === 'right' ? 'rtl' : 'ltr'}
+        dir="auto"
       />
     );
   }
