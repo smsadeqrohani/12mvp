@@ -61,11 +61,34 @@ export const getAllMatches = query({
             .unique();
         }
         
+        // Check if this match is part of a tournament
+        const tournamentMatch = await ctx.db
+          .query("tournamentMatches")
+          .withIndex("by_match", (q: any) => q.eq("matchId", match._id))
+          .unique();
+        
+        let tournamentInfo = null;
+        if (tournamentMatch) {
+          const tournament = await ctx.db
+            .query("tournaments")
+            .filter((q: any) => q.eq(q.field("tournamentId"), tournamentMatch.tournamentId))
+            .unique();
+          
+          if (tournament) {
+            tournamentInfo = {
+              tournamentId: tournamentMatch.tournamentId,
+              round: tournamentMatch.round,
+              tournament: tournament,
+            };
+          }
+        }
+        
         return {
           match,
           participants: participantsWithProfiles,
           creator: creatorProfile,
           result,
+          tournamentInfo,
         };
       })
     );

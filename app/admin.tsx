@@ -6,7 +6,7 @@ import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
-import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
+import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin } from "../src/features/admin";
 import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
@@ -53,6 +53,7 @@ export default function AdminScreen() {
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
+  const [viewingTournamentId, setViewingTournamentId] = useState<string | null>(null);
   const [confirmationDialog, setConfirmationDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -241,6 +242,28 @@ export default function AdminScreen() {
     );
   }
 
+  // If viewing tournament details, show the tournament details view
+  if (viewingTournamentId) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="px-6 py-6">
+          <TouchableOpacity
+            onPress={() => setViewingTournamentId(null)}
+            className="flex-row items-center gap-2 px-4 py-3 bg-background-light rounded-lg mb-6 w-fit"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={20} color="#ff701a" />
+            <Text className="text-accent font-semibold">بازگشت به لیست تورنومنت‌ها</Text>
+          </TouchableOpacity>
+          <TournamentDetailsAdmin 
+            tournamentId={viewingTournamentId} 
+            onBack={() => setViewingTournamentId(null)}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // If viewing match details, show the match results view
   if (viewingMatchId) {
     return (
@@ -417,6 +440,10 @@ export default function AdminScreen() {
 
   const handleViewMatch = (matchId: string) => {
     setViewingMatchId(matchId);
+  };
+
+  const handleViewTournament = (tournamentId: string) => {
+    setViewingTournamentId(tournamentId);
   };
 
   // Pagination handlers
@@ -1078,6 +1105,37 @@ export default function AdminScreen() {
         },
       },
       {
+        key: 'type',
+        header: 'نوع',
+        render: (matchData) => {
+          const { tournamentInfo } = matchData;
+          if (tournamentInfo) {
+            const roundText = {
+              semi1: "نیمه‌نهایی ۱",
+              semi2: "نیمه‌نهایی ۲",
+              final: "فینال",
+            };
+            return (
+              <View className="items-center">
+                <View className="bg-purple-900/30 border border-purple-800/30 rounded-lg px-2 py-1">
+                  <Ionicons name="trophy" size={14} color="#a78bfa" />
+                </View>
+                <Text className="text-purple-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  {roundText[tournamentInfo.round]}
+                </Text>
+              </View>
+            );
+          }
+          return (
+            <View className="px-3 py-1 rounded-full bg-gray-700/50 border border-gray-600/30">
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                مسابقه عادی
+              </Text>
+            </View>
+          );
+        },
+      },
+      {
         key: 'status',
         header: 'وضعیت',
         render: (matchData) => {
@@ -1332,6 +1390,16 @@ export default function AdminScreen() {
           const { tournament } = tournamentData;
           return (
             <View className="flex-row items-center gap-2">
+              <TouchableOpacity
+                onPress={() => handleViewTournament(tournament.tournamentId)}
+                className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                style={{ minHeight: touchTargetSize }}
+                activeOpacity={0.7}
+              >
+                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  جزئیات
+                </Text>
+              </TouchableOpacity>
               {(tournament.status === "waiting" || tournament.status === "active") && (
                 <TouchableOpacity
                   onPress={(e) => {
