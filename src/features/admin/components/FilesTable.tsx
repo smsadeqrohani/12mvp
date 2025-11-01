@@ -9,6 +9,7 @@ import { FileUpload } from "./FileUpload";
 import { PaginationControls } from "../../../components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { formatFileSize } from "../../../lib/filePicker";
+import { getOptimalPageSize } from "../../../lib/platform";
 import type { Column } from "../../../components/ui/DataTableRN";
 
 export function FilesTable() {
@@ -29,7 +30,7 @@ export function FilesTable() {
   const [filesCursor, setFilesCursor] = useState<string | null>(null);
   const [filesCursorHistory, setFilesCursorHistory] = useState<(string | null)[]>([null]);
   const [filesPage, setFilesPage] = useState(1);
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = getOptimalPageSize();
 
   const allFiles = useQuery(api.files.getAllFiles, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: filesCursor },
@@ -195,7 +196,8 @@ export function FilesTable() {
   ];
 
   return (
-    <View className="flex-1">
+    <>
+    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       {/* Upload Button */}
       <View className="mb-4">
         <Button
@@ -242,6 +244,7 @@ export function FilesTable() {
           />
         </View>
       )}
+    </ScrollView>
 
       {/* Upload Modal */}
       <Modal
@@ -390,6 +393,6 @@ export function FilesTable() {
           </View>
         </Modal>
       )}
-    </View>
+    </>
   );
 }

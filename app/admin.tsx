@@ -9,6 +9,7 @@ import { toast } from "../src/lib/toast";
 import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin } from "../src/features/admin";
 import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
+import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
 
 type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments";
@@ -84,7 +85,7 @@ export default function AdminScreen() {
   const userProfile = useQuery(api.auth.getUserProfile);
 
   // Pagination queries
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = getOptimalPageSize();
   const allUsers = useQuery(api.auth.getAllUsers, {
     paginationOpts: { numItems: PAGE_SIZE, cursor: usersCursor },
   });
@@ -616,7 +617,10 @@ export default function AdminScreen() {
     ];
 
     return (
-      <View className="flex-1">
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+      >
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
@@ -655,7 +659,7 @@ export default function AdminScreen() {
           onPrev={handlePrevUsers}
           isLoading={allUsers === undefined}
         />
-      </View>
+      </ScrollView>
     );
   };
 

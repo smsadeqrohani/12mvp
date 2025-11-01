@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { PaginationControls } from "../../../components/ui";
+import { getOptimalPageSize } from "../../../lib/platform";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,7 +16,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [historyCursorHistory, setHistoryCursorHistory] = useState<(string | null)[]>([null]);
   const [historyPage, setHistoryPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = getOptimalPageSize();
   const router = useRouter();
 
   // Check authentication first
