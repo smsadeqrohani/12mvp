@@ -246,10 +246,10 @@ export default function AdminScreen() {
   if (viewingTournamentId) {
     return (
       <SafeAreaView className="flex-1 bg-background">
-        <View className="px-6 py-6">
+        <View className="flex-1">
           <TouchableOpacity
             onPress={() => setViewingTournamentId(null)}
-            className="flex-row items-center gap-2 px-4 py-3 bg-background-light rounded-lg mb-6 w-fit"
+            className="flex-row items-center gap-2 px-4 py-3 mx-6 mt-6 w-fit bg-background-light rounded-lg mb-6"
             activeOpacity={0.7}
           >
             <Ionicons name="arrow-back" size={20} color="#ff701a" />
