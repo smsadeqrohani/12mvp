@@ -156,8 +156,10 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
               <View key={match.matchId} className="bg-gray-800/50 rounded-lg p-4 mb-3">
                 <View className="flex-row justify-between items-center mb-2">
                   <Text className="text-white font-semibold">بازی با {match.opponentName}</Text>
-                  <View className="bg-blue-500/20 px-3 py-1 rounded-full">
-                    <Text className="text-blue-500 text-xs">در حال بازی</Text>
+                  <View className={`${match.status === "waiting" ? "bg-yellow-500/20" : "bg-blue-500/20"} px-3 py-1 rounded-full`}>
+                    <Text className={`${match.status === "waiting" ? "text-yellow-500" : "text-blue-500"} text-xs`}>
+                      {match.status === "waiting" ? "منتظر حریف" : "در حال بازی"}
+                    </Text>
                   </View>
                 </View>
                 
@@ -169,14 +171,27 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
                   زمان باقی‌مانده: {formatTimeRemaining(match.expiresAt)}
                 </Text>
                 
-                <TouchableOpacity
-                  onPress={() => router.push(`/(tabs)/play?matchId=${match.matchId}`)}
-                  className="flex-row items-center justify-center gap-2 px-4 py-2 bg-accent rounded-lg"
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="play-circle-outline" size={20} color="#fff" />
-                  <Text className="text-white font-semibold text-sm">ادامه بازی</Text>
-                </TouchableOpacity>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity
+                    onPress={() => router.push(`/(tabs)/play?matchId=${match.matchId}`)}
+                    className="flex-1 flex-row items-center justify-center gap-2 px-4 py-2 bg-accent rounded-lg"
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="play-circle-outline" size={20} color="#fff" />
+                    <Text className="text-white font-semibold text-sm">ادامه بازی</Text>
+                  </TouchableOpacity>
+
+                  {match.canCancel && (
+                    <TouchableOpacity
+                      onPress={() => handleCancelMatch(match.matchId)}
+                      className="flex-row items-center justify-center gap-2 px-4 py-2 bg-red-600 rounded-lg"
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="close-circle-outline" size={20} color="#fff" />
+                      <Text className="text-white font-semibold text-sm">لغو بازی</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
             ))}
           </View>

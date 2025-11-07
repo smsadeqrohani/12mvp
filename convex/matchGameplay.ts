@@ -27,8 +27,15 @@ export const submitAnswer = mutation({
       throw new Error("Match not found");
     }
     
-    if (match.status !== "active") {
+    const isCreatorSoloPlay =
+      match.status === "waiting" && match.creatorId === currentUserId;
+
+    if (!isCreatorSoloPlay && match.status !== "active") {
       throw new Error("Match is not active");
+    }
+
+    if (Date.now() > match.expiresAt) {
+      throw new Error("Match has expired");
     }
     
     // Get question

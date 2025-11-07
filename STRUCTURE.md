@@ -229,7 +229,8 @@ convex/
 │   ├── getMatchDetails()         # Get match info (no answers)
 │   ├── getUserActiveMatch()      # Check active match
 │   ├── getUserActiveMatchStatus() # Match status
-│   └── leaveMatch()              # Leave match
+│   ├── leaveMatch()              # Leave match
+│   └── Solo waiting window (24h) # Creator can answer while waiting for opponent
 │
 ├── matchGameplay.ts                # 🎲 Gameplay Operations
 │   ├── submitAnswer()            # Submit answer (validates)

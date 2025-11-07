@@ -172,31 +172,43 @@ export const getUserActiveMatches = query({
     
     for (const participant of userParticipants) {
       const match = await ctx.db.get(participant.matchId);
-      if (match && match.status === "active" && !participant.completedAt) {
-        // Get opponent
-        const allParticipants = await ctx.db
-          .query("matchParticipants")
-          .withIndex("by_match", (q) => q.eq("matchId", match._id))
-          .collect();
-        
-        const opponent = allParticipants.find(p => p.userId !== currentUserId);
-        let opponentProfile = null;
-        if (opponent) {
-          opponentProfile = await ctx.db
-            .query("profiles")
-            .withIndex("by_user", (q: any) => q.eq("userId", opponent.userId))
-            .unique();
-        }
-        
-        activeMatches.push({
-          matchId: match._id,
-          startedAt: match.startedAt,
-          expiresAt: match.expiresAt,
-          questionsAnswered: participant.answers?.length || 0,
-          totalQuestions: match.questions.length,
-          opponentName: opponentProfile?.name || "Unknown",
-        });
+      if (!match || participant.completedAt) {
+        continue;
       }
+
+      const allParticipants = await ctx.db
+        .query("matchParticipants")
+        .withIndex("by_match", (q) => q.eq("matchId", participant.matchId))
+        .collect();
+
+      const isCreatorSoloPlay =
+        match.status === "waiting" &&
+        match.creatorId === currentUserId &&
+        allParticipants.length === 1;
+
+      if (match.status !== "active" && !isCreatorSoloPlay) {
+        continue;
+      }
+
+      const opponent = allParticipants.find(p => p.userId !== currentUserId);
+      let opponentProfile = null;
+      if (opponent) {
+        opponentProfile = await ctx.db
+          .query("profiles")
+          .withIndex("by_user", (q: any) => q.eq("userId", opponent.userId))
+          .unique();
+      }
+
+      activeMatches.push({
+        matchId: match._id,
+        startedAt: match.startedAt || match.createdAt,
+        expiresAt: match.expiresAt,
+        questionsAnswered: participant.answers?.length || 0,
+        totalQuestions: match.questions.length,
+        opponentName: opponentProfile?.name || "Unknown",
+        status: match.status,
+        canCancel: isCreatorSoloPlay,
+      });
     }
     
     // Sort by startedAt (most recent first)
