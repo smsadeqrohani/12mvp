@@ -1,12 +1,59 @@
-import { View, Text, ActivityIndicator } from "react-native";
-import { useQuery } from "convex/react";
+import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { SignOutButton } from "../../../features/auth";
+import { Avatar, Modal } from "../../../components/ui";
+import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID } from "../../../../shared/avatarOptions";
+import { toast } from "../../../lib/toast";
+
+const MODAL_DESCRIPTION = "یکی از آواتارهای از پیش بارگذاری‌شده را انتخاب کنید. آواتار شما بلافاصله در تمامی بخش‌های بازی به‌روزرسانی می‌شود.";
 
 export function HelloPage() {
   const userProfile = useQuery(api.auth.getUserProfile);
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const topUsers = useQuery(api.auth.getTopUsers, { limit: 5 });
+  const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
+
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [pendingAvatarId, setPendingAvatarId] = useState(DEFAULT_AVATAR_ID);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+
+  useEffect(() => {
+    if (isAvatarModalOpen && userProfile) {
+      setPendingAvatarId(userProfile.avatarId ?? DEFAULT_AVATAR_ID);
+    }
+  }, [isAvatarModalOpen, userProfile]);
+
+  const handleOpenAvatarModal = () => {
+    setIsAvatarModalOpen(true);
+  };
+
+  const handleCloseAvatarModal = () => {
+    if (isSavingAvatar) return;
+    setIsAvatarModalOpen(false);
+  };
+
+  const handleSaveAvatar = () => {
+    if (!pendingAvatarId || !userProfile) return;
+
+    if (pendingAvatarId === (userProfile.avatarId ?? DEFAULT_AVATAR_ID)) {
+      setIsAvatarModalOpen(false);
+      return;
+    }
+
+    setIsSavingAvatar(true);
+    updateProfileAvatar({ avatarId: pendingAvatarId })
+      .then(() => {
+        toast.success("آواتار شما به‌روزرسانی شد");
+        setIsAvatarModalOpen(false);
+      })
+      .catch((error) => {
+        console.error("Failed to update avatar:", error);
+        toast.error("خطا در به‌روزرسانی آواتار");
+      })
+      .finally(() => setIsSavingAvatar(false));
+  };
 
   if (!userProfile || !loggedInUser) {
     return (
@@ -19,12 +66,22 @@ export function HelloPage() {
   return (
     <View className="flex-1 p-4 space-y-6">
       <View className="items-center">
+        <Avatar avatarId={userProfile.avatarId} size="xl" highlighted className="mb-4" />
         <Text className="text-4xl font-bold text-accent mb-4" style={{ fontFamily: 'Vazirmatn-Bold' }}>
           سلام، {userProfile.name}! 👋
         </Text>
         <Text className="text-lg text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
           به داشبورد خود خوش آمدید
         </Text>
+        <TouchableOpacity
+          onPress={handleOpenAvatarModal}
+          activeOpacity={0.7}
+          className="mt-4 px-4 py-2 rounded-lg bg-accent"
+        >
+          <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            تغییر آواتار
+          </Text>
+        </TouchableOpacity>
       </View>
       
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">
@@ -82,6 +139,7 @@ export function HelloPage() {
                 }`}
               >
                 <View className="flex-row items-center gap-3 flex-1">
+                  <Avatar avatarId={user.avatarId} size="sm" highlighted={index === 0} />
                   <View className={`w-8 h-8 rounded-full items-center justify-center ${
                     index === 0
                       ? "bg-accent"
@@ -91,9 +149,7 @@ export function HelloPage() {
                       ? "bg-orange-600"
                       : "bg-gray-600"
                   }`}>
-                    <Text className={`text-white font-bold text-sm ${
-                      index < 3 ? "text-white" : "text-gray-300"
-                    }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    <Text className="text-white font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
                       {user.rank}
                     </Text>
                   </View>
@@ -122,6 +178,71 @@ export function HelloPage() {
       <View className="items-center mt-4">
         <SignOutButton />
       </View>
+
+      <Modal
+        isOpen={isAvatarModalOpen}
+        onClose={handleCloseAvatarModal}
+        title="انتخاب آواتار"
+        description={MODAL_DESCRIPTION}
+        size="md"
+      >
+        <View className="flex-row flex-wrap justify-center gap-4">
+          {AVATAR_OPTIONS.map((option) => {
+            const isSelected = option.id === pendingAvatarId;
+            return (
+              <TouchableOpacity
+                key={option.id}
+                onPress={() => setPendingAvatarId(option.id)}
+                activeOpacity={0.8}
+                className="items-center gap-2"
+              >
+                <Avatar
+                  avatarId={option.id}
+                  size="lg"
+                  highlighted={isSelected}
+                  badge={
+                    isSelected ? (
+                      <View className="w-7 h-7 rounded-full bg-accent items-center justify-center border border-white/40">
+                        <Text className="text-white text-xs font-bold">✓</Text>
+                      </View>
+                    ) : undefined
+                  }
+                />
+                <Text className={`text-sm ${isSelected ? "text-accent font-semibold" : "text-gray-300"}`}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <View className="flex-row justify-end gap-3 mt-8">
+          <TouchableOpacity
+            onPress={handleCloseAvatarModal}
+            disabled={isSavingAvatar}
+            activeOpacity={0.7}
+            className="px-4 py-3 rounded-lg border border-gray-600 bg-background"
+          >
+            <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              انصراف
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSaveAvatar}
+            activeOpacity={0.7}
+            disabled={isSavingAvatar || pendingAvatarId === (userProfile.avatarId ?? DEFAULT_AVATAR_ID)}
+            className={`px-4 py-3 rounded-lg ${isSavingAvatar || pendingAvatarId === (userProfile.avatarId ?? DEFAULT_AVATAR_ID) ? "bg-accent/60" : "bg-accent"}`}
+          >
+            {isSavingAvatar ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                ذخیره آواتار
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 }

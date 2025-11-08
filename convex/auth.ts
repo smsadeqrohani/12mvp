@@ -2,6 +2,7 @@ import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { DEFAULT_AVATAR_ID, isValidAvatarId } from "../shared/avatarOptions";
 
 /**
  * Authentication and User Profile Management
@@ -40,7 +41,7 @@ export const getUserProfile = query({
 });
 
 export const createProfile = mutation({
-  args: { name: v.string() },
+  args: { name: v.string(), avatarId: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -55,12 +56,45 @@ export const createProfile = mutation({
     if (existingProfile) {
       throw new Error("Profile already exists");
     }
-    
+    const avatarId = args.avatarId && isValidAvatarId(args.avatarId) ? args.avatarId : DEFAULT_AVATAR_ID;
+
     await ctx.db.insert("profiles", {
       userId,
       name: args.name,
       isAdmin: false,
       points: 0,
+      avatarId,
+    });
+  },
+});
+
+export const updateProfileAvatar = mutation({
+  args: { avatarId: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    if (!isValidAvatarId(args.avatarId)) {
+      throw new Error("Invalid avatar selection");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .unique();
+
+    if (!profile) {
+      throw new Error("User profile not found");
+    }
+
+    if (profile.avatarId === args.avatarId) {
+      return;
+    }
+
+    await ctx.db.patch(profile._id, {
+      avatarId: args.avatarId,
     });
   },
 });
@@ -108,6 +142,7 @@ export const getAllUsers = query({
           name: profile.name,
           isAdmin: profile.isAdmin,
           points: profile.points ?? 0,
+          avatarId: profile.avatarId ?? DEFAULT_AVATAR_ID,
         };
       })
     );
@@ -233,6 +268,7 @@ export const getTopUsers = query({
           name: profile.name,
           points,
           creationTime,
+          avatarId: profile.avatarId ?? DEFAULT_AVATAR_ID,
         };
       })
     );
@@ -251,6 +287,7 @@ export const getTopUsers = query({
       rank: index + 1,
       name: user.name,
       points: user.points,
+      avatarId: user.avatarId ?? DEFAULT_AVATAR_ID,
     }));
   },
 });

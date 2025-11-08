@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, getRandomQuestions } from "./utils";
+import { DEFAULT_AVATAR_ID } from "../shared/avatarOptions";
 import { Id } from "./_generated/dataModel";
 
 // Helper function to generate unique tournament ID
@@ -405,6 +406,7 @@ export const getWaitingTournaments = query({
             createdAt: tournament.createdAt,
             expiresAt: tournament.expiresAt,
             creatorName: creator?.name || "Unknown",
+          creatorAvatarId: creator?.avatarId ?? DEFAULT_AVATAR_ID,
             participantCount: participants.length,
             isUserCreator: tournament.creatorId === currentUserId,
             isUserParticipant, // Add this field

@@ -8,6 +8,7 @@ const applicationTables = {
     name: v.string(),
     isAdmin: v.boolean(),
     points: v.optional(v.number()),
+    avatarId: v.optional(v.string()),
   }).index("by_user", ["userId"]),
   
   categories: defineTable({

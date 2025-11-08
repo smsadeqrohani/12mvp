@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar } from "../../../components/ui";
 
 interface TournamentLobbyProps {
   onTournamentStart?: (tournamentId: string) => void;
@@ -293,7 +294,10 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             otherWaitingTournaments.map((tournament) => (
               <View key={tournament.tournamentId} className="bg-gray-800/50 rounded-lg p-4 mb-3">
                 <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-white font-semibold">تورنومنت {tournament.creatorName}</Text>
+                  <View className="flex-row items-center gap-3">
+                    <Avatar avatarId={tournament.creatorAvatarId} size="sm" />
+                    <Text className="text-white font-semibold">تورنومنت {tournament.creatorName}</Text>
+                  </View>
                   <View className="bg-green-500/20 px-3 py-1 rounded-full">
                     <Text className="text-green-500 text-xs">آماده پیوستن</Text>
             </View>

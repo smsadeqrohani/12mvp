@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, FlatList, ActivityIndicator } from "react
 import { useQuery } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
-import { PaginationControls } from "../../../components/ui";
+import { Avatar, PaginationControls } from "../../../components/ui";
 import { getOptimalPageSize } from "../../../lib/platform";
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -167,6 +167,7 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
         )}
         renderItem={({ item: matchData, index }) => {
           const { match, result, participant, opponent, isWinner, isDraw } = matchData;
+          const opponentAvatarId = opponent?.avatarId;
           
           return (
             <TouchableOpacity 
@@ -186,7 +187,8 @@ export function MatchHistory({ onViewMatch }: MatchHistoryProps) {
                   {/* Match Info */}
                   <View className="flex-1">
                     <View className="flex-row items-center gap-3 mb-2">
-                      <Text className="text-lg font-semibold text-white">
+                      <Avatar avatarId={opponentAvatarId} size="sm" />
+                      <Text className="text-lg font-semibold text-white flex-1">
                         مسابقه با {opponent?.name ?? "بازیکن ناشناس"}
                       </Text>
                       

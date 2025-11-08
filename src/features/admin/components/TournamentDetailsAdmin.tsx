@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { Button } from "../../../components/ui";
+import { Button, Avatar } from "../../../components/ui";
 import { Ionicons } from "@expo/vector-icons";
 
 interface TournamentDetailsAdminProps {
@@ -110,11 +110,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
               سازنده
             </Text>
             <View className="flex-row items-center gap-2">
-              <View className="w-8 h-8 bg-accent/20 rounded-full items-center justify-center">
-                <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                  {creator?.name[0] || "?"}
-                </Text>
-              </View>
+              <Avatar avatarId={creator?.avatarId} size="sm" highlighted />
               <Text className="text-white" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
                 {creator?.name || "ناشناس"}
               </Text>
@@ -163,6 +159,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                       {index + 1}
                     </Text>
                   </View>
+                  <Avatar avatarId={p.profile?.avatarId} size="sm" />
                   <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
                     {p.profile?.name || "ناشناس"}
                   </Text>
@@ -213,11 +210,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                   <View className="flex-row items-center justify-between mb-3">
                     <View className="flex-1">
                       <View className="flex-row items-center gap-2">
-                        <View className="w-6 h-6 bg-accent/20 rounded-full items-center justify-center">
-                          <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                            {tm.player1Profile?.name[0] || "?"}
-                          </Text>
-                        </View>
+                    <Avatar avatarId={tm.player1Profile?.avatarId} size="sm" />
                         <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
                           {tm.player1Profile?.name || "ناشناس"}
                         </Text>
@@ -226,11 +219,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                     <Text className="text-gray-400 text-sm">VS</Text>
                     <View className="flex-1 flex-row-reverse">
                       <View className="flex-row items-center gap-2">
-                        <View className="w-6 h-6 bg-accent/20 rounded-full items-center justify-center">
-                          <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                            {tm.player2Profile?.name[0] || "?"}
-                          </Text>
-                        </View>
+                    <Avatar avatarId={tm.player2Profile?.avatarId} size="sm" />
                         <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
                           {tm.player2Profile?.name || "ناشناس"}
                         </Text>

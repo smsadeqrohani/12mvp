@@ -5,6 +5,7 @@ import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar } from "../../../components/ui";
 
 interface QuizGameProps {
   matchId: Id<"matches">;
@@ -318,11 +319,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         {matchDetails.participants.map((participant) => (
           <View key={participant.userId} className="flex-1 bg-background-light/60 rounded-xl border border-gray-700/30 p-4">
             <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-                <Text className="text-accent font-bold text-sm">
-                  {participant.profile?.name[0] || "?"}
-                </Text>
-              </View>
+              <Avatar avatarId={participant.profile?.avatarId} size="md" />
               <View className="flex-1">
                 <Text className="text-white font-semibold">
                   {participant.profile?.name || "بازیکن ناشناس"}

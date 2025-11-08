@@ -4,18 +4,22 @@ import { api } from "../../../../convex/_generated/api";
 import { useState } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
-import { KeyboardAvoidingContainer } from "../../../components/ui";
+import { Avatar, KeyboardAvoidingContainer } from "../../../components/ui";
+import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID } from "../../../../shared/avatarOptions";
+import { Ionicons } from "@expo/vector-icons";
 
 export function ProfileSetup() {
   const createProfile = useMutation(api.auth.createProfile);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
+  const [selectedAvatarId, setSelectedAvatarId] = useState(DEFAULT_AVATAR_ID);
   const router = useRouter();
+  const isFormValid = name.trim().length > 0;
 
   const handleSubmit = () => {
     setLoading(true);
 
-    createProfile({ name })
+    createProfile({ name, avatarId: selectedAvatarId })
       .then(() => {
         toast.success("پروفایل ایجاد شد!");
         router.replace("/");
@@ -48,6 +52,35 @@ export function ProfileSetup() {
           <View className="bg-background-light rounded-2xl p-6 border border-gray-700 shadow-lg">
             <View className="flex flex-col gap-4">
               <View>
+                <Text className="text-gray-300 mb-2 font-medium">انتخاب آواتار</Text>
+                <View className="flex-row flex-wrap gap-3">
+                  {AVATAR_OPTIONS.map((option) => {
+                    const isSelected = option.id === selectedAvatarId;
+                    return (
+                      <TouchableOpacity
+                        key={option.id}
+                        onPress={() => setSelectedAvatarId(option.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Avatar
+                          avatarId={option.id}
+                          size="md"
+                          highlighted={isSelected}
+                          badge={
+                            isSelected ? (
+                              <View className="w-6 h-6 rounded-full bg-accent items-center justify-center">
+                                <Ionicons name="checkmark" size={16} color="#fff" />
+                              </View>
+                            ) : undefined
+                          }
+                        />
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View>
                 <Text className="text-gray-300 mb-2 font-medium">نام شما</Text>
                 <TextInput
                   value={name}
@@ -59,7 +92,11 @@ export function ProfileSetup() {
                   autoFocus
                 />
               </View>
-              <TouchableOpacity onPress={handleSubmit} className="auth-button mt-2" disabled={loading}>
+              <TouchableOpacity
+                onPress={handleSubmit}
+                className={`auth-button mt-2 ${(!isFormValid || loading) ? "opacity-60" : ""}`}
+                disabled={!isFormValid || loading}
+              >
                 {loading ? (
                   <View className="flex-row items-center justify-center gap-2">
                     <ActivityIndicator size="small" color="#fff" />

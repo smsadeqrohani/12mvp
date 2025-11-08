@@ -7,7 +7,7 @@ import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
 import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin } from "../src/features/admin";
-import { PaginationControls, SkeletonAdminTab, DataTableRN } from "../src/components/ui";
+import { PaginationControls, SkeletonAdminTab, DataTableRN, Avatar } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
@@ -550,11 +550,7 @@ export default function AdminScreen() {
         header: 'نام کاربر',
         render: (user) => (
           <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-              <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                {user.name[0]}
-              </Text>
-            </View>
+            <Avatar avatarId={user.avatarId} size="md" />
             <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
               {user.name}
             </Text>

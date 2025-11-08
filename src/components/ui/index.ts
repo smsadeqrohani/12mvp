@@ -13,4 +13,5 @@ export { PageLoader } from './PageLoader';
 export { RTLView } from './RTLView';
 export { KeyboardAvoidingContainer } from './KeyboardAvoidingContainer';
 export { TextInput } from './TextInput';
+export { Avatar } from './Avatar';
 

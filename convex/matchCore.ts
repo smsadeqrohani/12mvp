@@ -2,6 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { requireAuth, getRandomQuestions } from "./utils";
+import { DEFAULT_AVATAR_ID } from "../shared/avatarOptions";
 
 // Helper function to get categories for a question
 async function getQuestionCategories(ctx: any, questionId: string) {
@@ -206,6 +207,7 @@ export const getUserActiveMatches = query({
         questionsAnswered: participant.answers?.length || 0,
         totalQuestions: match.questions.length,
         opponentName: opponentProfile?.name || "Unknown",
+        opponentAvatarId: opponentProfile?.avatarId ?? DEFAULT_AVATAR_ID,
         status: match.status,
         canCancel: isCreatorSoloPlay,
       });
@@ -267,6 +269,7 @@ export const getUserPendingResultsMatches = query({
         myScore: participant.totalScore || 0,
         myTime: participant.totalTime || 0,
         opponentName: opponentProfile?.name || "Unknown",
+        opponentAvatarId: opponentProfile?.avatarId ?? DEFAULT_AVATAR_ID,
         opponentAnswered: opponent?.answers?.length || 0,
         opponentCompleted: opponent?.completedAt ? true : false,
         totalQuestions: match.questions.length,
@@ -472,6 +475,7 @@ export const getWaitingMatches = query({
             createdAt: match.createdAt,
             expiresAt: match.expiresAt,
             creatorName: creator?.name || "Unknown",
+            creatorAvatarId: creator?.avatarId ?? DEFAULT_AVATAR_ID,
             participantCount: participants.length,
             isUserCreator: match.creatorId === currentUserId,
           };

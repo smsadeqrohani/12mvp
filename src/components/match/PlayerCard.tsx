@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar } from "../ui";
 
 interface PlayerCardProps {
   name: string;
@@ -10,6 +11,7 @@ interface PlayerCardProps {
   isCurrentUser?: boolean;
   status?: ReactNode;
   className?: string;
+  avatarId?: string | null;
 }
 
 export function PlayerCard({
@@ -20,6 +22,7 @@ export function PlayerCard({
   isCurrentUser,
   status,
   className = "",
+  avatarId,
 }: PlayerCardProps) {
   return (
     <View
@@ -30,21 +33,11 @@ export function PlayerCard({
       } p-6 ${className}`}
     >
       <View className="flex-row items-center gap-4 mb-4">
-        <View
-          className={`w-12 h-12 rounded-full items-center justify-center ${
-            isWinner
-              ? "bg-accent"
-              : "bg-accent/20"
-          }`}
-        >
-          <Text
-            className={`font-bold text-lg ${
-              isWinner ? "text-white" : "text-accent"
-            }`}
-          >
-            {name[0]}
-          </Text>
-        </View>
+        <Avatar
+          avatarId={avatarId}
+          size="md"
+          highlighted={isWinner}
+        />
         <View className="flex-1">
           <View className="flex-row items-center gap-2">
             <Text className="text-white font-semibold text-lg">

@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar } from "../../../components/ui";
 
 interface MatchResultsProps {
   matchId: Id<"matches">;
@@ -114,11 +115,12 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                 : "bg-red-600/10 border-red-500/30"
             }`}>
               <View className="items-center">
-                <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
-                  <Text className="text-accent font-bold text-xl">
-                    {currentUserParticipant?.profile?.name[0] || "?"}
-                  </Text>
-                </View>
+                <Avatar
+                  avatarId={currentUserParticipant?.profile?.avatarId}
+                  size="lg"
+                  highlighted={isWinner}
+                  className="mb-4"
+                />
                 <Text className="text-xl font-semibold text-white mb-2">
                   {currentUserParticipant?.profile?.name || "شما"}
                 </Text>
@@ -159,11 +161,12 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
                 : "bg-red-600/10 border-red-500/30"
             }`}>
               <View className="items-center">
-                <View className="w-16 h-16 bg-gray-600/20 rounded-full items-center justify-center mb-4">
-                  <Text className="text-gray-400 font-bold text-xl">
-                    {opponentParticipant?.profile?.name[0] || "?"}
-                  </Text>
-                </View>
+                <Avatar
+                  avatarId={opponentParticipant?.profile?.avatarId}
+                  size="lg"
+                  highlighted={!isWinner && !isDraw}
+                  className="mb-4"
+                />
                 <Text className="text-xl font-semibold text-white mb-2">
                   {opponentParticipant?.profile?.name || "حریف"}
                 </Text>
