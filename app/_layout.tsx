@@ -105,6 +105,27 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  useEffect(() => {
+    if (Platform.OS !== "web") {
+      return;
+    }
+
+    let cancelled = false;
+    import("@vercel/speed-insights")
+      .then(({ injectSpeedInsights }) => {
+        if (!cancelled) {
+          injectSpeedInsights();
+        }
+      })
+      .catch((error) => {
+        console.warn("Failed to initialize Vercel Speed Insights:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
