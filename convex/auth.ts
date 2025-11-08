@@ -291,3 +291,35 @@ export const getTopUsers = query({
     }));
   },
 });
+
+export const updateProfileName = mutation({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const trimmedName = args.name.trim();
+    if (!trimmedName) {
+      throw new Error("Name cannot be empty");
+    }
+
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .unique();
+
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+
+    if (profile.name === trimmedName) {
+      return;
+    }
+
+    await ctx.db.patch(profile._id, {
+      name: trimmedName,
+    });
+  },
+});

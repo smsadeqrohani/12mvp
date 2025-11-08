@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -14,10 +14,14 @@ export function HelloPage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const topUsers = useQuery(api.auth.getTopUsers, { limit: 5 });
   const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
+  const updateProfileName = useMutation(api.auth.updateProfileName);
 
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [pendingAvatarId, setPendingAvatarId] = useState(DEFAULT_AVATAR_ID);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   useEffect(() => {
     if (isAvatarModalOpen && userProfile) {
@@ -55,6 +59,37 @@ export function HelloPage() {
       .finally(() => setIsSavingAvatar(false));
   };
 
+  const handleOpenNameModal = () => {
+    setNameInput(userProfile?.name ?? "");
+    setIsNameModalOpen(true);
+  };
+
+  const handleCloseNameModal = () => {
+    if (isSavingName) return;
+    setIsNameModalOpen(false);
+  };
+
+  const handleSaveName = () => {
+    if (!userProfile) return;
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === userProfile.name) {
+      setIsNameModalOpen(false);
+      return;
+    }
+
+    setIsSavingName(true);
+    updateProfileName({ name: trimmed })
+      .then(() => {
+        toast.success("نام شما به‌روزرسانی شد");
+        setIsNameModalOpen(false);
+      })
+      .catch((error) => {
+        console.error("Failed to update name:", error);
+        toast.error("خطا در به‌روزرسانی نام");
+      })
+      .finally(() => setIsSavingName(false));
+  };
+
   if (!userProfile || !loggedInUser) {
     return (
       <View className="flex justify-center items-center p-8">
@@ -87,7 +122,16 @@ export function HelloPage() {
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">
         <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>حساب شما</Text>
         <View className="space-y-3">
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center justify-between gap-3">
+            <TouchableOpacity
+              onPress={handleOpenNameModal}
+              activeOpacity={0.7}
+              className="px-3 py-1 rounded-lg border border-accent/40 bg-accent/10"
+            >
+              <Text className="text-accent text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                ویرایش
+              </Text>
+            </TouchableOpacity>
             <Text className="text-white text-right flex-1">{userProfile.name}</Text>
             <Text className="font-medium text-gray-300 ml-3">نام:</Text>
           </View>
@@ -241,6 +285,63 @@ export function HelloPage() {
               </Text>
             )}
           </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <Modal
+        isOpen={isNameModalOpen}
+        onClose={handleCloseNameModal}
+        title="ویرایش نام"
+        description="نام جدید خود را وارد کنید. این نام در مسابقات و تورنومنت‌ها نمایش داده خواهد شد."
+        size="sm"
+      >
+        <View className="space-y-4">
+          <View>
+            <Text className="text-gray-300 mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              نام جدید
+            </Text>
+            <TextInput
+              value={nameInput}
+              onChangeText={setNameInput}
+              className="bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
+              placeholder="نام شما"
+              placeholderTextColor="#6b7280"
+              textAlign="right"
+              editable={!isSavingName}
+              autoFocus
+            />
+          </View>
+
+          <View className="flex-row justify-end gap-3">
+            <TouchableOpacity
+              onPress={handleCloseNameModal}
+              disabled={isSavingName}
+              activeOpacity={0.7}
+              className="px-4 py-3 rounded-lg border border-gray-600 bg-background"
+            >
+              <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                انصراف
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSaveName}
+              activeOpacity={0.7}
+              disabled={isSavingName || nameInput.trim().length === 0 || nameInput.trim() === userProfile.name}
+              className={`px-4 py-3 rounded-lg ${
+                isSavingName || nameInput.trim().length === 0 || nameInput.trim() === userProfile.name
+                  ? "bg-accent/60"
+                  : "bg-accent"
+              }`}
+            >
+              {isSavingName ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  ذخیره نام
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>
