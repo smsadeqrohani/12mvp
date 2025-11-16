@@ -184,6 +184,11 @@ export const submitAnswer = mutation({
           completedAt: Date.now(),
         });
         
+        // Award +2 points to match creator after the game ends (if exists)
+        if (match.creatorId) {
+          await awardPoints(ctx, match.creatorId, 2);
+        }
+        
         // Check if this is a tournament match and update tournament match status
         const tournamentMatch = await ctx.db
           .query("tournamentMatches")
@@ -197,10 +202,7 @@ export const submitAnswer = mutation({
             winnerId: winnerId || undefined,
           });
           
-          // Award 10 points for winning a tournament match (semi or final)
-          if (winnerId && !isDraw) {
-            await awardPoints(ctx, winnerId, 10);
-          }
+          // No points for winning a tournament semifinal or non-final match
           
           // If this is a semifinal, check if we should create the final match
           if (tournamentMatch.round === "semi1" || tournamentMatch.round === "semi2") {
@@ -300,17 +302,22 @@ export const submitAnswer = mutation({
                 completedAt: Date.now(),
               });
               
-              // Award 30 additional points for winning the tournament itself
+              // Award +10 points for winning the tournament
               if (winnerId && !isDraw) {
-                await awardPoints(ctx, winnerId, 30);
+                await awardPoints(ctx, winnerId, 10);
+              }
+              
+              // Award +4 points to tournament creator upon tournament completion
+              if (tournament.creatorId) {
+                await awardPoints(ctx, tournament.creatorId, 4);
               }
             }
           }
         } else {
           // This is a single match (not a tournament match)
-          // Award 10 points for winning a single match
+          // Award +5 points for winning a single match
           if (winnerId && !isDraw) {
-            await awardPoints(ctx, winnerId, 10);
+            await awardPoints(ctx, winnerId, 5);
           }
         }
       }
