@@ -160,6 +160,24 @@ export const submitAnswer = mutation({
           completedAt: Date.now(),
         });
         
+        // Update players' cumulative correct answers on their profiles
+        const participantsToUpdate = [player1, player2];
+        for (const p of participantsToUpdate) {
+          const profile = await ctx.db
+            .query("profiles")
+            .withIndex("by_user", (q: any) => q.eq("userId", p.userId))
+            .unique();
+          if (profile) {
+            const prev = profile.correctAnswersTotal ?? 0;
+            const toAdd = p.totalScore ?? 0;
+            if (toAdd > 0) {
+              await ctx.db.patch(profile._id, {
+                correctAnswersTotal: prev + toAdd,
+              });
+            }
+          }
+        }
+        
         // Mark match as completed
         await ctx.db.patch(args.matchId, {
           status: "completed",

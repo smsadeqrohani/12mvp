@@ -63,6 +63,7 @@ export const createProfile = mutation({
       name: args.name,
       isAdmin: false,
       points: 0,
+      correctAnswersTotal: 0,
       avatarId,
     });
   },
@@ -256,27 +257,27 @@ export const getTopUsers = query({
     // Get all profiles
     const allProfiles = await ctx.db.query("profiles").collect();
     
-    // Get user data and sort by points, then by creation time
+    // Get user data and sort by total correct answers, then by creation time
     const usersWithData = await Promise.all(
       allProfiles.map(async (profile) => {
         const user = await ctx.db.get(profile.userId);
-        const points = profile.points ?? 0;
+        const correctAnswers = profile.correctAnswersTotal ?? 0;
         const creationTime = user?._creationTime ?? 0;
         
         return {
           userId: profile.userId,
           name: profile.name,
-          points,
+          correctAnswers,
           creationTime,
           avatarId: profile.avatarId ?? DEFAULT_AVATAR_ID,
         };
       })
     );
     
-    // Sort by points (descending), then by creation time (ascending - oldest first for tiebreaker)
+    // Sort by correct answers (descending), then by creation time (ascending - oldest first for tiebreaker)
     usersWithData.sort((a, b) => {
-      if (b.points !== a.points) {
-        return b.points - a.points;
+      if (b.correctAnswers !== a.correctAnswers) {
+        return b.correctAnswers - a.correctAnswers;
       }
       // For equal points, older users (lower creation time) rank higher
       return a.creationTime - b.creationTime;
@@ -286,7 +287,7 @@ export const getTopUsers = query({
     return usersWithData.slice(0, limit).map((user, index) => ({
       rank: index + 1,
       name: user.name,
-      points: user.points,
+      correctAnswers: user.correctAnswers,
       avatarId: user.avatarId ?? DEFAULT_AVATAR_ID,
     }));
   },

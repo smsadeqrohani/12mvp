@@ -165,7 +165,7 @@ export function HelloPage() {
           </View>
         ) : topUsers.length === 0 ? (
           <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-            هنوز کاربری با امتیاز وجود ندارد
+            هنوز کاربری با پاسخ درست وجود ندارد
           </Text>
         ) : (
           <View className="space-y-3">
@@ -203,7 +203,7 @@ export function HelloPage() {
                 </View>
                 <View className="bg-accent/20 rounded-lg px-3 py-1 border border-accent/30">
                   <Text className="text-accent font-bold" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                    {user.points.toLocaleString('fa-IR')}
+                    {user.correctAnswers.toLocaleString('fa-IR')}
                   </Text>
                 </View>
               </View>
