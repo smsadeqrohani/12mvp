@@ -1,3 +1,6 @@
+// Check if building on Vercel (web-only build)
+const isVercelBuild = process.env.VERCEL === "1";
+
 export default {
   expo: {
     name: "12 MVP",
@@ -14,27 +17,33 @@ export default {
     assetBundlePatterns: [
       "**/*"
     ],
-    ios: {
-      supportsTablet: true,
-      bundleIdentifier: "com.12mvp.app",
-      infoPlist: {
-        UIViewControllerBasedStatusBarAppearance: true,
-        UIStatusBarStyle: "UIStatusBarStyleLightContent",
-        // Enable RTL layout
-        CFBundleDevelopmentRegion: "fa",
-        CFBundleAllowMixedLocalizations: true
+    // Only include iOS config for local builds, exclude on Vercel
+    ...(!isVercelBuild && {
+      ios: {
+        supportsTablet: true,
+        bundleIdentifier: "com.12mvp.app",
+        infoPlist: {
+          UIViewControllerBasedStatusBarAppearance: true,
+          UIStatusBarStyle: "UIStatusBarStyleLightContent",
+          // Enable RTL layout
+          CFBundleDevelopmentRegion: "fa",
+          CFBundleAllowMixedLocalizations: true
+        }
       }
-    },
-    android: {
-      adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
-        backgroundColor: "#06202F"
-      },
-      package: "com.mvp12.app",
-      permissions: [],
-      // Enable RTL support for Android
-      supportsRtl: true
-    },
+    }),
+    // Only include Android config for local builds, exclude on Vercel
+    ...(!isVercelBuild && {
+      android: {
+        adaptiveIcon: {
+          foregroundImage: "./assets/adaptive-icon.png",
+          backgroundColor: "#06202F"
+        },
+        package: "com.mvp12.app",
+        permissions: [],
+        // Enable RTL support for Android
+        supportsRtl: true
+      }
+    }),
     web: {
       favicon: "./assets/favicon.png",
       bundler: "metro"
