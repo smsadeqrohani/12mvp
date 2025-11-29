@@ -1502,9 +1502,145 @@ npm run android    # Android emulator
 **Production:**
 ```bash
 npm run build:web      # Expo web build
+npm run build:vercel   # Vercel-optimized web build
 eas build --platform ios      # iOS build (EAS)
 eas build --platform android  # Android build (EAS)
 ```
+
+### Vercel Build Architecture
+
+The project includes **Vercel-specific optimizations** for web deployment:
+
+**1. Conditional Platform Configuration (`app.config.js`)**
+
+The app configuration conditionally excludes iOS/Android configs when building on Vercel:
+
+```javascript
+// Check if building on Vercel (web-only build)
+const isVercelBuild = process.env.VERCEL === "1";
+
+export default {
+  expo: {
+    // ... base config
+    
+    // Only include iOS config for local builds, exclude on Vercel
+    ...(!isVercelBuild && {
+      ios: {
+        supportsTablet: true,
+        bundleIdentifier: "com.12mvp.app",
+        // ... iOS config
+      }
+    }),
+    
+    // Only include Android config for local builds, exclude on Vercel
+    ...(!isVercelBuild && {
+      android: {
+        package: "com.mvp12.app",
+        // ... Android config
+      }
+    }),
+    
+    // Web config always included
+    web: {
+      favicon: "./assets/favicon.png",
+      bundler: "metro"
+    }
+  }
+};
+```
+
+**Benefits:**
+- ✅ **Faster Builds**: Excludes unnecessary iOS/Android configuration processing
+- ✅ **Smaller Bundle**: Only web assets included
+- ✅ **Cleaner Output**: No mobile-specific files in web deployment
+- ✅ **Automatic Detection**: Uses `VERCEL=1` environment variable (set by Vercel)
+
+**2. Vercel Configuration (`vercel.json`)**
+
+```json
+{
+  "buildCommand": "npm run build:vercel",
+  "outputDirectory": "dist",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
+
+**Configuration Details:**
+- **buildCommand**: Uses `expo export` to generate static web build
+- **outputDirectory**: Expo outputs to `dist/` directory
+- **framework**: Set to `null` (custom Expo build, not a framework)
+- **rewrites**: SPA routing - all routes serve `index.html` for client-side routing
+
+**3. Vercel Speed Insights Integration**
+
+Performance monitoring integrated in `app/_layout.tsx`:
+
+```typescript
+useEffect(() => {
+  if (Platform.OS !== "web") {
+    return;
+  }
+
+  import("@vercel/speed-insights")
+    .then(({ injectSpeedInsights }) => {
+      injectSpeedInsights();
+    })
+    .catch((error) => {
+      console.warn("Failed to initialize Vercel Speed Insights:", error);
+    });
+}, []);
+```
+
+**Features:**
+- ✅ **Web Only**: Only loads on web platform (not mobile)
+- ✅ **Lazy Loading**: Dynamically imports to avoid bundle bloat
+- ✅ **Error Handling**: Gracefully handles import failures
+- ✅ **Real-time Metrics**: Provides performance insights in Vercel dashboard
+
+**4. Build Scripts**
+
+```json
+{
+  "scripts": {
+    "build": "expo export",
+    "build:web": "expo export",
+    "build:vercel": "expo export"
+  }
+}
+```
+
+All web build scripts use `expo export` which:
+- Generates static HTML/CSS/JS files
+- Optimizes assets for production
+- Creates SPA-compatible routing structure
+- Outputs to `dist/` directory
+
+**5. Deployment Flow**
+
+**Vercel Automatic Deployment:**
+1. Push to connected Git branch
+2. Vercel detects `vercel.json`
+3. Sets `VERCEL=1` environment variable
+4. Runs `npm run build:vercel`
+5. Serves files from `dist/` directory
+6. Applies SPA rewrites for routing
+
+**Environment Variables Required:**
+- `EXPO_PUBLIC_CONVEX_URL` - Convex backend URL (required)
+- `VERCEL=1` - Automatically set by Vercel (detects build environment)
+
+**Files Excluded (`.vercelignore`):**
+- `node_modules/`
+- `.git/`
+- `.expo/`
+- `dist/`
+- `.env.*` files
 
 ### Testing Strategy
 

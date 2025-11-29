@@ -158,6 +158,7 @@ npm run android      # Run on Android emulator
 
 # Production
 npm run build:web    # Build for web
+npm run build:vercel # Build for Vercel (web-optimized)
 npm run build:ios    # Build for iOS (requires EAS)
 npm run build:android # Build for Android (requires EAS)
 npm run lint         # Run TypeScript checks
@@ -297,23 +298,66 @@ See [STRUCTURE.md - Refactoring Benefits](./STRUCTURE.md#-refactoring-benefits) 
 
 This project is connected to Convex deployment: [`precious-horse-758`](https://dashboard.convex.dev/d/precious-horse-758)
 
-### Production Deployment
+### Vercel Deployment (Web)
 
-1. **Build the frontend**
-   ```bash
-   npm run build
-   ```
+The project is configured for **Vercel** deployment with optimized web-only builds:
 
-2. **Deploy to Convex**
+**Build Configuration:**
+- **Build Command**: `npm run build:vercel` (uses `expo export`)
+- **Output Directory**: `dist`
+- **Framework**: None (custom Expo web build)
+- **SPA Routing**: All routes rewrite to `/index.html` for client-side routing
+
+**Vercel-Specific Optimizations:**
+- ✅ **Conditional Platform Config**: iOS/Android configs excluded on Vercel builds
+  - `app.config.js` detects `VERCEL=1` environment variable
+  - Only web configuration included for faster builds
+  - Reduces build time and bundle size
+- ✅ **Vercel Speed Insights**: Integrated for performance monitoring
+  - Automatically loads on web platform only
+  - Provides real-time performance metrics
+- ✅ **SPA Routing**: Configured in `vercel.json` for Expo Router compatibility
+
+**Vercel Environment Variables:**
+```env
+EXPO_PUBLIC_CONVEX_URL=https://precious-horse-758.convex.cloud
+VERCEL=1  # Automatically set by Vercel
+```
+
+**Deploy to Vercel:**
+1. Connect your repository to Vercel
+2. Vercel will auto-detect `vercel.json` configuration
+3. Set `EXPO_PUBLIC_CONVEX_URL` in Vercel environment variables
+4. Deploy automatically on every push to main branch
+
+**Files:**
+- `vercel.json` - Vercel build configuration
+- `app.config.js` - Conditional platform config (excludes iOS/Android on Vercel)
+- `.vercelignore` - Files to exclude from deployment
+
+### Production Deployment (General)
+
+1. **Deploy Backend (Convex)**
    ```bash
    npx convex deploy
    ```
 
-3. **Deploy frontend** to your hosting provider (Vercel, Netlify, etc.)
+2. **Build for Web**
+   ```bash
+   npm run build:web    # Standard web build
+   npm run build:vercel # Vercel-optimized build
+   ```
 
-4. **Environment variables**
-   - Set `VITE_CONVEX_URL` in your hosting environment
-   - Configure authentication providers if needed
+3. **Build for Mobile** (requires EAS)
+   ```bash
+   npm run build:ios      # iOS build
+   npm run build:android  # Android build
+   ```
+
+4. **Environment Variables**
+   - `EXPO_PUBLIC_CONVEX_URL` - Convex deployment URL (required)
+   - `CONVEX_DEPLOYMENT` - Convex deployment ID (for local dev)
+   - `CONVEX_SITE_URL` - Site URL for callbacks (for local dev)
 
 ### Deployment Checklist
 - [ ] Test RTL functionality in production
@@ -321,6 +365,8 @@ This project is connected to Convex deployment: [`precious-horse-758`](https://d
 - [ ] Check real-time features work
 - [ ] Ensure admin panel is accessible
 - [ ] Test authentication flow
+- [ ] Verify Vercel Speed Insights is working (web only)
+- [ ] Test SPA routing on all routes
 
 ## 🧪 Testing & Troubleshooting
 

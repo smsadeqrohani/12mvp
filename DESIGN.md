@@ -1144,5 +1144,29 @@ const [fontsLoaded] = useFonts({
 - Hidden tabs (play, results) for internal navigation
 - Route groups for auth and tabs
 
+## 🚀 Performance Monitoring
+
+### Vercel Speed Insights
+
+The application includes **Vercel Speed Insights** for performance monitoring on web deployments:
+
+**Integration:**
+- Automatically loads on web platform only (not mobile)
+- Lazy-loaded to avoid bundle bloat
+- Provides real-time performance metrics in Vercel dashboard
+
+**Configuration:**
+- Integrated in `app/_layout.tsx`
+- Only activates on web platform (`Platform.OS === "web"`)
+- Gracefully handles import failures
+
+**Benefits:**
+- ✅ Real-time performance monitoring
+- ✅ Web Vitals tracking (LCP, FID, CLS)
+- ✅ No impact on mobile builds
+- ✅ Automatic error handling
+
+For deployment details, see **[README.md](./README.md#-vercel-deployment-web)** and **[STRUCTURE.md](./STRUCTURE.md#-vercel-build-architecture)**.
+
 **Last Updated**: December 2024
 
