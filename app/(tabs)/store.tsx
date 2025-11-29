@@ -129,7 +129,10 @@ export default function StoreScreen() {
                         {isActive && (
                           <View className="bg-accent/20 rounded-lg p-3 border border-accent/30 mb-4">
                             <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                              ✓ فعال تا {daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}{hoursRemaining} ساعت دیگر
+                              {purchase?.durationMs === 0 
+                                ? "✓ فعال دائمی"
+                                : `✓ فعال تا ${daysRemaining && daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}${hoursRemaining || 0} ساعت دیگر`
+                              }
                             </Text>
                           </View>
                         )}

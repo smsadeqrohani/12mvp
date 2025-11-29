@@ -1456,7 +1456,10 @@ export default function AdminScreen() {
                           مدت اعتبار:
                         </Text>
                         <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                          {Math.floor(item.durationMs / (24 * 60 * 60 * 1000))} روز
+                          {item.durationMs === 0 
+                            ? "دائمی"
+                            : `${Math.floor(item.durationMs / (24 * 60 * 60 * 1000))} روز`
+                          }
                         </Text>
                       </View>
                     </View>
