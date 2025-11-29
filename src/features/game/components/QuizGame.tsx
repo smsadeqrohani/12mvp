@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
+import { getCleanErrorMessage } from "../../../lib/helpers";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar } from "../../../components/ui";
 
@@ -201,7 +202,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       }, 2000);
       
     } catch (error) {
-      toast.error("خطا در ارسال پاسخ: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
       setIsAnswered(false);
     }
   };
@@ -226,7 +227,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       onLeaveMatch();
     } catch (error) {
       console.error("Error leaving match:", error);
-      toast.error("خطا در خروج از مسابقه: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
     }
   };
 

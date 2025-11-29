@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
+import { getCleanErrorMessage } from "../../../lib/helpers";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar } from "../../../components/ui";
 
@@ -55,7 +56,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
       setSelectedCategory(null);
     } catch (error) {
       console.error("Error creating tournament:", error);
-      toast.error("خطا در ایجاد تورنومنت: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
       setIsCreating(false);
     }
   };
@@ -66,7 +67,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
       toast.success("به تورنومنت پیوستید!");
     } catch (error) {
       console.error("Error joining tournament:", error);
-      toast.error("خطا در پیوستن به تورنومنت: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
     }
   };
 
@@ -76,7 +77,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
       toast.success("تورنومنت لغو شد");
     } catch (error) {
       console.error("Error canceling tournament:", error);
-      toast.error("خطا در لغو تورنومنت: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
     }
   };
 

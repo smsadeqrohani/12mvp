@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
+import { getCleanErrorMessage } from "../../../lib/helpers";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar } from "../../../components/ui";
 
@@ -46,7 +47,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
       setIsCreating(false);
     } catch (error) {
       console.error("Error creating match:", error);
-      toast.error("خطا در ایجاد بازی: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
       setIsCreating(false);
     }
   };
@@ -58,7 +59,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
       router.push(`/(tabs)/play?matchId=${matchId}`);
     } catch (error) {
       console.error("Error joining match:", error);
-      toast.error("خطا در پیوستن به بازی: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
     }
   };
 
@@ -68,7 +69,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
       toast.success("بازی لغو شد");
     } catch (error) {
       console.error("Error canceling match:", error);
-      toast.error("خطا در لغو بازی: " + (error as Error).message);
+      toast.error(getCleanErrorMessage(error));
     }
   };
 

@@ -144,3 +144,75 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
   }
 }
 
+/**
+ * Extract clean Persian error message from Convex errors
+ * Removes technical details like Request ID, stack traces, etc.
+ */
+export function getCleanErrorMessage(error: unknown): string {
+  if (!error) {
+    return "خطایی رخ داده است";
+  }
+
+  let errorMessage = "";
+  
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  } else if (typeof error === "string") {
+    errorMessage = error;
+  } else {
+    errorMessage = String(error);
+  }
+
+  // Split by newlines to handle multi-line errors
+  const lines = errorMessage.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Look for Persian text (contains Persian characters)
+  const persianPattern = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+  
+  // Find the line with Persian text
+  let persianLine = "";
+  for (const line of lines) {
+    if (persianPattern.test(line)) {
+      // Clean this line from technical details
+      let cleaned = line
+        .replace(/^خطا در (ایجاد|پیوستن|لغو|ارسال|خروج|تغییر|ذخیره|حذف|آپلود|انتخاب|بازنشانی|به‌روزرسانی)\s*[^:]*:\s*/i, "")
+        .replace(/^Uncaught Error\s*:?\s*/i, "")
+        .replace(/^Server Error\s*:?\s*/i, "")
+        .replace(/\[Request ID:\s*[^\]]+\]/gi, "")
+        .replace(/\[CONVEX\s+[^\]]+\]/gi, "")
+        .replace(/at handler\s*\([^)]+\)/gi, "")
+        .replace(/Called by client/gi, "")
+        .trim();
+      
+      if (cleaned && persianPattern.test(cleaned)) {
+        persianLine = cleaned;
+        break;
+      }
+    }
+  }
+  
+  // If we found a Persian line, use it
+  if (persianLine) {
+    return persianLine;
+  }
+  
+  // Otherwise, clean the entire message
+  errorMessage = errorMessage
+    .replace(/^خطا در (ایجاد|پیوستن|لغو|ارسال|خروج|تغییر|ذخیره|حذف|آپلود|انتخاب|بازنشانی|به‌روزرسانی)\s*[^:]*:\s*/i, "")
+    .replace(/^Uncaught Error\s*:?\s*/i, "")
+    .replace(/^Server Error\s*:?\s*/i, "")
+    .replace(/\[Request ID:\s*[^\]]+\]/gi, "")
+    .replace(/\[CONVEX\s+[^\]]+\]/gi, "")
+    .replace(/at handler\s*\([^)]+\)/gi, "")
+    .replace(/Called by client/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // If message is empty or doesn't contain Persian, return default
+  if (!errorMessage || errorMessage.length < 5 || !persianPattern.test(errorMessage)) {
+    return "خطایی رخ داده است";
+  }
+
+  return errorMessage;
+}
+
