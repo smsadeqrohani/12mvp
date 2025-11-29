@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Modal, Alert, Platform } from "react-native";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Modal, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
-import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin } from "../src/features/admin";
-import { PaginationControls, SkeletonAdminTab, DataTableRN, Avatar } from "../src/components/ui";
+import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin, StoreItemForm } from "../src/features/admin";
+import { PaginationControls, SkeletonAdminTab, DataTableRN, Avatar, ConfirmationDialog } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments";
+type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store";
 
 // Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
@@ -52,6 +52,8 @@ export default function AdminScreen() {
   const [editingQuestion, setEditingQuestion] = useState<QuestionWithAnswer | null>(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
+  const [showStoreItemForm, setShowStoreItemForm] = useState(false);
+  const [editingStoreItem, setEditingStoreItem] = useState<any>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
   const [viewingTournamentId, setViewingTournamentId] = useState<string | null>(null);
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -103,6 +105,7 @@ export default function AdminScreen() {
     paginationOpts: { numItems: PAGE_SIZE, cursor: matchesCursor },
   });
   const allTournaments = useQuery(api.tournaments.getAllTournaments);
+  const allStoreItems = useQuery(api.store.getAllStoreItems);
 
   const makeUserAdmin = useMutation(api.auth.makeUserAdmin);
   const updateUserName = useMutation(api.auth.updateUserName);
@@ -113,6 +116,8 @@ export default function AdminScreen() {
   const deleteCategory = useMutation(api.categories.deleteCategory);
   const cancelMatch = useMutation(api.matches.cancelMatch);
   const cancelTournament = useMutation(api.tournaments.cancelTournament);
+  const deleteStoreItem = useMutation(api.store.deleteStoreItem);
+  const toggleStoreItemStatus = useMutation(api.store.toggleStoreItemStatus);
 
   console.log("cancelMatch mutation:", cancelMatch);
 
@@ -293,21 +298,14 @@ export default function AdminScreen() {
     confirmText: string = "حذف",
     cancelText: string = "لغو"
   ) => {
-    if (Platform.OS === 'web') {
-      setConfirmationDialog({
-        isOpen: true,
-        title,
-        message,
-        onConfirm,
-        confirmText,
-        cancelText,
-      });
-    } else {
-      Alert.alert(title, message, [
-        { text: cancelText, style: "cancel" },
-        { text: confirmText, style: "destructive", onPress: onConfirm }
-      ]);
-    }
+    setConfirmationDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      confirmText,
+      cancelText,
+    });
   };
 
   const handleToggleAdmin = async (userId: string, isAdmin: boolean) => {
@@ -444,6 +442,45 @@ export default function AdminScreen() {
 
   const handleViewTournament = (tournamentId: string) => {
     setViewingTournamentId(tournamentId);
+  };
+
+  const handleCreateStoreItem = () => {
+    setEditingStoreItem(null);
+    setShowStoreItemForm(true);
+  };
+
+  const handleEditStoreItem = (item: any) => {
+    setEditingStoreItem(item);
+    setShowStoreItemForm(true);
+  };
+
+  const handleCloseStoreItemForm = () => {
+    setShowStoreItemForm(false);
+    setEditingStoreItem(null);
+  };
+
+  const handleDeleteStoreItem = async (itemId: string) => {
+    showConfirmation(
+      "حذف آیتم",
+      "آیا مطمئن هستید که می‌خواهید این آیتم را حذف کنید؟",
+      async () => {
+        try {
+          await deleteStoreItem({ itemId: itemId as Id<"storeItems"> });
+          toast.success("آیتم با موفقیت حذف شد");
+        } catch (error) {
+          toast.error("خطا در حذف آیتم");
+        }
+      }
+    );
+  };
+
+  const handleToggleStoreItemStatus = async (itemId: string) => {
+    try {
+      await toggleStoreItemStatus({ itemId: itemId as Id<"storeItems"> });
+      toast.success("وضعیت آیتم تغییر کرد");
+    } catch (error) {
+      toast.error("خطا در تغییر وضعیت آیتم");
+    }
   };
 
   // Pagination handlers
@@ -1325,6 +1362,154 @@ export default function AdminScreen() {
     );
   };
 
+  const renderStoreTab = () => {
+    if (allStoreItems === undefined) {
+      return <SkeletonAdminTab />;
+    }
+
+    return (
+      <View className="space-y-6">
+        <View className="flex-row items-center justify-between mb-6">
+          <Text className="text-2xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            مدیریت فروشگاه
+          </Text>
+          <TouchableOpacity
+            onPress={handleCreateStoreItem}
+            className="px-4 py-3 bg-accent rounded-lg flex-row items-center gap-2"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              افزودن آیتم
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {allStoreItems.length === 0 ? (
+          <View className="bg-background-light rounded-lg p-8 border border-gray-600">
+            <Text className="text-gray-400 text-center" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              هنوز آیتمی در فروشگاه وجود ندارد
+            </Text>
+          </View>
+        ) : (
+          <View className="space-y-4">
+            {allStoreItems.map((item) => (
+              <View
+                key={item._id}
+                className={`bg-background-light rounded-lg p-6 border ${
+                  item.isActive ? "border-gray-600" : "border-gray-700/50 opacity-60"
+                }`}
+              >
+                <View className="flex-row items-start justify-between mb-4">
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-2 mb-2">
+                      <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                        {item.name}
+                      </Text>
+                      {item.isActive ? (
+                        <View className="px-2 py-1 bg-green-500/20 rounded border border-green-500/30">
+                          <Text className="text-green-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                            فعال
+                          </Text>
+                        </View>
+                      ) : (
+                        <View className="px-2 py-1 bg-gray-500/20 rounded border border-gray-500/30">
+                          <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                            غیرفعال
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    {item.description && item.description.trim() && (
+                      <Text className="text-gray-300 mb-4" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        {item.description}
+                      </Text>
+                    )}
+                    
+                    <View className="bg-gray-800/50 rounded-lg p-4 mb-4">
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                          قیمت:
+                        </Text>
+                        <Text className="text-accent font-bold" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                          {item.price.toLocaleString('fa-IR')} امتیاز
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                          بازی اضافی:
+                        </Text>
+                        <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          +{item.matchesBonus}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                          تورنومنت اضافی:
+                        </Text>
+                        <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          +{item.tournamentsBonus}
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                          مدت اعتبار:
+                        </Text>
+                        <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          {Math.floor(item.durationMs / (24 * 60 * 60 * 1000))} روز
+                        </Text>
+                      </View>
+                    </View>
+
+                  </View>
+                </View>
+
+                <View className="flex-row items-center gap-2 mt-4">
+                  <TouchableOpacity
+                    onPress={() => handleEditStoreItem(item)}
+                    className="flex-1 px-4 py-3 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+                    activeOpacity={0.7}
+                  >
+                    <Text className="text-blue-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      ویرایش
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleToggleStoreItemStatus(item._id)}
+                    className={`flex-1 px-4 py-3 rounded-lg border ${
+                      item.isActive
+                        ? "bg-yellow-600/20 border-yellow-500/30"
+                        : "bg-green-600/20 border-green-500/30"
+                    }`}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      className={`text-center font-semibold ${
+                        item.isActive ? "text-yellow-400" : "text-green-400"
+                      }`}
+                      style={{ fontFamily: 'Vazirmatn-SemiBold' }}
+                    >
+                      {item.isActive ? "غیرفعال" : "فعال"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteStoreItem(item._id)}
+                    className="flex-1 px-4 py-3 bg-red-600/20 border border-red-500/30 rounded-lg"
+                    activeOpacity={0.7}
+                  >
+                    <Text className="text-red-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      حذف
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderTournamentsTab = () => {
     // Show skeleton while loading
     if (allTournaments === undefined) {
@@ -1643,6 +1828,29 @@ export default function AdminScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setActiveTab("store")}
+                className={`p-4 rounded-xl ${
+                  activeTab === "store"
+                    ? "bg-accent/20 border border-accent/30"
+                    : "bg-transparent"
+                }`}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
+                    activeTab === "store" ? "bg-accent" : "bg-gray-700"
+                  }`}>
+                    <Ionicons name="storefront" size={20} color={activeTab === "store" ? "#fff" : "#9ca3af"} />
+                  </View>
+                  <Text className={`font-medium ${
+                    activeTab === "store" ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    مدیریت فروشگاه
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* Back to Main Button */}
@@ -1676,6 +1884,7 @@ export default function AdminScreen() {
           {activeTab === "files" && renderFilesTab()}
           {activeTab === "matches" && renderMatchesTab()}
           {activeTab === "tournaments" && renderTournamentsTab()}
+          {activeTab === "store" && renderStoreTab()}
         </View>
       </View>
 
@@ -1715,48 +1924,50 @@ export default function AdminScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Confirmation Dialog Modal */}
-      {confirmationDialog && (
-        <Modal
-          visible={confirmationDialog.isOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmationDialog(null)}
-        >
-          <View className="flex-1 bg-black/50 items-center justify-center p-4">
-            <View className="bg-background-light rounded-2xl border border-gray-700/30 p-6 max-w-md w-full">
-              <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                {confirmationDialog.title}
+      {/* Store Item Form Modal */}
+      <Modal
+        visible={showStoreItemForm}
+        animationType="slide"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
+      >
+        <SafeAreaView className="flex-1 bg-background">
+          <View className="flex-1">
+            <View className="flex-row items-center justify-between p-4 border-b border-gray-700">
+              <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {editingStoreItem ? "ویرایش آیتم" : "ایجاد آیتم جدید"}
               </Text>
-              <Text className="text-gray-300 mb-6 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                {confirmationDialog.message}
-              </Text>
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => setConfirmationDialog(null)}
-                  className="flex-1 py-3 px-4 bg-gray-700/50 border border-gray-600 rounded-lg"
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {confirmationDialog.cancelText}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setConfirmationDialog(null);
-                    confirmationDialog.onConfirm();
-                  }}
-                  className="flex-1 py-3 px-4 bg-red-600/20 border border-red-500/30 rounded-lg"
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-red-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {confirmationDialog.confirmText}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={handleCloseStoreItemForm}
+                className="p-2"
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
             </View>
+            <StoreItemForm
+              item={editingStoreItem}
+              onClose={handleCloseStoreItemForm}
+            />
           </View>
-        </Modal>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Confirmation Dialog */}
+      {confirmationDialog && (
+        <ConfirmationDialog
+          isOpen={confirmationDialog.isOpen}
+          onClose={() => setConfirmationDialog(null)}
+          onConfirm={confirmationDialog.onConfirm}
+          title={confirmationDialog.title}
+          message={confirmationDialog.message}
+          confirmText={confirmationDialog.confirmText}
+          cancelText={confirmationDialog.cancelText}
+          variant="danger"
+        />
       )}
     </SafeAreaView>
   );

@@ -89,6 +89,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="store"
+        options={{
+          title: "فروشگاه",
+        }}
+      />
+      <Tabs.Screen
         name="play"
         options={{
           title: "بازی",

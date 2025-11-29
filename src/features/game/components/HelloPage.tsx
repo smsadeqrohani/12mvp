@@ -14,6 +14,8 @@ export function HelloPage() {
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const topUsers = useQuery(api.auth.getTopUsers, { limit: 5 });
   const dailyLimits = useQuery(api.matches.getDailyLimits);
+  const userPurchases = useQuery(api.store.getUserPurchases);
+  const storeItems = useQuery(api.store.getStoreItems);
   const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
   const updateProfileName = useMutation(api.auth.updateProfileName);
 
@@ -181,9 +183,18 @@ export function HelloPage() {
                     بازی‌های ایجاد شده
                   </Text>
                 </View>
-                <Text className={`font-bold ${dailyLimits.canCreateMatch ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                  {dailyLimits.matchesCreated} / {dailyLimits.matchesLimit}
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className={`font-bold ${dailyLimits.canCreateMatch ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    {dailyLimits.matchesCreated} / {dailyLimits.matchesLimit}
+                  </Text>
+                  {dailyLimits.matchesBonus > 0 && (
+                    <View className="bg-accent/20 rounded px-2 py-1">
+                      <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                        +{dailyLimits.matchesBonus}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
               <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
                 {dailyLimits.canCreateMatch 
@@ -202,9 +213,18 @@ export function HelloPage() {
                     تورنومنت‌های ایجاد شده
                   </Text>
                 </View>
-                <Text className={`font-bold ${dailyLimits.canCreateTournament ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                  {dailyLimits.tournamentsCreated} / {dailyLimits.tournamentsLimit}
-                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className={`font-bold ${dailyLimits.canCreateTournament ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    {dailyLimits.tournamentsCreated} / {dailyLimits.tournamentsLimit}
+                  </Text>
+                  {dailyLimits.tournamentsBonus > 0 && (
+                    <View className="bg-accent/20 rounded px-2 py-1">
+                      <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                        +{dailyLimits.tournamentsBonus}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
               <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
                 {dailyLimits.canCreateTournament 
@@ -241,6 +261,73 @@ export function HelloPage() {
           </View>
         </View>
       )}
+
+      {/* Active Purchases */}
+      {userPurchases && storeItems && (() => {
+        const now = Date.now();
+        const activePurchases = userPurchases
+          .map(purchase => {
+            const item = storeItems.find(i => i._id === purchase.itemId);
+            if (!item) return null;
+            const expiresAt = purchase.purchasedAt + purchase.durationMs;
+            if (expiresAt <= now) return null;
+            return { purchase, item, expiresAt };
+          })
+          .filter((p): p is { purchase: typeof userPurchases[0], item: typeof storeItems[0], expiresAt: number } => p !== null);
+
+        if (activePurchases.length === 0) return null;
+
+        return (
+          <View className="bg-background-light rounded-lg p-6 border border-gray-600">
+            <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              🛒 خریدهای فعال
+            </Text>
+            <View className="space-y-3">
+              {activePurchases.map(({ purchase, item, expiresAt }) => {
+                const timeRemaining = expiresAt - now;
+                const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+                return (
+                  <View key={purchase._id} className="bg-accent/10 rounded-lg p-4 border border-accent/30">
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Text className="text-accent font-bold text-lg text-right flex-1" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                        {item.name}
+                      </Text>
+                    </View>
+                    <Text className="text-gray-300 text-sm text-right mb-2" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      {item.description}
+                    </Text>
+                    <View className="flex-row items-center gap-2 mt-2">
+                      <Text className="text-accent text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        ⏰ باقی‌مانده: {daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}{hoursRemaining} ساعت
+                      </Text>
+                    </View>
+                    {(item.matchesBonus > 0 || item.tournamentsBonus > 0) && (
+                      <View className="mt-2 flex-row items-center gap-2">
+                        {item.matchesBonus > 0 && (
+                          <View className="bg-green-500/20 rounded px-2 py-1">
+                            <Text className="text-green-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                              +{item.matchesBonus} بازی
+                            </Text>
+                          </View>
+                        )}
+                        {item.tournamentsBonus > 0 && (
+                          <View className="bg-blue-500/20 rounded px-2 py-1">
+                            <Text className="text-blue-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                              +{item.tournamentsBonus} تورنومنت
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        );
+      })()}
 
       {/* Leaderboard */}
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">

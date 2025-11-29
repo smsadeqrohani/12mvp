@@ -1,61 +1,40 @@
-import { Platform, View, Text } from "react-native";
+import { View, Text } from "react-native";
 import Toast from "react-native-toast-message";
 
 // Cross-platform toast implementation
+// Uses react-native-toast-message which works on all platforms (web, iOS, Android)
 export const toast = {
   success: (message: string) => {
-    if (Platform.OS === 'web') {
-      // Use browser alert for web as fallback
-      console.log('✅ Success:', message);
-      alert(message);
-    } else {
-      Toast.show({
-        type: "success",
-        text1: message,
-        position: "top",
-        visibilityTime: 4000,
-      });
-    }
+    Toast.show({
+      type: "success",
+      text1: message,
+      position: "top",
+      visibilityTime: 4000,
+    });
   },
   error: (message: string) => {
-    if (Platform.OS === 'web') {
-      // Use browser alert for web as fallback
-      console.error('❌ Error:', message);
-      alert(message);
-    } else {
-      Toast.show({
-        type: "error",
-        text1: message,
-        position: "top",
-        visibilityTime: 4000,
-      });
-    }
+    Toast.show({
+      type: "error",
+      text1: message,
+      position: "top",
+      visibilityTime: 4000,
+    });
   },
   info: (message: string) => {
-    if (Platform.OS === 'web') {
-      console.info('ℹ️ Info:', message);
-      alert(message);
-    } else {
-      Toast.show({
-        type: "info",
-        text1: message,
-        position: "top",
-        visibilityTime: 4000,
-      });
-    }
+    Toast.show({
+      type: "info",
+      text1: message,
+      position: "top",
+      visibilityTime: 4000,
+    });
   },
   warning: (message: string) => {
-    if (Platform.OS === 'web') {
-      console.warn('⚠️ Warning:', message);
-      alert(message);
-    } else {
-      Toast.show({
-        type: "warning",
-        text1: message,
-        position: "top",
-        visibilityTime: 4000,
-      });
-    }
+    Toast.show({
+      type: "warning",
+      text1: message,
+      position: "top",
+      visibilityTime: 4000,
+    });
   },
 };
 

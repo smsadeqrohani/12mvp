@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Alert, Modal, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
-import { Button, SkeletonAdminTab, DataTableRN, TextInput } from "../../../components/ui";
+import { Button, SkeletonAdminTab, DataTableRN, TextInput, ConfirmationDialog } from "../../../components/ui";
 import { FilePreview } from "./FilePreview";
 import { FileUpload } from "./FileUpload";
 import { PaginationControls } from "../../../components/ui";
@@ -45,21 +45,14 @@ export function FilesTable() {
     confirmText: string = "حذف",
     cancelText: string = "لغو"
   ) => {
-    if (Platform.OS === 'web') {
-      setConfirmationDialog({
-        isOpen: true,
-        title,
-        message,
-        onConfirm,
-        confirmText,
-        cancelText,
-      });
-    } else {
-      Alert.alert(title, message, [
-        { text: cancelText, style: "cancel" },
-        { text: confirmText, style: "destructive", onPress: onConfirm }
-      ]);
-    }
+    setConfirmationDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+      confirmText,
+      cancelText,
+    });
   };
 
   const handleRename = async (fileId: string, newName: string) => {
@@ -350,48 +343,18 @@ export function FilesTable() {
         />
       )}
 
-      {/* Confirmation Dialog Modal */}
+      {/* Confirmation Dialog */}
       {confirmationDialog && (
-        <Modal
-          visible={confirmationDialog.isOpen}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setConfirmationDialog(null)}
-        >
-          <View className="flex-1 bg-black/50 items-center justify-center p-4">
-            <View className="bg-background-light rounded-2xl border border-gray-700/30 p-6 max-w-md w-full">
-              <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                {confirmationDialog.title}
-              </Text>
-              <Text className="text-gray-300 mb-6 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                {confirmationDialog.message}
-              </Text>
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  onPress={() => setConfirmationDialog(null)}
-                  className="flex-1 py-3 px-4 bg-gray-700/50 border border-gray-600 rounded-lg"
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {confirmationDialog.cancelText}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    setConfirmationDialog(null);
-                    confirmationDialog.onConfirm();
-                  }}
-                  className="flex-1 py-3 px-4 bg-red-600/20 border border-red-500/30 rounded-lg"
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-red-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {confirmationDialog.confirmText}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+        <ConfirmationDialog
+          isOpen={confirmationDialog.isOpen}
+          onClose={() => setConfirmationDialog(null)}
+          onConfirm={confirmationDialog.onConfirm}
+          title={confirmationDialog.title}
+          message={confirmationDialog.message}
+          confirmText={confirmationDialog.confirmText}
+          cancelText={confirmationDialog.cancelText}
+          variant="danger"
+        />
       )}
     </>
   );

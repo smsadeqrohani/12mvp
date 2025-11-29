@@ -634,6 +634,35 @@ export const getDailyLimits = query({
         tournament.status !== "cancelled"
     );
     
+    // Get active purchases and calculate bonuses
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    let matchesBonus = 0;
+    let tournamentsBonus = 0;
+    
+    for (const purchase of purchases) {
+      const expiresAt = purchase.purchasedAt + purchase.durationMs;
+      if (expiresAt > now) {
+        // Purchase is still active
+        const item = await ctx.db.get(purchase.itemId);
+        if (item) {
+          matchesBonus += item.matchesBonus;
+          tournamentsBonus += item.tournamentsBonus;
+        }
+      }
+    }
+    
+    // Base limits
+    const baseMatchesLimit = 3;
+    const baseTournamentsLimit = 1;
+    
+    // Calculate total limits with bonuses
+    const matchesLimit = baseMatchesLimit + matchesBonus;
+    const tournamentsLimit = baseTournamentsLimit + tournamentsBonus;
+    
     // Find the oldest creation time to calculate when limits reset
     const allRecentCreations = [
       ...recentMatches.map(m => m.createdAt),
@@ -650,12 +679,14 @@ export const getDailyLimits = query({
     
     return {
       matchesCreated: recentMatches.length,
-      matchesLimit: 3,
+      matchesLimit,
       tournamentsCreated: recentTournaments.length,
-      tournamentsLimit: 1,
+      tournamentsLimit,
       resetTime,
-      canCreateMatch: recentMatches.length < 3,
-      canCreateTournament: recentTournaments.length < 1,
+      canCreateMatch: recentMatches.length < matchesLimit,
+      canCreateTournament: recentTournaments.length < tournamentsLimit,
+      matchesBonus,
+      tournamentsBonus,
     };
   },
 });

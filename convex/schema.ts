@@ -119,6 +119,24 @@ const applicationTables = {
     status: v.union(v.literal("waiting"), v.literal("active"), v.literal("completed")),
     winnerId: v.optional(v.id("users")),
   }).index("by_tournament", ["tournamentId"]).index("by_match", ["matchId"]),
+  
+  storeItems: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    benefits: v.optional(v.array(v.string())), // Array of benefit descriptions
+    price: v.number(), // Price in points
+    matchesBonus: v.number(), // Additional matches limit
+    tournamentsBonus: v.number(), // Additional tournaments limit
+    durationMs: v.number(), // Duration in milliseconds (e.g., 30 days = 30 * 24 * 60 * 60 * 1000)
+    isActive: v.boolean(), // Whether item is available for purchase
+  }),
+  
+  purchases: defineTable({
+    userId: v.id("users"),
+    itemId: v.id("storeItems"),
+    purchasedAt: v.number(),
+    durationMs: v.number(), // Duration from the item at time of purchase
+  }).index("by_user", ["userId"]).index("by_item", ["itemId"]),
 };
 
 export default defineSchema({
