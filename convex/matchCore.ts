@@ -644,8 +644,9 @@ export const getDailyLimits = query({
     let tournamentsBonus = 0;
     
     for (const purchase of purchases) {
-      const expiresAt = purchase.purchasedAt + purchase.durationMs;
-      if (expiresAt > now) {
+      // If durationMs is 0, item never expires
+      const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (isActive) {
         // Purchase is still active
         const item = await ctx.db.get(purchase.itemId);
         if (item) {

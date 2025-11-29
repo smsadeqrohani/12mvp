@@ -53,10 +53,11 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
       toast.error("تعداد تورنومنت نمی‌تواند منفی باشد");
       return;
     }
-    if (parseFloat(formData.durationMs) <= 0) {
-      toast.error("مدت زمان باید بیشتر از صفر باشد");
+    if (parseFloat(formData.durationMs) < 0) {
+      toast.error("مدت زمان نمی‌تواند منفی باشد");
       return;
     }
+    // 0 is allowed (permanent, never expires)
 
     setIsSubmitting(true);
     try {
@@ -197,7 +198,7 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
                 setDurationDays(days);
               }}
               className="flex-1 bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
-              placeholder="30"
+              placeholder="30 (0 برای دائمی)"
               placeholderTextColor="#6b7280"
               textAlign="right"
               keyboardType="numeric"
@@ -207,6 +208,9 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
               روز
             </Text>
           </View>
+          <Text className="text-gray-400 text-xs mt-1 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            {calculateDurationDays() === 0 ? "0 = فعال دائمی (هرگز expire نمی‌شود)" : ""}
+          </Text>
         </View>
 
         <View className="flex-row items-center justify-between p-4 bg-gray-800/50 rounded-lg">

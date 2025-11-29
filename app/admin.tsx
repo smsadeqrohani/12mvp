@@ -1371,7 +1371,7 @@ export default function AdminScreen() {
       <View className="space-y-6">
         <View className="flex-row items-center justify-between mb-6">
           <Text className="text-2xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-            مدیریت فروشگاه
+            استادیوم‌ها
           </Text>
           <TouchableOpacity
             onPress={handleCreateStoreItem}
@@ -1847,7 +1847,7 @@ export default function AdminScreen() {
                   <Text className={`font-medium ${
                     activeTab === "store" ? "text-white" : "text-gray-300"
                   }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    مدیریت فروشگاه
+                    استادیوم‌ها
                   </Text>
                 </View>
               </TouchableOpacity>

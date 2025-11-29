@@ -269,11 +269,15 @@ export function HelloPage() {
           .map(purchase => {
             const item = storeItems.find(i => i._id === purchase.itemId);
             if (!item) return null;
+            // If durationMs is 0, item never expires
+            if (purchase.durationMs === 0) {
+              return { purchase, item, expiresAt: null };
+            }
             const expiresAt = purchase.purchasedAt + purchase.durationMs;
             if (expiresAt <= now) return null;
             return { purchase, item, expiresAt };
           })
-          .filter((p): p is { purchase: typeof userPurchases[0], item: typeof storeItems[0], expiresAt: number } => p !== null);
+          .filter((p): p is { purchase: typeof userPurchases[0], item: typeof storeItems[0], expiresAt: number | null } => p !== null);
 
         if (activePurchases.length === 0) return null;
 
@@ -284,9 +288,9 @@ export function HelloPage() {
             </Text>
             <View className="space-y-3">
               {activePurchases.map(({ purchase, item, expiresAt }) => {
-                const timeRemaining = expiresAt - now;
-                const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-                const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const timeRemaining = expiresAt === null ? null : expiresAt - now;
+                const daysRemaining = timeRemaining === null ? null : Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                const hoursRemaining = timeRemaining === null ? null : Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
                 return (
                   <View key={purchase._id} className="bg-accent/10 rounded-lg p-4 border border-accent/30">
@@ -295,12 +299,17 @@ export function HelloPage() {
                         {item.name}
                       </Text>
                     </View>
-                    <Text className="text-gray-300 text-sm text-right mb-2" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                      {item.description}
-                    </Text>
+                    {item.description && (
+                      <Text className="text-gray-300 text-sm text-right mb-2" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        {item.description}
+                      </Text>
+                    )}
                     <View className="flex-row items-center gap-2 mt-2">
                       <Text className="text-accent text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                        ⏰ باقی‌مانده: {daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}{hoursRemaining} ساعت
+                        {expiresAt === null 
+                          ? "⏰ فعال دائمی"
+                          : `⏰ باقی‌مانده: ${daysRemaining !== null && daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}${hoursRemaining !== null ? hoursRemaining : 0} ساعت`
+                        }
                       </Text>
                     </View>
                     {(item.matchesBonus > 0 || item.tournamentsBonus > 0) && (

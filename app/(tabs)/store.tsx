@@ -57,6 +57,8 @@ export default function StoreScreen() {
     if (!userPurchases) return false;
     const purchase = userPurchases.find(p => p.itemId === itemId);
     if (!purchase) return false;
+    // If durationMs is 0, item never expires
+    if (purchase.durationMs === 0) return true;
     const now = Date.now();
     const expiresAt = purchase.purchasedAt + purchase.durationMs;
     return expiresAt > now;
@@ -92,10 +94,11 @@ export default function StoreScreen() {
                 const purchase = userPurchases?.find(p => p.itemId === item._id);
                 const now = Date.now();
                 const expiresAt = purchase ? purchase.purchasedAt + purchase.durationMs : 0;
-                const isActive = purchased && expiresAt > now;
-                const timeRemaining = isActive ? expiresAt - now : 0;
-                const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-                const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                // If durationMs is 0, item never expires
+                const isActive = purchased && (purchase?.durationMs === 0 || expiresAt > now);
+                const timeRemaining = purchase?.durationMs === 0 ? Infinity : (isActive ? expiresAt - now : 0);
+                const daysRemaining = timeRemaining === Infinity ? null : Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                const hoursRemaining = timeRemaining === Infinity ? null : Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
                 return (
                   <View
