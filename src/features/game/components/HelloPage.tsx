@@ -13,6 +13,7 @@ export function HelloPage() {
   const userProfile = useQuery(api.auth.getUserProfile);
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const topUsers = useQuery(api.auth.getTopUsers, { limit: 5 });
+  const dailyLimits = useQuery(api.matches.getDailyLimits);
   const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
   const updateProfileName = useMutation(api.auth.updateProfileName);
 
@@ -22,12 +23,22 @@ export function HelloPage() {
   const [isNameModalOpen, setIsNameModalOpen] = useState(false);
   const [nameInput, setNameInput] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     if (isAvatarModalOpen && userProfile) {
       setPendingAvatarId(userProfile.avatarId ?? DEFAULT_AVATAR_ID);
     }
   }, [isAvatarModalOpen, userProfile]);
+
+  // Update current time every minute for reset time display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOpenAvatarModal = () => {
     setIsAvatarModalOpen(true);
@@ -153,6 +164,83 @@ export function HelloPage() {
           </View>
         </View>
       </View>
+
+      {/* Daily Limits */}
+      {dailyLimits && (
+        <View className="bg-background-light rounded-lg p-6 border border-gray-600">
+          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            محدودیت‌های روزانه
+          </Text>
+          <View className="space-y-4">
+            {/* Matches Limit */}
+            <View className="bg-gray-800/50 rounded-lg p-4">
+              <View className="flex-row items-center justify-between mb-2">
+                <View className="flex-row items-center gap-2">
+                  <View className={`w-3 h-3 rounded-full ${dailyLimits.canCreateMatch ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    بازی‌های ایجاد شده
+                  </Text>
+                </View>
+                <Text className={`font-bold ${dailyLimits.canCreateMatch ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  {dailyLimits.matchesCreated} / {dailyLimits.matchesLimit}
+                </Text>
+              </View>
+              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {dailyLimits.canCreateMatch 
+                  ? `شما می‌توانید ${dailyLimits.matchesLimit - dailyLimits.matchesCreated} بازی دیگر ایجاد کنید`
+                  : 'شما به حداکثر بازی‌های روزانه رسیده‌اید'
+                }
+              </Text>
+            </View>
+
+            {/* Tournaments Limit */}
+            <View className="bg-gray-800/50 rounded-lg p-4">
+              <View className="flex-row items-center justify-between mb-2">
+                <View className="flex-row items-center gap-2">
+                  <View className={`w-3 h-3 rounded-full ${dailyLimits.canCreateTournament ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    تورنومنت‌های ایجاد شده
+                  </Text>
+                </View>
+                <Text className={`font-bold ${dailyLimits.canCreateTournament ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  {dailyLimits.tournamentsCreated} / {dailyLimits.tournamentsLimit}
+                </Text>
+              </View>
+              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                {dailyLimits.canCreateTournament 
+                  ? 'شما می‌توانید یک تورنومنت دیگر ایجاد کنید'
+                  : 'شما به حداکثر تورنومنت‌های روزانه رسیده‌اید'
+                }
+              </Text>
+            </View>
+
+            {/* Reset Time */}
+            {dailyLimits.resetTime && (() => {
+              const timeUntilReset = dailyLimits.resetTime - currentTime;
+              
+              if (timeUntilReset <= 0) {
+                return null; // Already reset
+              }
+              
+              const hoursUntilReset = Math.floor(timeUntilReset / (1000 * 60 * 60));
+              const minutesUntilReset = Math.floor((timeUntilReset % (1000 * 60 * 60)) / (1000 * 60));
+              
+              return (
+                <View className="bg-accent/10 rounded-lg p-3 border border-accent/30">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-accent text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      ⏰ محدودیت‌ها در{' '}
+                      {hoursUntilReset > 0 ? `${hoursUntilReset} ساعت و ` : ''}
+                      {minutesUntilReset} دقیقه{' '}
+                      بازنشانی می‌شوند
+                    </Text>
+                  </View>
+                </View>
+              );
+            })()}
+          </View>
+        </View>
+      )}
 
       {/* Leaderboard */}
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">

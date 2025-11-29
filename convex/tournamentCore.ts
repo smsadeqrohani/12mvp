@@ -22,6 +22,26 @@ export const createTournament = mutation({
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
+    // Check daily limit: max 1 tournament per 24 hours
+    const now = Date.now();
+    const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+    
+    // Get all tournaments created by user in last 24 hours (excluding cancelled)
+    const allTournaments = await ctx.db
+      .query("tournaments")
+      .collect();
+    
+    const recentTournaments = allTournaments.filter(
+      (tournament) => 
+        tournament.creatorId === currentUserId && 
+        tournament.createdAt > twentyFourHoursAgo &&
+        tournament.status !== "cancelled"
+    );
+    
+    if (recentTournaments.length >= 1) {
+      throw new Error("شما در 24 ساعت گذشته 1 تورنومنت ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.");
+    }
+    
     // If categoryId is provided, validate it exists
     if (args.categoryId) {
       const category = await ctx.db.get(args.categoryId);
@@ -30,7 +50,6 @@ export const createTournament = mutation({
       }
     }
     
-    const now = Date.now();
     const expiresAt = now + (24 * 60 * 60 * 1000); // 24 hours from now
     const tournamentId = generateTournamentId();
     

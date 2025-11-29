@@ -30,10 +30,29 @@ export const createMatch = mutation({
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
+    // Check daily limit: max 3 matches per 24 hours
+    const now = Date.now();
+    const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+    
+    // Get all matches created by user in last 24 hours (excluding cancelled)
+    const allMatches = await ctx.db
+      .query("matches")
+      .collect();
+    
+    const recentMatches = allMatches.filter(
+      (match) => 
+        match.creatorId === currentUserId && 
+        match.createdAt > twentyFourHoursAgo &&
+        match.status !== "cancelled"
+    );
+    
+    if (recentMatches.length >= 3) {
+      throw new Error("شما در 24 ساعت گذشته 3 بازی ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.");
+    }
+    
     // Get random questions for the match
     const selectedQuestions = await getRandomQuestions(ctx);
     
-    const now = Date.now();
     const expiresAt = now + (24 * 60 * 60 * 1000); // 24 hours from now
     
     // Create new match in waiting state
@@ -575,6 +594,69 @@ export const leaveMatch = mutation({
     }
     
     return true;
+  },
+});
+
+/**
+ * Get daily limits status for the current user
+ */
+export const getDailyLimits = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return null;
+    }
+    
+    const now = Date.now();
+    const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
+    
+    // Get all matches created by user in last 24 hours (excluding cancelled)
+    const allMatches = await ctx.db
+      .query("matches")
+      .collect();
+    
+    const recentMatches = allMatches.filter(
+      (match) => 
+        match.creatorId === currentUserId && 
+        match.createdAt > twentyFourHoursAgo &&
+        match.status !== "cancelled"
+    );
+    
+    // Get all tournaments created by user in last 24 hours (excluding cancelled)
+    const allTournaments = await ctx.db
+      .query("tournaments")
+      .collect();
+    
+    const recentTournaments = allTournaments.filter(
+      (tournament) => 
+        tournament.creatorId === currentUserId && 
+        tournament.createdAt > twentyFourHoursAgo &&
+        tournament.status !== "cancelled"
+    );
+    
+    // Find the oldest creation time to calculate when limits reset
+    const allRecentCreations = [
+      ...recentMatches.map(m => m.createdAt),
+      ...recentTournaments.map(t => t.createdAt)
+    ];
+    
+    const oldestCreation = allRecentCreations.length > 0 
+      ? Math.min(...allRecentCreations)
+      : null;
+    
+    const resetTime = oldestCreation 
+      ? oldestCreation + (24 * 60 * 60 * 1000)
+      : null;
+    
+    return {
+      matchesCreated: recentMatches.length,
+      matchesLimit: 3,
+      tournamentsCreated: recentTournaments.length,
+      tournamentsLimit: 1,
+      resetTime,
+      canCreateMatch: recentMatches.length < 3,
+      canCreateTournament: recentTournaments.length < 1,
+    };
   },
 });
 

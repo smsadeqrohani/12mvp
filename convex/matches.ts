@@ -22,6 +22,7 @@ export {
   getWaitingMatches,
   getMyWaitingMatches,
   leaveMatch,
+  getDailyLimits,
 } from "./matchCore";
 
 // Gameplay operations
