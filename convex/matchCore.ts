@@ -30,7 +30,7 @@ export const createMatch = mutation({
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
-    // Check daily limit: max 3 matches per 24 hours
+    // Check daily limit with stadium bonuses
     const now = Date.now();
     const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
     
@@ -46,8 +46,34 @@ export const createMatch = mutation({
         match.status !== "cancelled"
     );
     
-    if (recentMatches.length >= 3) {
-      throw new Error("شما در 24 ساعت گذشته 3 بازی ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.");
+    // Calculate match limit including stadium bonuses
+    const baseMatchesLimit = 3;
+    
+    // Get active purchases and calculate bonuses
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    let matchesBonus = 0;
+    
+    for (const purchase of purchases) {
+      // If durationMs is 0, item never expires
+      const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (isActive) {
+        // Purchase is still active
+        const item = await ctx.db.get(purchase.itemId);
+        if (item) {
+          matchesBonus += item.matchesBonus;
+        }
+      }
+    }
+    
+    // Calculate total limit with bonuses
+    const matchesLimit = baseMatchesLimit + matchesBonus;
+    
+    if (recentMatches.length >= matchesLimit) {
+      throw new Error(`شما در 24 ساعت گذشته ${matchesLimit} بازی ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.`);
     }
     
     // Get random questions for the match

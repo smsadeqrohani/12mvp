@@ -22,7 +22,7 @@ export const createTournament = mutation({
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
-    // Check daily limit: max 1 tournament per 24 hours
+    // Check daily limit with stadium bonuses
     const now = Date.now();
     const twentyFourHoursAgo = now - (24 * 60 * 60 * 1000);
     
@@ -38,8 +38,34 @@ export const createTournament = mutation({
         tournament.status !== "cancelled"
     );
     
-    if (recentTournaments.length >= 1) {
-      throw new Error("شما در 24 ساعت گذشته 1 تورنومنت ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.");
+    // Calculate tournament limit including stadium bonuses
+    const baseTournamentsLimit = 1;
+    
+    // Get active purchases and calculate bonuses
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    let tournamentsBonus = 0;
+    
+    for (const purchase of purchases) {
+      // If durationMs is 0, item never expires
+      const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (isActive) {
+        // Purchase is still active
+        const item = await ctx.db.get(purchase.itemId);
+        if (item) {
+          tournamentsBonus += item.tournamentsBonus;
+        }
+      }
+    }
+    
+    // Calculate total limit with bonuses
+    const tournamentsLimit = baseTournamentsLimit + tournamentsBonus;
+    
+    if (recentTournaments.length >= tournamentsLimit) {
+      throw new Error(`شما در 24 ساعت گذشته ${tournamentsLimit} تورنومنت ایجاد کرده‌اید. لطفاً صبر کنید تا محدودیت روزانه بازنشانی شود.`);
     }
     
     // If categoryId is provided, validate it exists
