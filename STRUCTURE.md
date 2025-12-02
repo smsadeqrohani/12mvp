@@ -83,7 +83,7 @@ src/
 │   ├── game/                     # 🎮 Game/Match Feature
 │   │   ├── index.ts             # Barrel export
 │   │   └── components/
-│   │       ├── QuizGame.tsx     # Quiz gameplay logic
+│   │       ├── QuizGame.tsx     # Quiz gameplay logic with hints system
 │   │       ├── MatchLobby.tsx   # Matchmaking & waiting
 │   │       ├── MatchResults.tsx # Results display
 │   │       ├── MatchHistory.tsx # User match history
@@ -234,7 +234,9 @@ convex/
 │
 ├── matchGameplay.ts                # 🎲 Gameplay Operations
 │   ├── submitAnswer()            # Submit answer (validates)
-│   └── checkMatchCompletion()    # Check if completed (handles tournament progression)
+│   ├── checkMatchCompletion()    # Check if completed (handles tournament progression)
+│   ├── disableWrongOptions()     # Disable wrong answer options (costs points)
+│   └── showCorrectAnswer()       # Show correct answer (costs 7 points)
 │
 ├── matchResults.ts                 # 🏆 Results & History
 │   ├── getMatchResults()         # Get results (with answers)
@@ -290,7 +292,9 @@ convex/
 │   ├── requireAdmin()            # Ensure admin
 │   ├── adminOnly()               # Admin-only wrapper
 │   ├── validateQuestion()        # Validate question data
-│   └── getRandomQuestions()      # Get random questions (category support)
+│   ├── getRandomQuestions()      # Get random questions (category support)
+│   ├── awardPoints()             # Award points to user
+│   └── deductPoints()            # Deduct points from user
 │
 ├── auth.config.ts                  # Auth configuration
 ├── http.ts                         # HTTP endpoints
@@ -1761,6 +1765,55 @@ const results = await getTournamentResults({ tournamentId });
 - `tournamentResults.ts` - Results and history
 - `tournamentAdmin.ts` - Admin operations
 - `matchGameplay.ts` - Handles tournament progression when matches complete
+
+## 🎯 Game Hints System
+
+### Overview
+
+The game includes a points-based hint system that allows players to get help during quiz questions. Players can use one hint per question, and each hint costs points.
+
+### Available Hints
+
+1. **Disable 1 Wrong Option** (2 points)
+   - Disables one incorrect answer option
+   - Mutation: `disableWrongOptions` with `numOptionsToDisable: 1`
+   - Backend randomly selects one wrong option to disable
+
+2. **Disable 2 Wrong Options** (5 points)
+   - Disables two incorrect answer options
+   - Mutation: `disableWrongOptions` with `numOptionsToDisable: 2`
+   - Backend randomly selects two wrong options to disable
+
+3. **Show Correct Answer** (7 points)
+   - Disables all three wrong options
+   - Highlights the correct answer with green color
+   - Mutation: `showCorrectAnswer`
+   - Returns the correct option number
+
+### Implementation Details
+
+**Backend (`convex/matchGameplay.ts`):**
+- `disableWrongOptions()` - Disables wrong options (doesn't expose correct answer)
+- `showCorrectAnswer()` - Shows correct answer and disables wrong options
+- Both mutations check user points and deduct accordingly
+- Uses `deductPoints()` utility from `utils.ts`
+
+**Frontend (`src/features/game/components/QuizGame.tsx`):**
+- State management for disabled options per question
+- State management for correct option (when shown)
+- State management for used hints (prevents multiple uses)
+- Visual feedback:
+  - Disabled options: Reduced opacity, strikethrough, X icon
+  - Correct answer: Green highlight, checkmark icon
+- One hint per question enforcement
+
+### Rules
+
+- ✅ Only one hint can be used per question
+- ✅ Points are deducted immediately when hint is used
+- ✅ Hints are disabled if user doesn't have enough points
+- ✅ Hints are disabled after being used for that question
+- ✅ Hints reset when moving to next question
 
 **Last Updated**: December 2024  
 **Maintainers**: Development Team

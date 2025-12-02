@@ -34,6 +34,11 @@ This app has been converted to **React Native** and now runs on:
 - **Match History**: Complete history of played matches with detailed results
 - **Tournament History**: View past tournaments and results
 - **Live Scoring**: Real-time score calculation and winner determination
+- **Game Hints System**: In-game help options that cost points:
+  - **Disable 1 Wrong Option** (2 points): Disables one incorrect answer option
+  - **Disable 2 Wrong Options** (5 points): Disables two incorrect answer options
+  - **Show Correct Answer** (7 points): Disables all wrong options and highlights the correct answer
+  - Only one hint can be used per question
 
 ### 🔐 Authentication & Users
 - **Email/Password Auth**: Secure authentication with password validation
@@ -271,6 +276,15 @@ This project follows a clear documentation pattern. All documentation is organiz
 
 ### Recent Improvements ✨
 
+**Game Hints System (Dec 2024):**
+- ✅ **In-Game Help Options**: Added points-based hint system
+  - Disable 1 wrong option (2 points)
+  - Disable 2 wrong options (5 points)
+  - Show correct answer (7 points)
+- ✅ **One Hint Per Question**: Users can only use one hint per question
+- ✅ **Points Management**: Points are deducted when using hints
+- ✅ **Visual Feedback**: Disabled options are visually distinct with opacity and strikethrough
+
 **Performance & UX Enhancements (Oct 2025):**
 - ✅ **Code Splitting**: Route-based lazy loading for optimal bundle sizes
 - ✅ **Error Boundaries**: Added React error boundaries for graceful error handling
@@ -388,6 +402,9 @@ VERCEL=1  # Automatically set by Vercel
 - [ ] Tournament lobby shows available tournaments
 - [ ] Questions display correctly with timer
 - [ ] Can select and submit answers
+- [ ] Game hints work correctly (disable options, show correct answer)
+- [ ] Points are deducted correctly when using hints
+- [ ] Only one hint can be used per question
 - [ ] Results display correctly
 - [ ] Match history shows completed matches
 - [ ] Tournament results show bracket and winner

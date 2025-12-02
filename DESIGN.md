@@ -1124,7 +1124,11 @@ const [fontsLoaded] = useFonts({
 - `HelloPage` - Dashboard welcome screen
 - `MatchLobby` - 1v1 match lobby and matchmaking
 - `TournamentLobby` - Tournament creation and joining
-- `QuizGame` - Active quiz gameplay
+- `QuizGame` - Active quiz gameplay with hints system:
+  - Disable wrong options (1 or 2 options) - costs points
+  - Show correct answer - costs 7 points
+  - Points-based hint system
+  - One hint per question limit
 - `MatchResults` - Match results display
 - `MatchHistory` - User match history
 
