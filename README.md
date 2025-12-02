@@ -37,8 +37,11 @@ This app has been converted to **React Native** and now runs on:
 - **Game Hints System**: In-game help options that cost points:
   - **Disable 1 Wrong Option** (2 points): Disables one incorrect answer option
   - **Disable 2 Wrong Options** (5 points): Disables two incorrect answer options
-  - **Show Correct Answer** (7 points): Disables all wrong options and highlights the correct answer
+  - **Add Time Boost** (+10 seconds): Adds 10 seconds to remaining time (5 points)
   - Only one hint can be used per question
+- **Store System**: Purchase stadiums and mentors with points
+  - **Stadiums**: Provide bonus matches/tournaments per day
+  - **Mentors**: Provide free hints (disable 1 or 2 options) during gameplay
 
 ### 🔐 Authentication & Users
 - **Email/Password Auth**: Secure authentication with password validation
@@ -53,6 +56,9 @@ This app has been converted to **React Native** and now runs on:
 - **File Management**: Upload and manage media files
 - **Match Monitoring**: View and manage all matches in the system
 - **Tournament Monitoring**: View and manage all tournaments
+- **Store Management**: Manage store items (stadiums and mentors)
+  - **Stadiums**: Create/edit stadium items with match/tournament bonuses
+  - **Mentors**: Create/edit mentor items with different hint modes
 
 ### 🎨 UI/UX
 - **Persian Language**: Full RTL (Right-to-Left) support

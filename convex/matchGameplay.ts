@@ -426,7 +426,27 @@ export const disableWrongOptions = mutation({
       throw new Error("You have already answered this question");
     }
     
-    // Get user profile to check points
+    // Check if user has active mentor that matches this request
+    let hasActiveMentor = false;
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    const now = Date.now();
+    for (const purchase of purchases) {
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "mentor") continue;
+      
+      // Check if purchase is still active
+      const isActive = item.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (isActive && item.mentorMode === args.numOptionsToDisable) {
+        hasActiveMentor = true;
+        break;
+      }
+    }
+    
+    // Get user profile to check points (only if not using mentor)
     const profile = await ctx.db
       .query("profiles")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
@@ -439,7 +459,8 @@ export const disableWrongOptions = mutation({
     const currentPoints = profile.points ?? 0;
     const cost = args.numOptionsToDisable === 1 ? 2 : 5;
     
-    if (currentPoints < cost) {
+    // Only check points if not using mentor
+    if (!hasActiveMentor && currentPoints < cost) {
       throw new Error(`Not enough points. You need ${cost} points but only have ${currentPoints}`);
     }
     
@@ -468,21 +489,23 @@ export const disableWrongOptions = mutation({
     const shuffled = wrongOptions.sort(() => 0.5 - Math.random());
     const optionsToDisable = shuffled.slice(0, args.numOptionsToDisable);
     
-    // Deduct points
-    await deductPoints(ctx, currentUserId, cost);
+    // Deduct points only if not using mentor
+    if (!hasActiveMentor) {
+      await deductPoints(ctx, currentUserId, cost);
+    }
     
     // Return the options to disable (without exposing the correct answer)
     return {
       disabledOptions: optionsToDisable,
-      remainingPoints: currentPoints - cost,
+      remainingPoints: hasActiveMentor ? currentPoints : currentPoints - cost,
     };
   },
 });
 
 /**
- * Show correct answer (disable 3 wrong options and highlight correct one)
+ * Add time boost to current question (+10 seconds, costs 5 points)
  */
-export const showCorrectAnswer = mutation({
+export const addTimeBoost = mutation({
   args: {
     matchId: v.id("matches"),
     questionId: v.id("questions"),
@@ -546,40 +569,19 @@ export const showCorrectAnswer = mutation({
     }
     
     const currentPoints = profile.points ?? 0;
-    const cost = 7;
+    const cost = 5;
     
     if (currentPoints < cost) {
       throw new Error(`Not enough points. You need ${cost} points but only have ${currentPoints}`);
     }
     
-    // Get question
-    const question = await ctx.db.get(args.questionId);
-    if (!question) {
-      throw new Error("Question not found");
-    }
-    
-    // Get correct answer from secure table
-    const answerEntry = await ctx.db
-      .query("questionAnswers")
-      .withIndex("by_question", (q: any) => q.eq("questionId", args.questionId))
-      .unique();
-    
-    if (!answerEntry) {
-      throw new Error("Question answer not found");
-    }
-    
-    const correctOption = answerEntry.correctOption;
-    
-    // Get all wrong options (all options except the correct one)
-    const wrongOptions = [1, 2, 3, 4].filter(opt => opt !== correctOption);
-    
     // Deduct points
     await deductPoints(ctx, currentUserId, cost);
     
-    // Return the correct answer and disabled wrong options
+    // Return success and remaining points
     return {
-      correctOption,
-      disabledOptions: wrongOptions,
+      success: true,
+      timeAdded: 10, // 10 seconds
       remainingPoints: currentPoints - cost,
     };
   },

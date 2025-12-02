@@ -98,7 +98,9 @@ src/
 │           ├── FilesTable.tsx    # File management
 │           ├── FileUpload.tsx    # File upload component
 │           ├── FilePreview.tsx    # File preview modal
-│           └── MatchDetailsAdmin.tsx # Match monitoring
+│           ├── MatchDetailsAdmin.tsx # Match monitoring
+│           ├── TournamentDetailsAdmin.tsx # Tournament monitoring
+│           └── StoreItemForm.tsx # Store item (stadium/mentor) CRUD form
 │
 ├── components/                    # 🧩 Shared components
 │   ├── ui/                       # Reusable UI components
@@ -189,6 +191,9 @@ Routes are defined by **file structure** in `app/` directory:
 
 **Other Routes**:
 - `admin.tsx` - Admin panel (restricted to admin users)
+  - **Tabs**: users, questions, categories, files, matches, tournaments, store, mentors
+  - All admin management tables in one place
+  - Sidebar navigation with active state indicators
 - `tournament/[id].tsx` - Tournament detail view
 
 Routes are simple wrappers that render feature components and handle navigation/authentication guards.

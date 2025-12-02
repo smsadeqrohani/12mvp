@@ -63,7 +63,7 @@ export const createMatch = mutation({
       if (isActive) {
         // Purchase is still active
         const item = await ctx.db.get(purchase.itemId);
-        if (item) {
+        if (item && item.itemType === "stadium" && item.matchesBonus) {
           matchesBonus += item.matchesBonus;
         }
       }
@@ -675,9 +675,13 @@ export const getDailyLimits = query({
       if (isActive) {
         // Purchase is still active
         const item = await ctx.db.get(purchase.itemId);
-        if (item) {
-          matchesBonus += item.matchesBonus;
-          tournamentsBonus += item.tournamentsBonus;
+        if (item && item.itemType === "stadium") {
+          if (item.matchesBonus) {
+            matchesBonus += item.matchesBonus;
+          }
+          if (item.tournamentsBonus) {
+            tournamentsBonus += item.tournamentsBonus;
+          }
         }
       }
     }

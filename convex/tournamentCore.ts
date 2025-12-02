@@ -55,7 +55,7 @@ export const createTournament = mutation({
       if (isActive) {
         // Purchase is still active
         const item = await ctx.db.get(purchase.itemId);
-        if (item) {
+        if (item && item.itemType === "stadium" && item.tournamentsBonus) {
           tournamentsBonus += item.tournamentsBonus;
         }
       }

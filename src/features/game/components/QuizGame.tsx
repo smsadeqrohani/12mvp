@@ -24,11 +24,12 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const [isCorrect, setIsCorrect] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false);
   const [disabledOptions, setDisabledOptions] = useState<Record<string, number[]>>({}); // questionId -> disabled options
-  const [correctOption, setCorrectOption] = useState<Record<string, number>>({}); // questionId -> correct option (if shown)
   const [usedHints, setUsedHints] = useState<Record<string, string[]>>({}); // questionId -> array of used hint types
   const [userPoints, setUserPoints] = useState<number>(0);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timeLeftRef = useRef<number>(0);
+  const initializedQuestionRef = useRef<string | null>(null); // Track which question timer was initialized for
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const isParticipant = useQuery(
@@ -43,10 +44,14 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     api.matches.checkMatchCompletion, 
     userProfile && isParticipant ? { matchId } : "skip"
   );
+  const activeMentor = useQuery(
+    api.store.getUserActiveMentor,
+    userProfile ? {} : "skip"
+  );
   const submitAnswer = useMutation(api.matches.submitAnswer);
   const leaveMatch = useMutation(api.matches.leaveMatch);
   const disableWrongOptions = useMutation(api.matches.disableWrongOptions);
-  const showCorrectAnswer = useMutation(api.matches.showCorrectAnswer);
+  const addTimeBoost = useMutation(api.matches.addTimeBoost);
   
   // Update user points when profile changes
   useEffect(() => {
@@ -103,8 +108,17 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   // Initialize timer when question changes
   useEffect(() => {
     if (currentQuestion && !isAnswered) {
-      setTimeLeft(timePerQuestion);
-      setQuestionStartTime(Date.now());
+      const questionId = currentQuestion._id;
+      
+      // Only reset timer if this is a NEW question (not already initialized)
+      if (initializedQuestionRef.current !== questionId) {
+        const initialTime = timePerQuestion;
+        setTimeLeft(initialTime);
+        timeLeftRef.current = initialTime;
+        setQuestionStartTime(Date.now());
+        initializedQuestionRef.current = questionId; // Mark this question as initialized
+      }
+      
       setSelectedAnswer(null);
       setShowResult(false);
       setIsCorrect(false); // Reset correct state
@@ -113,14 +127,24 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       // Note: This will be cleared when moving to next question in handleAnswerSubmit,
       // but we also clear it here to be safe
       
+      // Clear existing timer before creating a new one
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
+        // Use ref to get the most up-to-date value
+        const currentTime = timeLeftRef.current;
+        const newTime = currentTime - 1;
+        timeLeftRef.current = newTime;
+        
+        if (newTime <= 0) {
+          timeLeftRef.current = 0;
+          setTimeLeft(0);
+          handleTimeUp();
+        } else {
+          setTimeLeft(newTime);
+        }
       }, 1000);
     }
     
@@ -172,13 +196,14 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       // Update user points
       setUserPoints(result.remainingPoints);
       
-      toast.success(`${numOptions} گزینه اشتباه غیرفعال شد. ${cost} امتیاز کسر شد.`);
+      const mentorCanHelp = activeMentor && activeMentor.mentorMode === numOptions;
+      toast.success(`${numOptions} گزینه اشتباه غیرفعال شد.${mentorCanHelp ? " (با استفاده از منتور)" : ` ${cost} امتیاز کسر شد.`}`);
     } catch (error) {
       toast.error(getCleanErrorMessage(error));
     }
   };
 
-  const handleShowCorrectAnswer = async () => {
+  const handleAddTimeBoost = async () => {
     if (!currentQuestion || isAnswered) return;
     
     const questionId = currentQuestion._id;
@@ -190,41 +215,40 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       return;
     }
     
-    const cost = 7;
+    const cost = 5;
     
     if (userPoints < cost) {
-      toast.error(`امتیاز کافی ندارید. برای نمایش پاسخ صحیح به ${cost} امتیاز نیاز دارید.`);
+      toast.error(`امتیاز کافی ندارید. برای افزودن زمان به ${cost} امتیاز نیاز دارید.`);
       return;
     }
     
     try {
-      const result = await showCorrectAnswer({
+      const result = await addTimeBoost({
         matchId,
         questionId: currentQuestion._id,
       });
       
-      // Update disabled options (all wrong options)
-      setDisabledOptions(prev => ({
-        ...prev,
-        [questionId]: result.disabledOptions,
-      }));
+      // Add 10 seconds to the current remaining time for THIS question
+      // Get the current time from ref (which is always up-to-date)
+      // Don't reset - just add to whatever time is remaining
+      const currentRemainingTime = Math.max(0, timeLeftRef.current);
+      const newTime = currentRemainingTime + result.timeAdded;
       
-      // Set correct option
-      setCorrectOption(prev => ({
-        ...prev,
-        [questionId]: result.correctOption,
-      }));
+      // Update ref first (this is what the timer uses)
+      timeLeftRef.current = newTime;
+      // Then update state (this is what the UI displays)
+      setTimeLeft(newTime);
       
       // Mark that a hint has been used (only one hint per question)
       setUsedHints(prev => ({
         ...prev,
-        [questionId]: ['used'],
+        [questionId]: ['timeBoost'],
       }));
       
       // Update user points
       setUserPoints(result.remainingPoints);
       
-      toast.success(`پاسخ صحیح نمایش داده شد. ${cost} امتیاز کسر شد.`);
+      toast.success(`۱۰ ثانیه به زمان اضافه شد. ${cost} امتیاز کسر شد.`);
     } catch (error) {
       toast.error(getCleanErrorMessage(error));
     }
@@ -312,11 +336,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
           setShowResult(false);
           // Clear disabled options and correct option for the next question
           setDisabledOptions(prev => {
-            const next = { ...prev };
-            delete next[currentQuestion._id];
-            return next;
-          });
-          setCorrectOption(prev => {
             const next = { ...prev };
             delete next[currentQuestion._id];
             return next;
@@ -506,73 +525,93 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         {/* Hint Buttons */}
         {!isAnswered && (
           <View className="gap-3 mb-6">
+            {/* Mentor Status */}
+            {activeMentor && (
+              <View className="bg-purple-600/20 rounded-lg p-3 border border-purple-500/30 mb-2">
+                <View className="flex-row items-center gap-2">
+                  <Ionicons name="school" size={20} color="#a78bfa" />
+                  <Text className="text-purple-300 text-sm flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    منتور فعال: {activeMentor.name} ({activeMentor.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"})
+                  </Text>
+                </View>
+              </View>
+            )}
+            
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={() => handleDisableOptions(1)}
-                disabled={userPoints < 2 || (usedHints[currentQuestion._id] || []).length > 0}
+                disabled={(userPoints < 2 && !(activeMentor && activeMentor.mentorMode === 1)) || (usedHints[currentQuestion._id] || []).length > 0}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  userPoints >= 2 && (usedHints[currentQuestion._id] || []).length === 0
-                    ? "bg-accent/20 border-accent"
+                  (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0
+                    ? activeMentor && activeMentor.mentorMode === 1
+                      ? "bg-purple-600/20 border-purple-500"
+                      : "bg-accent/20 border-accent"
                     : "bg-gray-700/50 border-gray-600 opacity-50"
                 }`}
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    userPoints >= 2 && (usedHints[currentQuestion._id] || []).length === 0
-                      ? "text-accent"
+                    (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0
+                      ? activeMentor && activeMentor.mentorMode === 1
+                        ? "text-purple-300"
+                        : "text-accent"
                       : "text-gray-400"
                   }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
                     غیرفعال کردن ۱ گزینه
                   </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    ۲ امتیاز
+                    {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : "۲ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => handleDisableOptions(2)}
-                disabled={userPoints < 5 || (usedHints[currentQuestion._id] || []).length > 0}
+                disabled={(userPoints < 5 && !(activeMentor && activeMentor.mentorMode === 2)) || (usedHints[currentQuestion._id] || []).length > 0}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
-                    ? "bg-accent/20 border-accent"
+                  (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && (usedHints[currentQuestion._id] || []).length === 0
+                    ? activeMentor && activeMentor.mentorMode === 2
+                      ? "bg-purple-600/20 border-purple-500"
+                      : "bg-accent/20 border-accent"
                     : "bg-gray-700/50 border-gray-600 opacity-50"
                 }`}
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
-                      ? "text-accent"
+                    (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && (usedHints[currentQuestion._id] || []).length === 0
+                      ? activeMentor && activeMentor.mentorMode === 2
+                        ? "text-purple-300"
+                        : "text-accent"
                       : "text-gray-400"
                   }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
                   غیرفعال کردن ۲ گزینه
                 </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    ۵ امتیاز
+                    {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : "۵ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity
-              onPress={handleShowCorrectAnswer}
-              disabled={userPoints < 7 || (usedHints[currentQuestion._id] || []).length > 0}
+              onPress={handleAddTimeBoost}
+              disabled={userPoints < 5 || (usedHints[currentQuestion._id] || []).length > 0}
               className={`w-full px-4 py-3 rounded-xl border-2 ${
-                userPoints >= 7 && (usedHints[currentQuestion._id] || []).length === 0
-                  ? "bg-green-600/20 border-green-500"
+                userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
+                  ? "bg-blue-600/20 border-blue-500"
                   : "bg-gray-700/50 border-gray-600 opacity-50"
               }`}
             >
               <View className="items-center">
                 <Text className={`text-lg font-bold ${
-                  userPoints >= 7 && (usedHints[currentQuestion._id] || []).length === 0
-                    ? "text-green-400"
+                  userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
+                    ? "text-blue-400"
                     : "text-gray-400"
                 }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                  نمایش پاسخ صحیح
+                  افزودن زمان (+۱۰ ثانیه)
                 </Text>
                 <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                  ۷ امتیاز
+                  ۵ امتیاز
                 </Text>
               </View>
             </TouchableOpacity>
@@ -588,7 +627,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             { key: 4, text: currentQuestion.option4Text },
           ].map((option) => {
             const isDisabled = disabledOptions[currentQuestion._id]?.includes(option.key);
-            const isCorrect = correctOption[currentQuestion._id] === option.key;
             
             return (
               <TouchableOpacity
@@ -603,11 +641,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                       ? isCorrect
                         ? "bg-green-600/30 border-2 border-green-500"
                         : "bg-red-600/30 border-2 border-red-500"
-                      : isCorrect
-                      ? "bg-green-600/30 border-2 border-green-500"
                       : "bg-gray-700/50 border border-gray-600"
-                    : isCorrect
-                    ? "bg-green-600/20 border-2 border-green-500"
                     : selectedAnswer === option.key
                     ? "bg-accent/20 border-2 border-accent"
                     : "bg-gray-700/50 border border-gray-600 active:bg-gray-600/50"
@@ -618,8 +652,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                   <View className={`w-8 h-8 rounded-full items-center justify-center ${
                     isDisabled
                       ? "bg-gray-700"
-                      : isCorrect
-                      ? "bg-green-500"
                       : isAnswered && showResult
                       ? option.key === selectedAnswer
                         ? isCorrect
@@ -634,9 +666,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                       <Ionicons name="close" size={16} color="#6b7280" />
                     ) : (
                       <Text className={`font-bold ${
-                        isCorrect
-                          ? "text-white"
-                          : isAnswered && showResult
+                        isAnswered && showResult
                           ? option.key === selectedAnswer ? "text-white" : "text-gray-400"
                           : selectedAnswer === option.key ? "text-white" : "text-gray-300"
                       }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
@@ -647,8 +677,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                   <Text className={`flex-1 ${
                     isDisabled
                       ? "text-gray-500 line-through"
-                      : isCorrect
-                      ? "text-green-300 font-semibold"
                       : isAnswered && showResult
                       ? option.key === selectedAnswer
                         ? isCorrect ? "text-green-300" : "text-red-300"
@@ -659,9 +687,6 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                   }`} style={{ fontFamily: 'Vazirmatn-Regular' }}>
                     {option.text}
                   </Text>
-                  {isCorrect && !isAnswered && (
-                    <Ionicons name="checkmark-circle" size={20} color="#4ade80" />
-                  )}
                 </View>
               </TouchableOpacity>
             );

@@ -1139,6 +1139,18 @@ const [fontsLoaded] = useFonts({
 - `FileUpload` - File upload component
 - `FilePreview` - File preview modal
 - `MatchDetailsAdmin` - Match monitoring
+- `TournamentDetailsAdmin` - Tournament monitoring
+- `StoreItemForm` - Store item (stadium/mentor) CRUD form
+
+**Admin Panel Tabs:**
+- Users (مدیریت کاربران)
+- Questions (مدیریت سؤالات)
+- Categories (مدیریت دسته‌بندی‌ها)
+- Files (مدیریت فایل‌ها)
+- Matches (مدیریت مسابقات)
+- Tournaments (مدیریت تورنومنت‌ها)
+- Store (فروشگاه - استادیوم‌ها)
+- Mentors (منتورها)
 
 ### Navigation Components
 

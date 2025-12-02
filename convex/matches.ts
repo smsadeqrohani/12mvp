@@ -30,7 +30,7 @@ export {
   submitAnswer,
   checkMatchCompletion,
   disableWrongOptions,
-  showCorrectAnswer,
+  addTimeBoost,
 } from "./matchGameplay";
 
 // Results and history

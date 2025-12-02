@@ -13,22 +13,27 @@ interface StoreItemFormProps {
     name: string;
     description?: string;
     price: number;
-    matchesBonus: number;
-    tournamentsBonus: number;
+    itemType: "stadium" | "mentor";
+    matchesBonus?: number;
+    tournamentsBonus?: number;
+    mentorMode?: 1 | 2;
     durationMs: number;
     isActive: boolean;
   };
+  defaultItemType?: "stadium" | "mentor";
   onClose: () => void;
 }
 
-export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
+export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: item?.name || "",
     description: item?.description || "",
     price: item?.price?.toString() || "0",
+    itemType: item?.itemType || defaultItemType || "stadium" as "stadium" | "mentor",
     matchesBonus: item?.matchesBonus?.toString() || "0",
     tournamentsBonus: item?.tournamentsBonus?.toString() || "0",
+    mentorMode: item?.mentorMode?.toString() || "1",
     durationMs: item?.durationMs?.toString() || (30 * 24 * 60 * 60 * 1000).toString(), // 30 days default
     isActive: item?.isActive ?? true,
   });
@@ -45,13 +50,20 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
       toast.error("قیمت باید بیشتر از صفر باشد");
       return;
     }
-    if (parseFloat(formData.matchesBonus) < 0) {
-      toast.error("تعداد بازی نمی‌تواند منفی باشد");
-      return;
-    }
-    if (parseFloat(formData.tournamentsBonus) < 0) {
-      toast.error("تعداد تورنومنت نمی‌تواند منفی باشد");
-      return;
+    if (formData.itemType === "stadium") {
+      if (parseFloat(formData.matchesBonus) < 0) {
+        toast.error("تعداد بازی نمی‌تواند منفی باشد");
+        return;
+      }
+      if (parseFloat(formData.tournamentsBonus) < 0) {
+        toast.error("تعداد تورنومنت نمی‌تواند منفی باشد");
+        return;
+      }
+    } else if (formData.itemType === "mentor") {
+      if (formData.mentorMode !== "1" && formData.mentorMode !== "2") {
+        toast.error("مدل منتور باید 1 یا 2 باشد");
+        return;
+      }
     }
     if (parseFloat(formData.durationMs) < 0) {
       toast.error("مدت زمان نمی‌تواند منفی باشد");
@@ -61,28 +73,30 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
 
     setIsSubmitting(true);
     try {
+      const baseData: any = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        price: parseFloat(formData.price),
+        itemType: formData.itemType,
+        durationMs: parseFloat(formData.durationMs),
+        isActive: formData.isActive,
+      };
+      
+      if (formData.itemType === "stadium") {
+        baseData.matchesBonus = parseInt(formData.matchesBonus);
+        baseData.tournamentsBonus = parseInt(formData.tournamentsBonus);
+      } else if (formData.itemType === "mentor") {
+        baseData.mentorMode = parseInt(formData.mentorMode) as 1 | 2;
+      }
+      
       if (item) {
         await updateStoreItem({
           itemId: item._id,
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          price: parseFloat(formData.price),
-          matchesBonus: parseInt(formData.matchesBonus),
-          tournamentsBonus: parseInt(formData.tournamentsBonus),
-          durationMs: parseFloat(formData.durationMs),
-          isActive: formData.isActive,
+          ...baseData,
         });
         toast.success("آیتم با موفقیت به‌روزرسانی شد");
       } else {
-        await createStoreItem({
-          name: formData.name.trim(),
-          description: formData.description.trim() || undefined,
-          price: parseFloat(formData.price),
-          matchesBonus: parseInt(formData.matchesBonus),
-          tournamentsBonus: parseInt(formData.tournamentsBonus),
-          durationMs: parseFloat(formData.durationMs),
-          isActive: formData.isActive,
-        });
+        await createStoreItem(baseData);
         toast.success("آیتم جدید با موفقیت ایجاد شد");
       }
       onClose();
@@ -140,6 +154,44 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
 
         <View>
           <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            نوع آیتم *
+          </Text>
+          <View className="flex-row gap-3">
+            <TouchableOpacity
+              onPress={() => setFormData({ ...formData, itemType: "stadium" })}
+              className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                formData.itemType === "stadium"
+                  ? "bg-accent/20 border-accent"
+                  : "bg-gray-800/80 border-gray-700/60"
+              }`}
+              disabled={isSubmitting}
+            >
+              <Text className={`text-center font-semibold ${
+                formData.itemType === "stadium" ? "text-accent" : "text-gray-400"
+              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                استادیوم
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setFormData({ ...formData, itemType: "mentor" })}
+              className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                formData.itemType === "mentor"
+                  ? "bg-accent/20 border-accent"
+                  : "bg-gray-800/80 border-gray-700/60"
+              }`}
+              disabled={isSubmitting}
+            >
+              <Text className={`text-center font-semibold ${
+                formData.itemType === "mentor" ? "text-accent" : "text-gray-400"
+              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                منتور
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View>
+          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
             قیمت (امتیاز) *
           </Text>
           <TextInput
@@ -154,37 +206,81 @@ export function StoreItemForm({ item, onClose }: StoreItemFormProps) {
           />
         </View>
 
-        <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-            تعداد بازی اضافی
-          </Text>
-          <TextInput
-            value={formData.matchesBonus}
-            onChangeText={(text) => setFormData({ ...formData, matchesBonus: text.replace(/[^0-9]/g, "") })}
-            className="bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
-            placeholder="0"
-            placeholderTextColor="#6b7280"
-            textAlign="right"
-            keyboardType="numeric"
-            editable={!isSubmitting}
-          />
-        </View>
+        {formData.itemType === "stadium" && (
+          <>
+            <View>
+              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                تعداد بازی اضافی
+              </Text>
+              <TextInput
+                value={formData.matchesBonus}
+                onChangeText={(text) => setFormData({ ...formData, matchesBonus: text.replace(/[^0-9]/g, "") })}
+                className="bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
+                placeholder="0"
+                placeholderTextColor="#6b7280"
+                textAlign="right"
+                keyboardType="numeric"
+                editable={!isSubmitting}
+              />
+            </View>
 
-        <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-            تعداد تورنومنت اضافی
-          </Text>
-          <TextInput
-            value={formData.tournamentsBonus}
-            onChangeText={(text) => setFormData({ ...formData, tournamentsBonus: text.replace(/[^0-9]/g, "") })}
-            className="bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
-            placeholder="0"
-            placeholderTextColor="#6b7280"
-            textAlign="right"
-            keyboardType="numeric"
-            editable={!isSubmitting}
-          />
-        </View>
+            <View>
+              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                تعداد تورنومنت اضافی
+              </Text>
+              <TextInput
+                value={formData.tournamentsBonus}
+                onChangeText={(text) => setFormData({ ...formData, tournamentsBonus: text.replace(/[^0-9]/g, "") })}
+                className="bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
+                placeholder="0"
+                placeholderTextColor="#6b7280"
+                textAlign="right"
+                keyboardType="numeric"
+                editable={!isSubmitting}
+              />
+            </View>
+          </>
+        )}
+
+        {formData.itemType === "mentor" && (
+          <View>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              مدل منتور *
+            </Text>
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setFormData({ ...formData, mentorMode: "1" })}
+                className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                  formData.mentorMode === "1"
+                    ? "bg-accent/20 border-accent"
+                    : "bg-gray-800/80 border-gray-700/60"
+                }`}
+                disabled={isSubmitting}
+              >
+                <Text className={`text-center font-semibold ${
+                  formData.mentorMode === "1" ? "text-accent" : "text-gray-400"
+                }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  حذف ۱ گزینه
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setFormData({ ...formData, mentorMode: "2" })}
+                className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                  formData.mentorMode === "2"
+                    ? "bg-accent/20 border-accent"
+                    : "bg-gray-800/80 border-gray-700/60"
+                }`}
+                disabled={isSubmitting}
+              >
+                <Text className={`text-center font-semibold ${
+                  formData.mentorMode === "2" ? "text-accent" : "text-gray-400"
+                }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  حذف ۲ گزینه
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         <View>
           <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
