@@ -34,14 +34,24 @@ This app has been converted to **React Native** and now runs on:
 - **Match History**: Complete history of played matches with detailed results
 - **Tournament History**: View past tournaments and results
 - **Live Scoring**: Real-time score calculation and winner determination
-- **Game Hints System**: In-game help options that cost points:
-  - **Disable 1 Wrong Option** (2 points): Disables one incorrect answer option
-  - **Disable 2 Wrong Options** (5 points): Disables two incorrect answer options
-  - **Add Time Boost** (+10 seconds): Adds 10 seconds to remaining time (5 points)
-  - Only one hint can be used per question
+- **Game Hints System**: In-game help options:
+  - **Manual Hints** (cost points):
+    - **Disable 1 Wrong Option** (2 points): Disables one incorrect answer option
+    - **Disable 2 Wrong Options** (5 points): Disables two incorrect answer options
+    - **Add Time Boost** (+10 seconds): Adds 10 seconds to remaining time (5 points)
+    - Only one manual hint can be used per question
+  - **Mentor System** (automatic, free):
+    - Active mentors automatically disable wrong options for each question
+    - Mentor Mode 1: Disables 1 wrong option automatically
+    - Mentor Mode 2: Disables 2 wrong options automatically
+    - Manual hint buttons are disabled when mentor is active
+    - Time boost remains available even with active mentor
 - **Store System**: Purchase stadiums and mentors with points
   - **Stadiums**: Provide bonus matches/tournaments per day
-  - **Mentors**: Provide free hints (disable 1 or 2 options) during gameplay
+  - **Mentors**: Automatically disable wrong options during gameplay (1 or 2 options based on mentor mode)
+    - When active, mentors automatically disable wrong options for each question
+    - Manual hint buttons are disabled when mentor is active
+    - Time boost button remains available even with active mentor
 
 ### 🔐 Authentication & Users
 - **Email/Password Auth**: Secure authentication with password validation
@@ -56,9 +66,10 @@ This app has been converted to **React Native** and now runs on:
 - **File Management**: Upload and manage media files
 - **Match Monitoring**: View and manage all matches in the system
 - **Tournament Monitoring**: View and manage all tournaments
-- **Store Management**: Manage store items (stadiums and mentors)
+- **Store Management**: Manage store items (stadiums and mentors) in unified store tab
   - **Stadiums**: Create/edit stadium items with match/tournament bonuses
-  - **Mentors**: Create/edit mentor items with different hint modes
+  - **Mentors**: Create/edit mentor items with different hint modes (disable 1 or 2 options)
+  - Single "Add" button with item type selection within the form
 
 ### 🎨 UI/UX
 - **Persian Language**: Full RTL (Right-to-Left) support

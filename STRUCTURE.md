@@ -100,7 +100,7 @@ src/
 │           ├── FilePreview.tsx    # File preview modal
 │           ├── MatchDetailsAdmin.tsx # Match monitoring
 │           ├── TournamentDetailsAdmin.tsx # Tournament monitoring
-│           └── StoreItemForm.tsx # Store item (stadium/mentor) CRUD form
+│           └── StoreItemForm.tsx # Store item (stadium/mentor) CRUD form with unified add button
 │
 ├── components/                    # 🧩 Shared components
 │   ├── ui/                       # Reusable UI components
@@ -191,7 +191,8 @@ Routes are defined by **file structure** in `app/` directory:
 
 **Other Routes**:
 - `admin.tsx` - Admin panel (restricted to admin users)
-  - **Tabs**: users, questions, categories, files, matches, tournaments, store, mentors
+  - **Tabs**: users, questions, categories, files, matches, tournaments, store
+  - Store tab includes both stadiums and mentors in unified view
   - All admin management tables in one place
   - Sidebar navigation with active state indicators
 - `tournament/[id].tsx` - Tournament detail view
@@ -289,6 +290,14 @@ convex/
 │   ├── renameFile() [admin]      # Rename file
 │   └── deleteFile() [admin]      # Delete file
 │
+├── store.ts                        # 🛒 Store Management API
+│   ├── getStoreItems()            # List store items (stadiums and mentors)
+│   ├── createStoreItem() [admin]  # Create store item (stadium or mentor)
+│   ├── updateStoreItem() [admin]  # Update store item
+│   ├── deleteStoreItem() [admin]  # Delete store item
+│   ├── purchaseStoreItem()        # Purchase store item with points
+│   └── getUserActiveMentor()     # Get user's active mentor
+│
 ├── crons.ts                        # ⏰ Scheduled Tasks
 │   └── Expiration cleanup cron jobs
 │
@@ -332,7 +341,16 @@ convex/
    - `tournamentParticipants` - Tournament players
    - `tournamentMatches` - Tournament match links (semi-finals, final)
 
-6. **Files**
+6. **Store Items**
+   - `storeItems` - Store items (stadiums and mentors)
+     - `itemType`: "stadium" | "mentor"
+     - Stadium fields: `matchesBonus`, `tournamentsBonus`
+     - Mentor fields: `mentorMode` (1 or 2)
+   - `userPurchases` - User purchases and active items
+     - Tracks purchased stadiums and mentors
+     - Manages active mentor for gameplay
+
+7. **Files**
    - `files` - File metadata
    - `_storage` - Convex storage (media)
 
@@ -1775,9 +1793,9 @@ const results = await getTournamentResults({ tournamentId });
 
 ### Overview
 
-The game includes a points-based hint system that allows players to get help during quiz questions. Players can use one hint per question, and each hint costs points.
+The game includes a points-based hint system that allows players to get help during quiz questions. Players can use hints manually (costing points) or automatically through active mentors (free).
 
-### Available Hints
+### Manual Hints (Cost Points)
 
 1. **Disable 1 Wrong Option** (2 points)
    - Disables one incorrect answer option
@@ -1789,36 +1807,56 @@ The game includes a points-based hint system that allows players to get help dur
    - Mutation: `disableWrongOptions` with `numOptionsToDisable: 2`
    - Backend randomly selects two wrong options to disable
 
-3. **Show Correct Answer** (7 points)
-   - Disables all three wrong options
-   - Highlights the correct answer with green color
-   - Mutation: `showCorrectAnswer`
-   - Returns the correct option number
+3. **Add Time Boost** (+10 seconds, 5 points)
+   - Adds 10 seconds to remaining time
+   - Independent of other hints (can be used even if mentor is active)
+   - Can only be used once per question
+
+### Mentor System (Automatic Hints)
+
+**Active Mentors** automatically disable wrong options for each question:
+- **Mentor Mode 1**: Automatically disables 1 wrong option per question (free)
+- **Mentor Mode 2**: Automatically disables 2 wrong options per question (free)
+- When mentor is active:
+  - ✅ Wrong options are automatically disabled when question loads
+  - ✅ Manual hint buttons (disable 1/2 options) are disabled
+  - ✅ Time boost button remains available
+  - ✅ No points are deducted for mentor hints
 
 ### Implementation Details
 
 **Backend (`convex/matchGameplay.ts`):**
 - `disableWrongOptions()` - Disables wrong options (doesn't expose correct answer)
-- `showCorrectAnswer()` - Shows correct answer and disables wrong options
+- `addTimeBoost()` - Adds time to remaining question time
 - Both mutations check user points and deduct accordingly
 - Uses `deductPoints()` utility from `utils.ts`
 
 **Frontend (`src/features/game/components/QuizGame.tsx`):**
 - State management for disabled options per question
-- State management for correct option (when shown)
 - State management for used hints (prevents multiple uses)
+- Auto-disable logic when mentor is active (via `useEffect`)
 - Visual feedback:
   - Disabled options: Reduced opacity, strikethrough, X icon
-  - Correct answer: Green highlight, checkmark icon
-- One hint per question enforcement
+  - Mentor status: Purple badge showing active mentor
+- Hint button states:
+  - Manual hint buttons disabled when mentor is active
+  - Time boost button always available (independent)
 
 ### Rules
 
-- ✅ Only one hint can be used per question
+**Manual Hints:**
+- ✅ Only one manual hint can be used per question (disable options OR time boost)
 - ✅ Points are deducted immediately when hint is used
 - ✅ Hints are disabled if user doesn't have enough points
 - ✅ Hints are disabled after being used for that question
 - ✅ Hints reset when moving to next question
+
+**Mentor System:**
+- ✅ Mentors automatically disable options when question loads
+- ✅ Manual hint buttons are disabled when mentor is active
+- ✅ Time boost can still be used even with active mentor
+- ✅ Mentor hints are free (no points deducted)
+- ✅ Mentor status displayed with purple badge
 
 **Last Updated**: December 2024  
 **Maintainers**: Development Team
