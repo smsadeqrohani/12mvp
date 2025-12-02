@@ -12,7 +12,7 @@ import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store" | "mentors";
+type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store";
 
 // Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
@@ -54,6 +54,7 @@ export default function AdminScreen() {
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [showStoreItemForm, setShowStoreItemForm] = useState(false);
   const [editingStoreItem, setEditingStoreItem] = useState<any>(null);
+  const [creatingItemType, setCreatingItemType] = useState<"stadium" | "mentor" | null>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
   const [viewingTournamentId, setViewingTournamentId] = useState<string | null>(null);
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -445,32 +446,7 @@ export default function AdminScreen() {
     setViewingTournamentId(tournamentId);
   };
 
-  const handleCreateStoreItem = () => {
-    setEditingStoreItem({ 
-      _id: "" as any,
-      name: "",
-      price: 0,
-      itemType: "stadium",
-      durationMs: 30 * 24 * 60 * 60 * 1000,
-      isActive: true,
-      matchesBonus: 0,
-      tournamentsBonus: 0,
-    });
-    setShowStoreItemForm(true);
-  };
 
-  const handleCreateMentor = () => {
-    setEditingStoreItem({ 
-      _id: "" as any,
-      name: "",
-      price: 0,
-      itemType: "mentor",
-      durationMs: 30 * 24 * 60 * 60 * 1000,
-      isActive: true,
-      mentorMode: 1,
-    });
-    setShowStoreItemForm(true);
-  };
 
   const handleEditStoreItem = (item: any) => {
     setEditingStoreItem(item);
@@ -480,6 +456,7 @@ export default function AdminScreen() {
   const handleCloseStoreItemForm = () => {
     setShowStoreItemForm(false);
     setEditingStoreItem(null);
+    setCreatingItemType(null);
   };
 
   const handleDeleteStoreItem = async (itemId: string) => {
@@ -1400,16 +1377,24 @@ export default function AdminScreen() {
     }
 
     const stadiumItems = allStoreItems.filter(item => item.itemType === "stadium");
+    const mentorItems = allStoreItems.filter(item => item.itemType === "mentor");
+    const allItems = [...stadiumItems, ...mentorItems];
     const itemsWithoutType = allStoreItems.filter(item => !item.itemType);
 
-    const stadiumColumns: Column<typeof stadiumItems[0]>[] = [
+    const storeColumns: Column<typeof allItems[0]>[] = [
       {
         key: 'name',
         header: 'نام',
         render: (item) => (
           <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-              <Ionicons name="storefront" size={20} color="#ff701a" />
+            <View className={`w-10 h-10 rounded-full items-center justify-center ${
+              item.itemType === "stadium" ? "bg-accent/20" : "bg-purple-600/20"
+            }`}>
+              <Ionicons 
+                name={item.itemType === "stadium" ? "storefront" : "school"} 
+                size={20} 
+                color={item.itemType === "stadium" ? "#ff701a" : "#a78bfa"} 
+              />
             </View>
             <View className="flex-1">
               <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
@@ -1428,9 +1413,15 @@ export default function AdminScreen() {
         key: 'type',
         header: 'نوع',
         render: (item) => (
-          <View className="bg-accent/20 rounded-lg px-3 py-1 border border-accent/30 w-fit">
-            <Text className="text-accent font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-              استادیوم
+          <View className={`rounded-lg px-3 py-1 border w-fit ${
+            item.itemType === "stadium"
+              ? "bg-accent/20 border-accent/30"
+              : "bg-purple-600/20 border-purple-500/30"
+          }`}>
+            <Text className={`font-semibold text-sm ${
+              item.itemType === "stadium" ? "text-accent" : "text-purple-300"
+            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              {item.itemType === "stadium" ? "استادیوم" : "منتور"}
             </Text>
           </View>
         ),
@@ -1450,229 +1441,41 @@ export default function AdminScreen() {
         key: 'matchesBonus',
         header: 'بازی اضافی',
         render: (item) => (
-          <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-            +{item.matchesBonus ?? 0}
-          </Text>
+          item.itemType === "stadium" ? (
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              +{item.matchesBonus ?? 0}
+            </Text>
+          ) : (
+            <Text className="text-gray-500 text-sm">-</Text>
+          )
         ),
       },
       {
         key: 'tournamentsBonus',
         header: 'تورنومنت اضافی',
         render: (item) => (
-          <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-            +{item.tournamentsBonus ?? 0}
-          </Text>
-        ),
-      },
-      {
-        key: 'duration',
-        header: 'مدت اعتبار',
-        render: (item) => (
-          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-            {item.durationMs === 0 
-              ? "دائمی"
-              : `${Math.floor(item.durationMs / (24 * 60 * 60 * 1000))} روز`
-            }
-          </Text>
-        ),
-      },
-      {
-        key: 'status',
-        header: 'وضعیت',
-        render: (item) => (
-          <View className={`px-3 py-1 rounded-full border w-fit ${
-            item.isActive
-              ? "bg-green-900/30 text-green-400 border-green-800/30"
-              : "bg-gray-700/50 text-gray-400 border-gray-600/30"
-          }`}>
-            <Text className={`text-xs font-semibold ${
-              item.isActive ? "text-green-400" : "text-gray-400"
-            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-              {item.isActive ? "فعال" : "غیرفعال"}
+          item.itemType === "stadium" ? (
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              +{item.tournamentsBonus ?? 0}
             </Text>
-          </View>
-        ),
-      },
-      {
-        key: 'actions',
-        header: 'عملیات',
-        width: 300,
-        render: (item) => (
-          <View className="flex-row items-center gap-2">
-            <TouchableOpacity
-              onPress={() => handleEditStoreItem(item)}
-              className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
-              style={{ minHeight: touchTargetSize }}
-              activeOpacity={0.7}
-            >
-              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                ویرایش
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleToggleStoreItemStatus(item._id)}
-              className={`px-3 py-2 rounded-lg border ${
-                item.isActive
-                  ? "bg-yellow-600/20 border-yellow-500/30"
-                  : "bg-green-600/20 border-green-500/30"
-              }`}
-              style={{ minHeight: touchTargetSize }}
-              activeOpacity={0.7}
-            >
-              <Text
-                className={`text-xs font-semibold ${
-                  item.isActive ? "text-yellow-400" : "text-green-400"
-                }`}
-                style={{ fontFamily: 'Vazirmatn-SemiBold' }}
-              >
-                {item.isActive ? "غیرفعال" : "فعال"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleDeleteStoreItem(item._id)}
-              className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
-              style={{ minHeight: touchTargetSize }}
-              activeOpacity={0.7}
-            >
-              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                حذف
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ),
-      },
-    ];
-
-    return (
-      <ScrollView 
-        className="flex-1"
-        showsVerticalScrollIndicator={false}
-      >
-        <View className="mb-6">
-          {/* Migration Button */}
-          {itemsWithoutType.length > 0 && (
-            <View className="bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4 mb-4">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-1">
-                  <Text className="text-yellow-300 font-semibold mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    ⚠️ آیتم‌های قدیمی نیاز به به‌روزرسانی دارند
-                  </Text>
-                  <Text className="text-yellow-400/80 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    {itemsWithoutType.length} آیتم فیلد itemType ندارد
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={handleMigrateStoreItems}
-                  className="px-4 py-2 bg-yellow-600 rounded-lg flex-row items-center gap-2"
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name="refresh" size={18} color="#fff" />
-                  <Text className="text-white font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    Migration
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          <View className="flex-row items-center justify-between mb-4">
-            <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                مدیریت فروشگاه
-              </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                استادیوم‌ها
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={handleCreateStoreItem}
-              className="px-4 py-3 bg-accent rounded-lg flex-row items-center gap-2"
-              activeOpacity={0.7}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                افزودن استادیوم
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      
-        {/* Stadiums Table */}
-        <DataTableRN
-          columns={stadiumColumns}
-          data={stadiumItems}
-          keyExtractor={(item) => item._id}
-          emptyState={{
-            icon: <Ionicons name="storefront" size={32} color="#6b7280" />,
-            title: "استادیومی یافت نشد",
-            description: "هنوز هیچ استادیومی در سیستم ثبت نشده است",
-          }}
-        />
-      </ScrollView>
-    );
-  };
-
-  const renderMentorsTab = () => {
-    if (allStoreItems === undefined) {
-      return <SkeletonAdminTab />;
-    }
-
-    const mentorItems = allStoreItems.filter(item => item.itemType === "mentor");
-    const itemsWithoutType = allStoreItems.filter(item => !item.itemType);
-
-    const mentorColumns: Column<typeof mentorItems[0]>[] = [
-      {
-        key: 'name',
-        header: 'نام',
-        render: (item) => (
-          <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 bg-purple-600/20 rounded-full items-center justify-center">
-              <Ionicons name="school" size={20} color="#a78bfa" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                {item.name}
-              </Text>
-              {item.description && item.description.trim() && (
-                <Text className="text-gray-400 text-sm mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                  {item.description}
-                </Text>
-              )}
-            </View>
-          </View>
-        ),
-      },
-      {
-        key: 'type',
-        header: 'نوع',
-        render: (item) => (
-          <View className="bg-purple-600/20 rounded-lg px-3 py-1 border border-purple-500/30 w-fit">
-            <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-              منتور
-            </Text>
-          </View>
-        ),
-      },
-      {
-        key: 'price',
-        header: 'قیمت',
-        render: (item) => (
-          <View className="bg-accent/10 rounded-lg px-3 py-1 border border-accent/30 w-fit">
-            <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-              {item.price.toLocaleString('fa-IR')} امتیاز
-            </Text>
-          </View>
+          ) : (
+            <Text className="text-gray-500 text-sm">-</Text>
+          )
         ),
       },
       {
         key: 'mentorMode',
-        header: 'مدل',
+        header: 'مدل منتور',
         render: (item) => (
-          <View className="bg-purple-600/20 rounded-lg px-3 py-1 border border-purple-500/30 w-fit">
-            <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-              {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
-            </Text>
-          </View>
+          item.itemType === "mentor" ? (
+            <View className="bg-purple-600/20 rounded-lg px-3 py-1 border border-purple-500/30 w-fit">
+              <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
+              </Text>
+            </View>
+          ) : (
+            <Text className="text-gray-500 text-sm">-</Text>
+          )
         ),
       },
       {
@@ -1792,36 +1595,41 @@ export default function AdminScreen() {
                 مدیریت فروشگاه
               </Text>
               <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                منتورها
+                استادیوم‌ها و منتورها
               </Text>
             </View>
             <TouchableOpacity
-              onPress={handleCreateMentor}
+              onPress={() => {
+                setEditingStoreItem(null);
+                setCreatingItemType(null);
+                setShowStoreItemForm(true);
+              }}
               className="px-4 py-3 bg-accent rounded-lg flex-row items-center gap-2"
               activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="#fff" />
               <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                افزودن منتور
+                افزودن
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       
-        {/* Mentors Table */}
+        {/* Store Items Table */}
         <DataTableRN
-          columns={mentorColumns}
-          data={mentorItems}
+          columns={storeColumns}
+          data={allItems}
           keyExtractor={(item) => item._id}
           emptyState={{
-            icon: <Ionicons name="school" size={32} color="#6b7280" />,
-            title: "منتوری یافت نشد",
-            description: "هنوز هیچ منتوری در سیستم ثبت نشده است",
+            icon: <Ionicons name="storefront" size={32} color="#6b7280" />,
+            title: "آیتمی یافت نشد",
+            description: "هنوز هیچ آیتمی در سیستم ثبت نشده است",
           }}
         />
       </ScrollView>
     );
   };
+
 
   const renderTournamentsTab = () => {
     // Show skeleton while loading
@@ -2160,30 +1968,7 @@ export default function AdminScreen() {
                   <Text className={`font-medium ${
                     activeTab === "store" ? "text-white" : "text-gray-300"
                   }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    فروشگاه (استادیوم)
-                  </Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => setActiveTab("mentors")}
-                className={`p-4 rounded-xl ${
-                  activeTab === "mentors"
-                    ? "bg-accent/20 border border-accent/30"
-                    : "bg-transparent"
-                }`}
-                activeOpacity={0.7}
-              >
-                <View className="flex-row items-center gap-3">
-                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
-                    activeTab === "mentors" ? "bg-accent" : "bg-gray-700"
-                  }`}>
-                    <Ionicons name="school" size={20} color={activeTab === "mentors" ? "#fff" : "#9ca3af"} />
-                  </View>
-                  <Text className={`font-medium ${
-                    activeTab === "mentors" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    منتورها
+                    فروشگاه
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -2221,7 +2006,6 @@ export default function AdminScreen() {
           {activeTab === "matches" && renderMatchesTab()}
           {activeTab === "tournaments" && renderTournamentsTab()}
           {activeTab === "store" && renderStoreTab()}
-          {activeTab === "mentors" && renderMentorsTab()}
         </View>
       </View>
 
@@ -2279,9 +2063,7 @@ export default function AdminScreen() {
                   ? editingStoreItem.itemType === "stadium" 
                     ? "ویرایش استادیوم" 
                     : "ویرایش منتور"
-                  : activeTab === "store"
-                    ? "ایجاد استادیوم جدید"
-                    : "ایجاد منتور جدید"
+                  : "ایجاد آیتم جدید"
                 }
               </Text>
               <TouchableOpacity
@@ -2294,7 +2076,7 @@ export default function AdminScreen() {
             </View>
             <StoreItemForm
               item={editingStoreItem}
-              defaultItemType={activeTab === "store" ? "stadium" : activeTab === "mentors" ? "mentor" : undefined}
+              defaultItemType={editingStoreItem?.itemType || creatingItemType || "stadium"}
               onClose={handleCloseStoreItemForm}
             />
           </View>

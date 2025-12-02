@@ -89,7 +89,8 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         baseData.mentorMode = parseInt(formData.mentorMode) as 1 | 2;
       }
       
-      if (item) {
+      // Check if item exists and has a valid ID (not empty string)
+      if (item && item._id && item._id !== "" && item._id !== "undefined") {
         await updateStoreItem({
           itemId: item._id,
           ...baseData,
@@ -338,7 +339,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             className="flex-1 p-4 bg-accent rounded-lg"
           >
             <Text className="text-white text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-              {isSubmitting ? "در حال ذخیره..." : item ? "به‌روزرسانی" : "ایجاد"}
+              {isSubmitting ? "در حال ذخیره..." : item ? "به‌روزرسانی" : "ذخیره"}
             </Text>
           </TouchableOpacity>
         </View>

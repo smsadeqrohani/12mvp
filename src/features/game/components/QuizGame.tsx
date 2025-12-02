@@ -30,6 +30,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const timeLeftRef = useRef<number>(0);
   const initializedQuestionRef = useRef<string | null>(null); // Track which question timer was initialized for
+  const mentorProcessedRef = useRef<Set<string>>(new Set()); // Track which questions have been processed by mentor
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const isParticipant = useQuery(
@@ -117,6 +118,42 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         timeLeftRef.current = initialTime;
         setQuestionStartTime(Date.now());
         initializedQuestionRef.current = questionId; // Mark this question as initialized
+        
+        // Auto-disable options if mentor is active
+        if (activeMentor && activeMentor.mentorMode) {
+          const mentorMode = activeMentor.mentorMode;
+          // Check if we haven't already processed this question with mentor
+          if (!mentorProcessedRef.current.has(questionId)) {
+            mentorProcessedRef.current.add(questionId);
+            // Auto-disable options based on mentor mode
+            disableWrongOptions({
+              matchId,
+              questionId: currentQuestion._id,
+              numOptionsToDisable: mentorMode,
+            }).then((result) => {
+              // Update disabled options for this question
+              setDisabledOptions(prev => ({
+                ...prev,
+                [questionId]: result.disabledOptions,
+              }));
+              
+              // Mark that mentor hint has been used
+              setUsedHints(prev => ({
+                ...prev,
+                [questionId]: ['mentor'],
+              }));
+              
+              // Update user points (mentor is free, so points don't change)
+              setUserPoints(result.remainingPoints);
+              
+              toast.success(`${mentorMode} گزینه اشتباه با استفاده از منتور غیرفعال شد`);
+            }).catch((error) => {
+              console.error("Error auto-disabling options with mentor:", error);
+              mentorProcessedRef.current.delete(questionId); // Remove from set if failed
+              toast.error("خطا در استفاده از منتور: " + getCleanErrorMessage(error));
+            });
+          }
+        }
       }
       
       setSelectedAnswer(null);
@@ -153,17 +190,23 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         clearInterval(timerRef.current);
       }
     };
-  }, [currentQuestionIndex, currentQuestion, isAnswered]);
+  }, [currentQuestionIndex, currentQuestion, isAnswered, activeMentor, matchId, disableWrongOptions]);
 
   const handleDisableOptions = async (numOptions: number) => {
     if (!currentQuestion || isAnswered) return;
     
+    // Don't allow manual disable if mentor is active (mentor does it automatically)
+    if (activeMentor && activeMentor.mentorMode) {
+      toast.error("منتور فعال است و به صورت خودکار گزینه‌ها را غیرفعال می‌کند");
+      return;
+    }
+    
     const questionId = currentQuestion._id;
     const usedHintsForQuestion = usedHints[questionId] || [];
     
-    // Check if any hint has already been used for this question
-    if (usedHintsForQuestion.length > 0) {
-      toast.error("شما قبلاً از یک کمک برای این سؤال استفاده کرده‌اید");
+    // Check if disable options hint has already been used for this question
+    if (usedHintsForQuestion.includes('used') || usedHintsForQuestion.includes('mentor')) {
+      toast.error("شما قبلاً از غیرفعال کردن گزینه برای این سؤال استفاده کرده‌اید");
       return;
     }
     
@@ -187,10 +230,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         [questionId]: [...(prev[questionId] || []), ...result.disabledOptions],
       }));
       
-      // Mark that a hint has been used (only one hint per question)
+      // Mark that disable options hint has been used
       setUsedHints(prev => ({
         ...prev,
-        [questionId]: ['used'],
+        [questionId]: [...(prev[questionId] || []), 'used'],
       }));
       
       // Update user points
@@ -209,9 +252,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
     const questionId = currentQuestion._id;
     const usedHintsForQuestion = usedHints[questionId] || [];
     
-    // Check if any hint has already been used for this question
-    if (usedHintsForQuestion.length > 0) {
-      toast.error("شما قبلاً از یک کمک برای این سؤال استفاده کرده‌اید");
+    // Check if time boost has already been used for this question (not other hints)
+    if (usedHintsForQuestion.includes('timeBoost')) {
+      toast.error("شما قبلاً از افزودن زمان برای این سؤال استفاده کرده‌اید");
       return;
     }
     
@@ -345,6 +388,8 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             delete next[currentQuestion._id];
             return next;
           });
+          // Clear mentor processed ref for the next question
+          mentorProcessedRef.current.delete(currentQuestion._id);
         } else {
           // User completed all questions
           // The useEffect will handle redirect based on match completion status
@@ -540,9 +585,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={() => handleDisableOptions(1)}
-                disabled={(userPoints < 2 && !(activeMentor && activeMentor.mentorMode === 1)) || (usedHints[currentQuestion._id] || []).length > 0}
+                disabled={(userPoints < 2 && !(activeMentor && activeMentor.mentorMode === 1)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode)}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0
+                  (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
                     ? activeMentor && activeMentor.mentorMode === 1
                       ? "bg-purple-600/20 border-purple-500"
                       : "bg-accent/20 border-accent"
@@ -551,7 +596,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0
+                    (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0 && !(activeMentor && activeMentor.mentorMode)
                       ? activeMentor && activeMentor.mentorMode === 1
                         ? "text-purple-300"
                         : "text-accent"
@@ -560,16 +605,16 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                     غیرفعال کردن ۱ گزینه
                   </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : "۲ امتیاز"}
+                    {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۲ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => handleDisableOptions(2)}
-                disabled={(userPoints < 5 && !(activeMentor && activeMentor.mentorMode === 2)) || (usedHints[currentQuestion._id] || []).length > 0}
+                disabled={(userPoints < 5 && !(activeMentor && activeMentor.mentorMode === 2)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode)}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && (usedHints[currentQuestion._id] || []).length === 0
+                  (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
                     ? activeMentor && activeMentor.mentorMode === 2
                       ? "bg-purple-600/20 border-purple-500"
                       : "bg-accent/20 border-accent"
@@ -578,16 +623,16 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && (usedHints[currentQuestion._id] || []).length === 0
+                    (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
                       ? activeMentor && activeMentor.mentorMode === 2
                         ? "text-purple-300"
                         : "text-accent"
                       : "text-gray-400"
                   }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                  غیرفعال کردن ۲ گزینه
-                </Text>
+                    غیرفعال کردن ۲ گزینه
+                  </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : "۵ امتیاز"}
+                    {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۵ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -595,9 +640,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             
             <TouchableOpacity
               onPress={handleAddTimeBoost}
-              disabled={userPoints < 5 || (usedHints[currentQuestion._id] || []).length > 0}
+              disabled={userPoints < 5 || (usedHints[currentQuestion._id] || []).includes('timeBoost')}
               className={`w-full px-4 py-3 rounded-xl border-2 ${
-                userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
+                userPoints >= 5 && !(usedHints[currentQuestion._id] || []).includes('timeBoost')
                   ? "bg-blue-600/20 border-blue-500"
                   : "bg-gray-700/50 border-gray-600 opacity-50"
               }`}
