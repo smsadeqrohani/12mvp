@@ -23,6 +23,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [disabledOptions, setDisabledOptions] = useState<Record<string, number[]>>({}); // questionId -> disabled options
+  const [correctOption, setCorrectOption] = useState<Record<string, number>>({}); // questionId -> correct option (if shown)
+  const [usedHints, setUsedHints] = useState<Record<string, string[]>>({}); // questionId -> array of used hint types
+  const [userPoints, setUserPoints] = useState<number>(0);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -41,6 +45,15 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   );
   const submitAnswer = useMutation(api.matches.submitAnswer);
   const leaveMatch = useMutation(api.matches.leaveMatch);
+  const disableWrongOptions = useMutation(api.matches.disableWrongOptions);
+  const showCorrectAnswer = useMutation(api.matches.showCorrectAnswer);
+  
+  // Update user points when profile changes
+  useEffect(() => {
+    if (userProfile?.points !== undefined) {
+      setUserPoints(userProfile.points);
+    }
+  }, [userProfile?.points]);
 
   // Check localStorage for previous redirect when userProfile is available
   useEffect(() => {
@@ -96,6 +109,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       setShowResult(false);
       setIsCorrect(false); // Reset correct state
       
+      // Clear removed options for previous question (if any)
+      // Note: This will be cleared when moving to next question in handleAnswerSubmit,
+      // but we also clear it here to be safe
+      
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -113,6 +130,105 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
       }
     };
   }, [currentQuestionIndex, currentQuestion, isAnswered]);
+
+  const handleDisableOptions = async (numOptions: number) => {
+    if (!currentQuestion || isAnswered) return;
+    
+    const questionId = currentQuestion._id;
+    const usedHintsForQuestion = usedHints[questionId] || [];
+    
+    // Check if any hint has already been used for this question
+    if (usedHintsForQuestion.length > 0) {
+      toast.error("شما قبلاً از یک کمک برای این سؤال استفاده کرده‌اید");
+      return;
+    }
+    
+    const cost = numOptions === 1 ? 2 : 5;
+    
+    if (userPoints < cost) {
+      toast.error(`امتیاز کافی ندارید. برای غیرفعال کردن ${numOptions} گزینه به ${cost} امتیاز نیاز دارید.`);
+      return;
+    }
+    
+    try {
+      const result = await disableWrongOptions({
+        matchId,
+        questionId: currentQuestion._id,
+        numOptionsToDisable: numOptions,
+      });
+      
+      // Update disabled options for this question
+      setDisabledOptions(prev => ({
+        ...prev,
+        [questionId]: [...(prev[questionId] || []), ...result.disabledOptions],
+      }));
+      
+      // Mark that a hint has been used (only one hint per question)
+      setUsedHints(prev => ({
+        ...prev,
+        [questionId]: ['used'],
+      }));
+      
+      // Update user points
+      setUserPoints(result.remainingPoints);
+      
+      toast.success(`${numOptions} گزینه اشتباه غیرفعال شد. ${cost} امتیاز کسر شد.`);
+    } catch (error) {
+      toast.error(getCleanErrorMessage(error));
+    }
+  };
+
+  const handleShowCorrectAnswer = async () => {
+    if (!currentQuestion || isAnswered) return;
+    
+    const questionId = currentQuestion._id;
+    const usedHintsForQuestion = usedHints[questionId] || [];
+    
+    // Check if any hint has already been used for this question
+    if (usedHintsForQuestion.length > 0) {
+      toast.error("شما قبلاً از یک کمک برای این سؤال استفاده کرده‌اید");
+      return;
+    }
+    
+    const cost = 7;
+    
+    if (userPoints < cost) {
+      toast.error(`امتیاز کافی ندارید. برای نمایش پاسخ صحیح به ${cost} امتیاز نیاز دارید.`);
+      return;
+    }
+    
+    try {
+      const result = await showCorrectAnswer({
+        matchId,
+        questionId: currentQuestion._id,
+      });
+      
+      // Update disabled options (all wrong options)
+      setDisabledOptions(prev => ({
+        ...prev,
+        [questionId]: result.disabledOptions,
+      }));
+      
+      // Set correct option
+      setCorrectOption(prev => ({
+        ...prev,
+        [questionId]: result.correctOption,
+      }));
+      
+      // Mark that a hint has been used (only one hint per question)
+      setUsedHints(prev => ({
+        ...prev,
+        [questionId]: ['used'],
+      }));
+      
+      // Update user points
+      setUserPoints(result.remainingPoints);
+      
+      toast.success(`پاسخ صحیح نمایش داده شد. ${cost} امتیاز کسر شد.`);
+    } catch (error) {
+      toast.error(getCleanErrorMessage(error));
+    }
+  };
 
   const handleTimeUp = async () => {
     if (timerRef.current) {
@@ -194,6 +310,22 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
           setCurrentQuestionIndex(prev => prev + 1);
           setIsAnswered(false);
           setShowResult(false);
+          // Clear disabled options and correct option for the next question
+          setDisabledOptions(prev => {
+            const next = { ...prev };
+            delete next[currentQuestion._id];
+            return next;
+          });
+          setCorrectOption(prev => {
+            const next = { ...prev };
+            delete next[currentQuestion._id];
+            return next;
+          });
+          setUsedHints(prev => {
+            const next = { ...prev };
+            delete next[currentQuestion._id];
+            return next;
+          });
         } else {
           // User completed all questions
           // The useEffect will handle redirect based on match completion status
@@ -290,6 +422,13 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
           </View>
           
           <View className="flex-row items-center gap-4">
+            <View>
+              <Text className="text-xl font-bold text-accent" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                {userPoints} امتیاز
+              </Text>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>امتیاز شما</Text>
+            </View>
+            
             <TouchableOpacity
               onPress={handleLeaveGame}
               className="px-4 py-2 bg-red-600 rounded-lg"
@@ -364,6 +503,82 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
           </Text>
         </View>
 
+        {/* Hint Buttons */}
+        {!isAnswered && (
+          <View className="gap-3 mb-6">
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => handleDisableOptions(1)}
+                disabled={userPoints < 2 || (usedHints[currentQuestion._id] || []).length > 0}
+                className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                  userPoints >= 2 && (usedHints[currentQuestion._id] || []).length === 0
+                    ? "bg-accent/20 border-accent"
+                    : "bg-gray-700/50 border-gray-600 opacity-50"
+                }`}
+              >
+                <View className="items-center">
+                  <Text className={`text-lg font-bold ${
+                    userPoints >= 2 && (usedHints[currentQuestion._id] || []).length === 0
+                      ? "text-accent"
+                      : "text-gray-400"
+                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    غیرفعال کردن ۱ گزینه
+                  </Text>
+                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                    ۲ امتیاز
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                onPress={() => handleDisableOptions(2)}
+                disabled={userPoints < 5 || (usedHints[currentQuestion._id] || []).length > 0}
+                className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                  userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
+                    ? "bg-accent/20 border-accent"
+                    : "bg-gray-700/50 border-gray-600 opacity-50"
+                }`}
+              >
+                <View className="items-center">
+                  <Text className={`text-lg font-bold ${
+                    userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
+                      ? "text-accent"
+                      : "text-gray-400"
+                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  غیرفعال کردن ۲ گزینه
+                </Text>
+                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                    ۵ امتیاز
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              onPress={handleShowCorrectAnswer}
+              disabled={userPoints < 7 || (usedHints[currentQuestion._id] || []).length > 0}
+              className={`w-full px-4 py-3 rounded-xl border-2 ${
+                userPoints >= 7 && (usedHints[currentQuestion._id] || []).length === 0
+                  ? "bg-green-600/20 border-green-500"
+                  : "bg-gray-700/50 border-gray-600 opacity-50"
+              }`}
+            >
+              <View className="items-center">
+                <Text className={`text-lg font-bold ${
+                  userPoints >= 7 && (usedHints[currentQuestion._id] || []).length === 0
+                    ? "text-green-400"
+                    : "text-gray-400"
+                }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  نمایش پاسخ صحیح
+                </Text>
+                <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  ۷ امتیاز
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Answer Options */}
         <View className="space-y-4">
           {[
@@ -371,58 +586,86 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             { key: 2, text: currentQuestion.option2Text },
             { key: 3, text: currentQuestion.option3Text },
             { key: 4, text: currentQuestion.option4Text },
-          ].map((option) => (
-            <TouchableOpacity
-              key={option.key}
-              onPress={() => !isAnswered && handleAnswerSubmit(option.key)}
-              disabled={isAnswered}
-              className={`p-4 rounded-xl ${
-                isAnswered && showResult
-                  ? option.key === selectedAnswer
-                    ? isCorrect
-                      ? "bg-green-600/30 border-2 border-green-500"
-                      : "bg-red-600/30 border-2 border-red-500"
-                    : "bg-gray-700/50 border border-gray-600"
-                  : selectedAnswer === option.key
-                  ? "bg-accent/20 border-2 border-accent"
-                  : "bg-gray-700/50 border border-gray-600 active:bg-gray-600/50"
-              }`}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center gap-3">
-                <View className={`w-8 h-8 rounded-full items-center justify-center ${
-                  isAnswered && showResult
+          ].map((option) => {
+            const isDisabled = disabledOptions[currentQuestion._id]?.includes(option.key);
+            const isCorrect = correctOption[currentQuestion._id] === option.key;
+            
+            return (
+              <TouchableOpacity
+                key={option.key}
+                onPress={() => !isAnswered && !isDisabled && handleAnswerSubmit(option.key)}
+                disabled={isAnswered || isDisabled}
+                className={`p-4 rounded-xl ${
+                  isDisabled
+                    ? "bg-gray-800/50 border border-gray-700 opacity-50"
+                    : isAnswered && showResult
                     ? option.key === selectedAnswer
                       ? isCorrect
-                        ? "bg-green-500"
-                        : "bg-red-500"
+                        ? "bg-green-600/30 border-2 border-green-500"
+                        : "bg-red-600/30 border-2 border-red-500"
+                      : isCorrect
+                      ? "bg-green-600/30 border-2 border-green-500"
+                      : "bg-gray-700/50 border border-gray-600"
+                    : isCorrect
+                    ? "bg-green-600/20 border-2 border-green-500"
+                    : selectedAnswer === option.key
+                    ? "bg-accent/20 border-2 border-accent"
+                    : "bg-gray-700/50 border border-gray-600 active:bg-gray-600/50"
+                }`}
+                activeOpacity={isDisabled ? 1 : 0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-8 h-8 rounded-full items-center justify-center ${
+                    isDisabled
+                      ? "bg-gray-700"
+                      : isCorrect
+                      ? "bg-green-500"
+                      : isAnswered && showResult
+                      ? option.key === selectedAnswer
+                        ? isCorrect
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                        : "bg-gray-600"
+                      : selectedAnswer === option.key
+                      ? "bg-accent"
                       : "bg-gray-600"
-                    : selectedAnswer === option.key
-                    ? "bg-accent"
-                    : "bg-gray-600"
-                }`}>
-                  <Text className={`font-bold ${
-                    isAnswered && showResult
-                      ? option.key === selectedAnswer ? "text-white" : "text-gray-400"
-                      : selectedAnswer === option.key ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                    {option.key}
+                  }`}>
+                    {isDisabled ? (
+                      <Ionicons name="close" size={16} color="#6b7280" />
+                    ) : (
+                      <Text className={`font-bold ${
+                        isCorrect
+                          ? "text-white"
+                          : isAnswered && showResult
+                          ? option.key === selectedAnswer ? "text-white" : "text-gray-400"
+                          : selectedAnswer === option.key ? "text-white" : "text-gray-300"
+                      }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                        {option.key}
+                      </Text>
+                    )}
+                  </View>
+                  <Text className={`flex-1 ${
+                    isDisabled
+                      ? "text-gray-500 line-through"
+                      : isCorrect
+                      ? "text-green-300 font-semibold"
+                      : isAnswered && showResult
+                      ? option.key === selectedAnswer
+                        ? isCorrect ? "text-green-300" : "text-red-300"
+                        : "text-gray-400"
+                      : selectedAnswer === option.key
+                      ? "text-accent"
+                      : "text-white"
+                  }`} style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                    {option.text}
                   </Text>
+                  {isCorrect && !isAnswered && (
+                    <Ionicons name="checkmark-circle" size={20} color="#4ade80" />
+                  )}
                 </View>
-                <Text className={`flex-1 ${
-                  isAnswered && showResult
-                    ? option.key === selectedAnswer
-                      ? isCorrect ? "text-green-300" : "text-red-300"
-                      : "text-gray-400"
-                    : selectedAnswer === option.key
-                    ? "text-accent"
-                    : "text-white"
-                }`} style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                  {option.text}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Result Display */}

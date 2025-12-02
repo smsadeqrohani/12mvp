@@ -2,7 +2,7 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
-import { getRandomQuestions, awardPoints } from "./utils";
+import { getRandomQuestions, awardPoints, deductPoints } from "./utils";
 
 /**
  * Match gameplay operations - answer submission, completion checking
@@ -359,6 +359,228 @@ export const checkMatchCompletion = query({
       participants,
       allCompleted,
       isCompleted: match.status === "completed",
+    };
+  },
+});
+
+/**
+ * Disable wrong options from a question
+ * Returns the options to disable (wrong answers only, not the correct one)
+ */
+export const disableWrongOptions = mutation({
+  args: {
+    matchId: v.id("matches"),
+    questionId: v.id("questions"),
+    numOptionsToDisable: v.number(), // 1 or 2
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Validate numOptionsToDisable
+    if (args.numOptionsToDisable !== 1 && args.numOptionsToDisable !== 2) {
+      throw new Error("Number of options to disable must be 1 or 2");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    const isCreatorSoloPlay =
+      match.status === "waiting" && match.creatorId === currentUserId;
+
+    if (!isCreatorSoloPlay && match.status !== "active") {
+      throw new Error("Match is not active");
+    }
+
+    if (Date.now() > match.expiresAt) {
+      throw new Error("Match has expired");
+    }
+    
+    // Check if question is part of this match
+    if (!match.questions.includes(args.questionId)) {
+      throw new Error("Question is not part of this match");
+    }
+    
+    // Find user's participation
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Check if user already answered this question
+    const existingAnswer = participant.answers?.find(
+      (answer) => answer.questionId === args.questionId
+    );
+    
+    if (existingAnswer) {
+      throw new Error("You have already answered this question");
+    }
+    
+    // Get user profile to check points
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+    
+    const currentPoints = profile.points ?? 0;
+    const cost = args.numOptionsToDisable === 1 ? 2 : 5;
+    
+    if (currentPoints < cost) {
+      throw new Error(`Not enough points. You need ${cost} points but only have ${currentPoints}`);
+    }
+    
+    // Get question
+    const question = await ctx.db.get(args.questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    
+    // Get correct answer from secure table
+    const answerEntry = await ctx.db
+      .query("questionAnswers")
+      .withIndex("by_question", (q: any) => q.eq("questionId", args.questionId))
+      .unique();
+    
+    if (!answerEntry) {
+      throw new Error("Question answer not found");
+    }
+    
+    const correctOption = answerEntry.correctOption;
+    
+    // Get all wrong options (all options except the correct one)
+    const wrongOptions = [1, 2, 3, 4].filter(opt => opt !== correctOption);
+    
+    // Shuffle wrong options and take the requested number
+    const shuffled = wrongOptions.sort(() => 0.5 - Math.random());
+    const optionsToDisable = shuffled.slice(0, args.numOptionsToDisable);
+    
+    // Deduct points
+    await deductPoints(ctx, currentUserId, cost);
+    
+    // Return the options to disable (without exposing the correct answer)
+    return {
+      disabledOptions: optionsToDisable,
+      remainingPoints: currentPoints - cost,
+    };
+  },
+});
+
+/**
+ * Show correct answer (disable 3 wrong options and highlight correct one)
+ */
+export const showCorrectAnswer = mutation({
+  args: {
+    matchId: v.id("matches"),
+    questionId: v.id("questions"),
+  },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    
+    // Get match
+    const match = await ctx.db.get(args.matchId);
+    if (!match) {
+      throw new Error("Match not found");
+    }
+    
+    const isCreatorSoloPlay =
+      match.status === "waiting" && match.creatorId === currentUserId;
+
+    if (!isCreatorSoloPlay && match.status !== "active") {
+      throw new Error("Match is not active");
+    }
+
+    if (Date.now() > match.expiresAt) {
+      throw new Error("Match has expired");
+    }
+    
+    // Check if question is part of this match
+    if (!match.questions.includes(args.questionId)) {
+      throw new Error("Question is not part of this match");
+    }
+    
+    // Find user's participation
+    const participant = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .filter((q) => q.eq(q.field("userId"), currentUserId))
+      .unique();
+    
+    if (!participant) {
+      throw new Error("You are not a participant in this match");
+    }
+    
+    // Check if user already answered this question
+    const existingAnswer = participant.answers?.find(
+      (answer) => answer.questionId === args.questionId
+    );
+    
+    if (existingAnswer) {
+      throw new Error("You have already answered this question");
+    }
+    
+    // Get user profile to check points
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .unique();
+    
+    if (!profile) {
+      throw new Error("Profile not found");
+    }
+    
+    const currentPoints = profile.points ?? 0;
+    const cost = 7;
+    
+    if (currentPoints < cost) {
+      throw new Error(`Not enough points. You need ${cost} points but only have ${currentPoints}`);
+    }
+    
+    // Get question
+    const question = await ctx.db.get(args.questionId);
+    if (!question) {
+      throw new Error("Question not found");
+    }
+    
+    // Get correct answer from secure table
+    const answerEntry = await ctx.db
+      .query("questionAnswers")
+      .withIndex("by_question", (q: any) => q.eq("questionId", args.questionId))
+      .unique();
+    
+    if (!answerEntry) {
+      throw new Error("Question answer not found");
+    }
+    
+    const correctOption = answerEntry.correctOption;
+    
+    // Get all wrong options (all options except the correct one)
+    const wrongOptions = [1, 2, 3, 4].filter(opt => opt !== correctOption);
+    
+    // Deduct points
+    await deductPoints(ctx, currentUserId, cost);
+    
+    // Return the correct answer and disabled wrong options
+    return {
+      correctOption,
+      disabledOptions: wrongOptions,
+      remainingPoints: currentPoints - cost,
     };
   },
 });

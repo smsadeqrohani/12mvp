@@ -29,6 +29,8 @@ export {
 export {
   submitAnswer,
   checkMatchCompletion,
+  disableWrongOptions,
+  showCorrectAnswer,
 } from "./matchGameplay";
 
 // Results and history

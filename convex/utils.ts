@@ -81,6 +81,29 @@ export const awardPoints = async (ctx: any, userId: any, points: number) => {
 };
 
 /**
+ * Deduct points from a user
+ */
+export const deductPoints = async (ctx: any, userId: any, points: number) => {
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .unique();
+  
+  if (!profile) {
+    throw new Error("Profile not found");
+  }
+  
+  const currentPoints = profile.points ?? 0;
+  const newPoints = Math.max(0, currentPoints - points); // Don't go below 0
+  
+  await ctx.db.patch(profile._id, {
+    points: newPoints,
+  });
+  
+  return newPoints;
+};
+
+/**
  * Admin-only wrapper for mutations and queries
  */
 export const adminOnly = <T extends any[]>(
