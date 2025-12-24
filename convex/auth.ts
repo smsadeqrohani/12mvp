@@ -56,7 +56,32 @@ export const createProfile = mutation({
     if (existingProfile) {
       throw new Error("Profile already exists");
     }
-    const avatarId = args.avatarId && isValidAvatarId(args.avatarId) ? args.avatarId : DEFAULT_AVATAR_ID;
+    
+    let avatarId = args.avatarId && isValidAvatarId(args.avatarId) ? args.avatarId : DEFAULT_AVATAR_ID;
+    
+    // Check if it's a premium avatar - if so, verify user owns it
+    if (isPremiumAvatar(avatarId)) {
+      // Get all user purchases
+      const purchases = await ctx.db
+        .query("purchases")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId))
+        .collect();
+      
+      // Check if user owns this avatar
+      let ownsAvatar = false;
+      for (const purchase of purchases) {
+        const item = await ctx.db.get(purchase.itemId);
+        if (item?.itemType === "avatar" && item.avatarId === avatarId) {
+          ownsAvatar = true;
+          break;
+        }
+      }
+      
+      if (!ownsAvatar) {
+        // Fall back to default avatar if user doesn't own the premium one
+        avatarId = DEFAULT_AVATAR_ID;
+      }
+    }
 
     await ctx.db.insert("profiles", {
       userId,

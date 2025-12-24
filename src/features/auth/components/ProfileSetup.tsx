@@ -17,15 +17,6 @@ export function ProfileSetup() {
   const router = useRouter();
   const isFormValid = name.trim().length > 0;
 
-  // Check if user can select an avatar (free or owned)
-  const canSelectAvatar = (avatarId: string) => {
-    if (isFreeAvatar(avatarId)) return true;
-    if (isPremiumAvatar(avatarId) && ownedAvatars) {
-      return ownedAvatars.includes(avatarId);
-    }
-    return false;
-  };
-
   const handleSubmit = () => {
     setLoading(true);
 
@@ -64,39 +55,32 @@ export function ProfileSetup() {
               <View>
                 <Text className="text-gray-300 mb-2 font-medium">انتخاب آواتار</Text>
                 <View className="flex-row flex-wrap gap-3">
-                  {AVATAR_OPTIONS.map((option) => {
+                  {AVATAR_OPTIONS.filter((option) => {
+                    // Show free avatars always
+                    if (isFreeAvatar(option.id)) return true;
+                    // Show premium avatars only if user owns them
+                    if (isPremiumAvatar(option.id)) {
+                      return ownedAvatars?.includes(option.id) ?? false;
+                    }
+                    return false;
+                  }).map((option) => {
                     const isSelected = option.id === selectedAvatarId;
-                    const canSelect = canSelectAvatar(option.id);
-                    const isOwned = ownedAvatars?.includes(option.id);
-                    const isPremium = isPremiumAvatar(option.id);
                     
                     return (
                       <TouchableOpacity
                         key={option.id}
-                        onPress={() => {
-                          if (canSelect) {
-                            setSelectedAvatarId(option.id);
-                          } else {
-                            toast.error("این آواتار را باید از فروشگاه خریداری کنید");
-                          }
-                        }}
-                        activeOpacity={canSelect ? 0.8 : 0.5}
-                        disabled={!canSelect}
+                        onPress={() => setSelectedAvatarId(option.id)}
+                        activeOpacity={0.8}
                       >
                         <View className="relative">
                           <Avatar
                             avatarId={option.id}
                             size="md"
                             highlighted={isSelected}
-                            className={!canSelect ? "opacity-50" : ""}
                             badge={
                               isSelected ? (
                                 <View className="w-6 h-6 rounded-full bg-accent items-center justify-center">
                                   <Ionicons name="checkmark" size={16} color="#fff" />
-                                </View>
-                              ) : isPremium && !isOwned ? (
-                                <View className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gray-700 items-center justify-center border border-gray-600">
-                                  <Ionicons name="lock-closed" size={12} color="#9ca3af" />
                                 </View>
                               ) : undefined
                             }
@@ -106,11 +90,9 @@ export function ProfileSetup() {
                     );
                   })}
                 </View>
-                {ownedAvatars && ownedAvatars.length > 0 && (
-                  <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-                    آواتارهای قفل‌شده را می‌توانید از فروشگاه خریداری کنید
-                  </Text>
-                )}
+                <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  آواتارهای ویژه را می‌توانید از فروشگاه خریداری کنید
+                </Text>
               </View>
 
               <View>

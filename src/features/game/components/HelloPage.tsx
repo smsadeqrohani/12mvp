@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { SignOutButton } from "../../../features/auth";
 import { Avatar, Modal } from "../../../components/ui";
-import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID } from "../../../../shared/avatarOptions";
+import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID, isFreeAvatar, isPremiumAvatar } from "../../../../shared/avatarOptions";
 import { toast } from "../../../lib/toast";
 
 const MODAL_DESCRIPTION = "یکی از آواتارهای از پیش بارگذاری‌شده را انتخاب کنید. آواتار شما بلافاصله در تمامی بخش‌های بازی به‌روزرسانی می‌شود.";
@@ -16,6 +16,7 @@ export function HelloPage() {
   const dailyLimits = useQuery(api.matches.getDailyLimits);
   const userPurchases = useQuery(api.store.getUserPurchases);
   const storeItems = useQuery(api.store.getStoreItems);
+  const ownedAvatars = useQuery(api.store.getUserOwnedAvatars);
   const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
   const updateProfileName = useMutation(api.auth.updateProfileName);
 
@@ -415,7 +416,15 @@ export function HelloPage() {
         size="md"
       >
         <View className="flex-row flex-wrap justify-center gap-4">
-          {AVATAR_OPTIONS.map((option) => {
+          {AVATAR_OPTIONS.filter((option) => {
+            // Show free avatars always
+            if (isFreeAvatar(option.id)) return true;
+            // Show premium avatars only if user owns them
+            if (isPremiumAvatar(option.id)) {
+              return ownedAvatars?.includes(option.id) ?? false;
+            }
+            return false;
+          }).map((option) => {
             const isSelected = option.id === pendingAvatarId;
             return (
               <TouchableOpacity
