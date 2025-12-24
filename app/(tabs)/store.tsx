@@ -5,12 +5,15 @@ import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { toast } from "../../src/lib/toast";
 import { Ionicons } from "@expo/vector-icons";
+import { Avatar } from "../../src/components/ui";
+import { getAvatarOption } from "../../shared/avatarOptions";
 
 export default function StoreScreen() {
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const storeItems = useQuery(api.store.getStoreItems);
   const userPurchases = useQuery(api.store.getUserPurchases);
+  const ownedAvatars = useQuery(api.store.getUserOwnedAvatars);
   const purchaseItem = useMutation(api.store.purchaseItem);
 
   // Authentication guard
@@ -62,6 +65,11 @@ export default function StoreScreen() {
     const now = Date.now();
     const expiresAt = purchase.purchasedAt + purchase.durationMs;
     return expiresAt > now;
+  };
+
+  const isAvatarOwned = (avatarId: string | undefined) => {
+    if (!avatarId || !ownedAvatars) return false;
+    return ownedAvatars.includes(avatarId);
   };
 
   const renderStoreItem = (item: any) => {
@@ -135,11 +143,31 @@ export default function StoreScreen() {
               </View>
             )}
 
+            {item.itemType === "avatar" && item.avatarId && (
+              <View className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/30 items-center">
+                <Text className="text-gray-400 mb-3" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  پیش‌نمایش آواتار:
+                </Text>
+                <Avatar
+                  avatarId={item.avatarId}
+                  size="xl"
+                  highlighted={isAvatarOwned(item.avatarId)}
+                />
+                {isAvatarOwned(item.avatarId) && (
+                  <View className="mt-2 bg-accent/20 rounded-full px-3 py-1">
+                    <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      ✓ در اختیار شما
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Status */}
             {isActive && (
               <View className="bg-accent/20 rounded-lg p-3 border border-accent/30 mb-4">
                 <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                  {purchase?.durationMs === 0 
+                  {purchase?.durationMs === 0 || item.itemType === "avatar"
                     ? "✓ فعال دائمی"
                     : `✓ فعال تا ${daysRemaining && daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}${hoursRemaining || 0} ساعت دیگر`
                   }
@@ -173,7 +201,10 @@ export default function StoreScreen() {
             }`}
             style={{ fontFamily: 'Vazirmatn-Bold' }}
           >
-            {isActive ? "در حال استفاده" : "خریداری"}
+            {isActive 
+              ? (item.itemType === "avatar" ? "در اختیار شما" : "در حال استفاده")
+              : "خریداری"
+            }
           </Text>
         </TouchableOpacity>
       </View>
@@ -227,6 +258,20 @@ export default function StoreScreen() {
                   </Text>
                   <View className="space-y-4">
                     {storeItems.filter(item => item.itemType === "mentor").map((item) => {
+                      return renderStoreItem(item);
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* Avatar Items */}
+              {storeItems.filter(item => item.itemType === "avatar").length > 0 && (
+                <View>
+                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    آواتارهای ویژه
+                  </Text>
+                  <View className="space-y-4">
+                    {storeItems.filter(item => item.itemType === "avatar").map((item) => {
                       return renderStoreItem(item);
                     })}
                   </View>

@@ -6,6 +6,7 @@ import { toast } from "../../../lib/toast";
 import { Button } from "../../../components/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { Id } from "../../../../convex/_generated/dataModel";
+import { AVATAR_OPTIONS, PREMIUM_AVATAR_IDS } from "../../../../shared/avatarOptions";
 
 interface StoreItemFormProps {
   item?: {
@@ -13,14 +14,15 @@ interface StoreItemFormProps {
     name: string;
     description?: string;
     price: number;
-    itemType: "stadium" | "mentor";
+    itemType: "stadium" | "mentor" | "avatar";
     matchesBonus?: number;
     tournamentsBonus?: number;
     mentorMode?: 1 | 2;
+    avatarId?: string;
     durationMs: number;
     isActive: boolean;
   };
-  defaultItemType?: "stadium" | "mentor";
+  defaultItemType?: "stadium" | "mentor" | "avatar";
   onClose: () => void;
 }
 
@@ -30,10 +32,11 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
     name: item?.name || "",
     description: item?.description || "",
     price: item?.price?.toString() || "0",
-    itemType: item?.itemType || defaultItemType || "stadium" as "stadium" | "mentor",
+    itemType: item?.itemType || defaultItemType || "stadium" as "stadium" | "mentor" | "avatar",
     matchesBonus: item?.matchesBonus?.toString() || "0",
     tournamentsBonus: item?.tournamentsBonus?.toString() || "0",
     mentorMode: item?.mentorMode?.toString() || "1",
+    avatarId: item?.avatarId || "",
     durationMs: item?.durationMs?.toString() || (30 * 24 * 60 * 60 * 1000).toString(), // 30 days default
     isActive: item?.isActive ?? true,
   });
@@ -64,12 +67,18 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         toast.error("مدل منتور باید 1 یا 2 باشد");
         return;
       }
+    } else if (formData.itemType === "avatar") {
+      if (!formData.avatarId || !PREMIUM_AVATAR_IDS.includes(formData.avatarId as any)) {
+        toast.error("لطفاً یک آواتار ویژه معتبر انتخاب کنید");
+        return;
+      }
     }
     if (parseFloat(formData.durationMs) < 0) {
       toast.error("مدت زمان نمی‌تواند منفی باشد");
       return;
     }
     // 0 is allowed (permanent, never expires)
+    // Avatar items are always permanent (durationMs = 0)
 
     setIsSubmitting(true);
     try {
@@ -87,6 +96,10 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         baseData.tournamentsBonus = parseInt(formData.tournamentsBonus);
       } else if (formData.itemType === "mentor") {
         baseData.mentorMode = parseInt(formData.mentorMode) as 1 | 2;
+      } else if (formData.itemType === "avatar") {
+        baseData.avatarId = formData.avatarId;
+        // Avatar items are always permanent
+        baseData.durationMs = 0;
       }
       
       // Check if item exists and has a valid ID (not empty string)
@@ -188,6 +201,21 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
                 منتور
               </Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setFormData({ ...formData, itemType: "avatar", durationMs: "0" })}
+              className={`flex-1 px-4 py-3 rounded-xl border-2 ${
+                formData.itemType === "avatar"
+                  ? "bg-accent/20 border-accent"
+                  : "bg-gray-800/80 border-gray-700/60"
+              }`}
+              disabled={isSubmitting}
+            >
+              <Text className={`text-center font-semibold ${
+                formData.itemType === "avatar" ? "text-accent" : "text-gray-400"
+              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                آواتار
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -283,32 +311,81 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
           </View>
         )}
 
-        <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-            مدت اعتبار (روز)
-          </Text>
-          <View className="flex-row items-center gap-2">
-            <TextInput
-              value={calculateDurationDays().toString()}
-              onChangeText={(text) => {
-                const days = parseInt(text.replace(/[^0-9]/g, "")) || 0;
-                setDurationDays(days);
-              }}
-              className="flex-1 bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
-              placeholder="30 (0 برای دائمی)"
-              placeholderTextColor="#6b7280"
-              textAlign="right"
-              keyboardType="numeric"
-              editable={!isSubmitting}
-            />
-            <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-              روز
+        {formData.itemType === "avatar" && (
+          <View>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              انتخاب آواتار ویژه *
+            </Text>
+            <View className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/60">
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2">
+                {PREMIUM_AVATAR_IDS.map((avatarId) => {
+                  const avatarOption = AVATAR_OPTIONS.find(opt => opt.id === avatarId);
+                  const isSelected = formData.avatarId === avatarId;
+                  return (
+                    <TouchableOpacity
+                      key={avatarId}
+                      onPress={() => setFormData({ ...formData, avatarId })}
+                      className={`p-2 rounded-lg border-2 ${
+                        isSelected
+                          ? "bg-accent/20 border-accent"
+                          : "bg-gray-700/50 border-gray-600"
+                      }`}
+                      disabled={isSubmitting}
+                    >
+                      <Text className={`text-xs text-center ${
+                        isSelected ? "text-accent" : "text-gray-400"
+                      }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                        {avatarOption?.label || avatarId}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+            {formData.avatarId && (
+              <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                انتخاب شده: {formData.avatarId}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {formData.itemType !== "avatar" && (
+          <View>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              مدت اعتبار (روز)
+            </Text>
+            <View className="flex-row items-center gap-2">
+              <TextInput
+                value={calculateDurationDays().toString()}
+                onChangeText={(text) => {
+                  const days = parseInt(text.replace(/[^0-9]/g, "")) || 0;
+                  setDurationDays(days);
+                }}
+                className="flex-1 bg-gray-800/80 border border-gray-700/60 rounded-xl px-4 py-3 text-white"
+                placeholder="30 (0 برای دائمی)"
+                placeholderTextColor="#6b7280"
+                textAlign="right"
+                keyboardType="numeric"
+                editable={!isSubmitting}
+              />
+              <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                روز
+              </Text>
+            </View>
+            <Text className="text-gray-400 text-xs mt-1 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              {calculateDurationDays() === 0 ? "0 = فعال دائمی (هرگز expire نمی‌شود)" : ""}
             </Text>
           </View>
-          <Text className="text-gray-400 text-xs mt-1 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-            {calculateDurationDays() === 0 ? "0 = فعال دائمی (هرگز expire نمی‌شود)" : ""}
-          </Text>
-        </View>
+        )}
+
+        {formData.itemType === "avatar" && (
+          <View className="bg-accent/10 rounded-lg p-3 border border-accent/30">
+            <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              آواتارها همیشه دائمی هستند (فعال دائمی)
+            </Text>
+          </View>
+        )}
 
         <View className="flex-row items-center justify-between p-4 bg-gray-800/50 rounded-lg">
           <Text className="text-white" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>

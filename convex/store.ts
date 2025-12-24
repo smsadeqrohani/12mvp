@@ -34,6 +34,7 @@ export const getStoreItems = query({
       matchesBonus: item.matchesBonus,
       tournamentsBonus: item.tournamentsBonus,
       mentorMode: item.mentorMode,
+      avatarId: item.avatarId,
       durationMs: item.durationMs,
     }));
   },
@@ -57,6 +58,41 @@ export const getUserPurchases = query({
       purchasedAt: purchase.purchasedAt,
       durationMs: purchase.durationMs,
     }));
+  },
+});
+
+/**
+ * Get user's owned avatars (permanent avatar purchases)
+ * Returns array of avatar IDs that the user owns
+ */
+export const getUserOwnedAvatars = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return [];
+    }
+    
+    // Get all user purchases
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+    
+    const ownedAvatars: string[] = [];
+    
+    // Check each purchase for avatar items
+    for (const purchase of purchases) {
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "avatar") continue;
+      
+      // Avatar purchases are permanent (durationMs = 0)
+      // So if it's an avatar item, user owns it permanently
+      if (item.avatarId) {
+        ownedAvatars.push(item.avatarId);
+      }
+    }
+    
+    return ownedAvatars;
   },
 });
 
@@ -123,6 +159,22 @@ export const purchaseItem = mutation({
       throw new Error("Item is not available for purchase");
     }
     
+    // For avatar items, check if user already owns it
+    if (item.itemType === "avatar") {
+      const purchases = await ctx.db
+        .query("purchases")
+        .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+        .collect();
+      
+      // Check if user already purchased this avatar
+      for (const purchase of purchases) {
+        const purchasedItem = await ctx.db.get(purchase.itemId);
+        if (purchasedItem?.itemType === "avatar" && purchasedItem.avatarId === item.avatarId) {
+          throw new Error("شما قبلاً این آواتار را خریداری کرده‌اید");
+        }
+      }
+    }
+    
     // Get user profile to check points
     const profile = await ctx.db
       .query("profiles")
@@ -148,11 +200,14 @@ export const purchaseItem = mutation({
     const now = Date.now();
     
     // Create purchase record
+    // Avatar items are always permanent (durationMs = 0)
+    const durationMs = item.itemType === "avatar" ? 0 : item.durationMs;
+    
     await ctx.db.insert("purchases", {
       userId: currentUserId,
       itemId: args.itemId,
       purchasedAt: now,
-      durationMs: item.durationMs,
+      durationMs,
     });
     
     return { success: true, remainingPoints: currentPoints - item.price };
@@ -177,6 +232,7 @@ export const getAllStoreItems = query({
       matchesBonus: item.matchesBonus,
       tournamentsBonus: item.tournamentsBonus,
       mentorMode: item.mentorMode,
+      avatarId: item.avatarId,
       durationMs: item.durationMs,
       isActive: item.isActive,
     }));
@@ -188,10 +244,11 @@ export const createStoreItem = mutation({
     name: v.string(),
     description: v.optional(v.string()),
     price: v.number(),
-    itemType: v.union(v.literal("stadium"), v.literal("mentor")),
+    itemType: v.union(v.literal("stadium"), v.literal("mentor"), v.literal("avatar")),
     matchesBonus: v.optional(v.number()),
     tournamentsBonus: v.optional(v.number()),
     mentorMode: v.optional(v.union(v.literal(1), v.literal(2))),
+    avatarId: v.optional(v.string()),
     durationMs: v.number(),
     isActive: v.boolean(),
   },
@@ -212,6 +269,13 @@ export const createStoreItem = mutation({
       itemData.tournamentsBonus = args.tournamentsBonus ?? 0;
     } else if (args.itemType === "mentor") {
       itemData.mentorMode = args.mentorMode;
+    } else if (args.itemType === "avatar") {
+      if (!args.avatarId) {
+        throw new Error("avatarId is required for avatar items");
+      }
+      itemData.avatarId = args.avatarId;
+      // Avatar items are always permanent (durationMs = 0)
+      itemData.durationMs = 0;
     }
     
     const itemId = await ctx.db.insert("storeItems", itemData);
@@ -226,10 +290,11 @@ export const updateStoreItem = mutation({
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     price: v.optional(v.number()),
-    itemType: v.optional(v.union(v.literal("stadium"), v.literal("mentor"))),
+    itemType: v.optional(v.union(v.literal("stadium"), v.literal("mentor"), v.literal("avatar"))),
     matchesBonus: v.optional(v.number()),
     tournamentsBonus: v.optional(v.number()),
     mentorMode: v.optional(v.union(v.literal(1), v.literal(2))),
+    avatarId: v.optional(v.string()),
     durationMs: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
   },
@@ -249,7 +314,15 @@ export const updateStoreItem = mutation({
     if (args.matchesBonus !== undefined) updates.matchesBonus = args.matchesBonus;
     if (args.tournamentsBonus !== undefined) updates.tournamentsBonus = args.tournamentsBonus;
     if (args.mentorMode !== undefined) updates.mentorMode = args.mentorMode;
-    if (args.durationMs !== undefined) updates.durationMs = args.durationMs;
+    if (args.avatarId !== undefined) updates.avatarId = args.avatarId;
+    if (args.durationMs !== undefined) {
+      // For avatar items, always set durationMs to 0 (permanent)
+      if (args.itemType === "avatar" || item.itemType === "avatar") {
+        updates.durationMs = 0;
+      } else {
+        updates.durationMs = args.durationMs;
+      }
+    }
     if (args.isActive !== undefined) updates.isActive = args.isActive;
     
     await ctx.db.patch(args.itemId, updates);

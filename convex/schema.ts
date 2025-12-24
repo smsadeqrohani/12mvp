@@ -124,13 +124,15 @@ const applicationTables = {
     name: v.string(),
     description: v.optional(v.string()),
     price: v.number(), // Price in points
-    itemType: v.optional(v.union(v.literal("stadium"), v.literal("mentor"))), // Type of item (optional for backward compatibility)
+    itemType: v.optional(v.union(v.literal("stadium"), v.literal("mentor"), v.literal("avatar"))), // Type of item (optional for backward compatibility)
     // Stadium fields
     matchesBonus: v.optional(v.number()), // Additional matches limit (for stadium)
     tournamentsBonus: v.optional(v.number()), // Additional tournaments limit (for stadium)
     // Mentor fields
     mentorMode: v.optional(v.union(v.literal(1), v.literal(2))), // 1 = disable 1 option, 2 = disable 2 options (for mentor)
-    durationMs: v.number(), // Duration in milliseconds (e.g., 30 days = 30 * 24 * 60 * 60 * 1000)
+    // Avatar fields
+    avatarId: v.optional(v.string()), // Avatar ID for avatar items
+    durationMs: v.number(), // Duration in milliseconds (e.g., 30 days = 30 * 24 * 60 * 60 * 1000, 0 = permanent)
     isActive: v.boolean(), // Whether item is available for purchase
   }),
   

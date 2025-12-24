@@ -2,7 +2,7 @@ import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { DEFAULT_AVATAR_ID, isValidAvatarId } from "../shared/avatarOptions";
+import { DEFAULT_AVATAR_ID, isValidAvatarId, isPremiumAvatar, isFreeAvatar } from "../shared/avatarOptions";
 
 /**
  * Authentication and User Profile Management
@@ -79,6 +79,29 @@ export const updateProfileAvatar = mutation({
 
     if (!isValidAvatarId(args.avatarId)) {
       throw new Error("Invalid avatar selection");
+    }
+
+    // Check if it's a premium avatar - if so, verify user owns it
+    if (isPremiumAvatar(args.avatarId)) {
+      // Get all user purchases
+      const purchases = await ctx.db
+        .query("purchases")
+        .withIndex("by_user", (q: any) => q.eq("userId", userId))
+        .collect();
+      
+      // Check if user owns this avatar
+      let ownsAvatar = false;
+      for (const purchase of purchases) {
+        const item = await ctx.db.get(purchase.itemId);
+        if (item?.itemType === "avatar" && item.avatarId === args.avatarId) {
+          ownsAvatar = true;
+          break;
+        }
+      }
+      
+      if (!ownsAvatar) {
+        throw new Error("شما این آواتار را خریداری نکرده‌اید");
+      }
     }
 
     const profile = await ctx.db
