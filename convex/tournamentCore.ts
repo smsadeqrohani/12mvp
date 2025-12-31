@@ -10,6 +10,31 @@ function generateTournamentId(): string {
   return `tournament_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+// Helper function to generate unique join code
+async function generateUniqueJoinCode(ctx: any): Promise<string> {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluding confusing characters
+  let code: string;
+  let exists = true;
+  
+  // Try generating codes until we find a unique one
+  while (exists) {
+    code = "";
+    for (let i = 0; i < 6; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    // Check if code already exists
+    const existingTournament = await ctx.db
+      .query("tournaments")
+      .withIndex("by_joinCode", (q: any) => q.eq("joinCode", code))
+      .first();
+    
+    exists = !!existingTournament;
+  }
+  
+  return code!;
+}
+
 /**
  * Core tournament operations - creating, joining, leaving tournaments
  */
@@ -18,6 +43,7 @@ export const createTournament = mutation({
   args: {
     categoryId: v.optional(v.id("categories")),
     isRandom: v.optional(v.boolean()),
+    isPrivate: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
@@ -82,6 +108,10 @@ export const createTournament = mutation({
     // Determine if random (if no category specified, default to random)
     const isRandom = args.isRandom ?? (!args.categoryId);
     
+    // Generate join code for private tournaments
+    const isPrivate = args.isPrivate ?? false;
+    const joinCode = isPrivate ? await generateUniqueJoinCode(ctx) : undefined;
+    
     // Create new tournament in waiting state
     const tournamentDocId = await ctx.db.insert("tournaments", {
       status: "waiting",
@@ -91,6 +121,8 @@ export const createTournament = mutation({
       tournamentId,
       categoryId: args.categoryId,
       isRandom,
+      isPrivate,
+      joinCode,
     });
     
     // Add creator as first participant
@@ -100,7 +132,7 @@ export const createTournament = mutation({
       joinedAt: now,
     });
     
-    return tournamentId;
+    return { tournamentId, joinCode };
   },
 });
 
@@ -147,16 +179,86 @@ export const getUserActiveTournaments = query({
   },
 });
 
+export const getTournamentByJoinCode = query({
+  args: { joinCode: v.string() },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return null;
+    }
+    
+    // Find tournament by join code
+    const tournament = await ctx.db
+      .query("tournaments")
+      .withIndex("by_joinCode", (q: any) => q.eq("joinCode", args.joinCode))
+      .first();
+    
+    if (!tournament) {
+      return null;
+    }
+    
+    // Check if tournament is waiting
+    if (tournament.status !== "waiting") {
+      return null;
+    }
+    
+    // Check if tournament has expired
+    if (Date.now() > tournament.expiresAt) {
+      return null;
+    }
+    
+    // Get participants
+    const participants = await ctx.db
+      .query("tournamentParticipants")
+      .withIndex("by_tournament", (q: any) => q.eq("tournamentId", tournament.tournamentId))
+      .collect();
+    
+    // Get creator profile
+    const creator = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", tournament.creatorId))
+      .unique();
+    
+    return {
+      tournamentId: tournament.tournamentId,
+      createdAt: tournament.createdAt,
+      expiresAt: tournament.expiresAt,
+      creatorName: creator?.name || "Unknown",
+      creatorAvatarId: creator?.avatarId ?? DEFAULT_AVATAR_ID,
+      participantCount: participants.length,
+      maxParticipants: 4,
+      isUserCreator: tournament.creatorId === currentUserId,
+      isAlreadyParticipant: participants.some(p => p.userId === currentUserId),
+    };
+  },
+});
+
 export const joinTournament = mutation({
-  args: { tournamentId: v.string() },
+  args: { 
+    tournamentId: v.optional(v.string()),
+    joinCode: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
-    // Get tournament
-    const tournament = await ctx.db
-      .query("tournaments")
-      .filter((q: any) => q.eq(q.field("tournamentId"), args.tournamentId))
-      .unique();
+    if (!args.tournamentId && !args.joinCode) {
+      throw new Error("Either tournamentId or joinCode must be provided");
+    }
+    
+    let tournament;
+    
+    // Get tournament by ID or join code
+    if (args.tournamentId) {
+      tournament = await ctx.db
+        .query("tournaments")
+        .filter((q: any) => q.eq(q.field("tournamentId"), args.tournamentId))
+        .unique();
+    } else if (args.joinCode) {
+      tournament = await ctx.db
+        .query("tournaments")
+        .withIndex("by_joinCode", (q: any) => q.eq("joinCode", args.joinCode))
+        .first();
+    }
     
     if (!tournament) {
       throw new Error("Tournament not found");
@@ -175,7 +277,7 @@ export const joinTournament = mutation({
     // Get participants
     const participants = await ctx.db
       .query("tournamentParticipants")
-      .withIndex("by_tournament", (q: any) => q.eq("tournamentId", args.tournamentId))
+      .withIndex("by_tournament", (q: any) => q.eq("tournamentId", tournament.tournamentId))
       .collect();
     
     // Check if user is already a participant
@@ -192,7 +294,7 @@ export const joinTournament = mutation({
     
     // Add user as participant
     await ctx.db.insert("tournamentParticipants", {
-      tournamentId: args.tournamentId,
+      tournamentId: tournament.tournamentId,
       userId: currentUserId,
       joinedAt: now,
     });
@@ -200,10 +302,10 @@ export const joinTournament = mutation({
     // Update tournament if now has 4 participants
     if (participants.length === 3) {
       // Start the tournament - create matches
-      await startTournament(ctx, args.tournamentId);
+      await startTournament(ctx, tournament.tournamentId);
     }
     
-    return args.tournamentId;
+    return tournament.tournamentId;
   },
 });
 
@@ -427,10 +529,10 @@ export const getWaitingTournaments = query({
     
     const now = Date.now();
     
-    // Filter out expired tournaments and get tournament details
+    // Filter out expired tournaments, private tournaments, and get tournament details
     const tournamentsWithDetails = await Promise.all(
       waitingTournaments
-        .filter(tournament => tournament.expiresAt > now)
+        .filter(tournament => tournament.expiresAt > now && !tournament.isPrivate) // Exclude private tournaments
         .map(async (tournament) => {
           const participants = await ctx.db
             .query("tournamentParticipants")
@@ -622,6 +724,8 @@ export const getMyWaitingTournaments = query({
           createdAt: tournament.createdAt,
           expiresAt: tournament.expiresAt,
           participantCount: participants.length,
+          isPrivate: tournament.isPrivate ?? false,
+          joinCode: tournament.joinCode,
         };
       })
     );

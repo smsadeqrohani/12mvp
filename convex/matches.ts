@@ -21,6 +21,7 @@ export {
   getUserActiveMatchStatus,
   getWaitingMatches,
   getMyWaitingMatches,
+  getMatchByJoinCode,
   leaveMatch,
   getDailyLimits,
 } from "./matchCore";

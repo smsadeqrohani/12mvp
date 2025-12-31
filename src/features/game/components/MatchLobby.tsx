@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl } from "react-native";
 import { useQuery, useMutation } from "convex/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
-import { getCleanErrorMessage } from "../../../lib/helpers";
+import { getCleanErrorMessage, copyToClipboard } from "../../../lib/helpers";
 import { Ionicons } from "@expo/vector-icons";
-import { Avatar } from "../../../components/ui";
+import { Avatar, Modal, TextInput } from "../../../components/ui";
 
 interface MatchLobbyProps {
   onMatchStart?: (matchId: Id<"matches">) => void;
@@ -16,8 +16,15 @@ interface MatchLobbyProps {
 
 export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingPrivate, setIsCreatingPrivate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [privateMatchJoinCode, setPrivateMatchJoinCode] = useState<string | null>(null);
+  const [showJoinCodeModal, setShowJoinCodeModal] = useState(false);
+  const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
+  const [joinCodeInput, setJoinCodeInput] = useState("");
+  const [debouncedJoinCode, setDebouncedJoinCode] = useState("");
+  const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const router = useRouter();
   
   const userProfile = useQuery(api.auth.getUserProfile);
@@ -25,6 +32,26 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
   const myWaitingMatches = useQuery(api.matches.getMyWaitingMatches);
   const activeMatches = useQuery(api.matches.getUserActiveMatches);
   const pendingResultsMatches = useQuery(api.matches.getUserPendingResultsMatches);
+  
+  // Debounce join code input - only query when user stops typing for 500ms
+  useEffect(() => {
+    if (joinCodeInput.length !== 6) {
+      setDebouncedJoinCode("");
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setDebouncedJoinCode(joinCodeInput.toUpperCase());
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [joinCodeInput]);
+  
+  // Only query when we have a valid 6-character debounced code
+  const matchByJoinCode = useQuery(
+    api.matches.getMatchByJoinCode,
+    debouncedJoinCode.length === 6 ? { joinCode: debouncedJoinCode } : "skip"
+  );
   
   const createMatch = useMutation(api.matches.createMatch);
   const joinMatch = useMutation(api.matches.joinMatch);
@@ -42,13 +69,60 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
   const handleCreateMatch = async () => {
     try {
       setIsCreating(true);
-      const matchId = await createMatch();
+      const result = await createMatch({ isPrivate: false });
       toast.success("بازی ایجاد شد! منتظر نفر دوم باشید");
       setIsCreating(false);
     } catch (error) {
       console.error("Error creating match:", error);
       toast.error(getCleanErrorMessage(error));
       setIsCreating(false);
+    }
+  };
+
+  const handleCreatePrivateMatch = async () => {
+    try {
+      setIsCreatingPrivate(true);
+      const result = await createMatch({ isPrivate: true });
+      setPrivateMatchJoinCode(result.joinCode || null);
+      setShowJoinCodeModal(true);
+      setIsCreatingPrivate(false);
+    } catch (error) {
+      console.error("Error creating private match:", error);
+      toast.error(getCleanErrorMessage(error));
+      setIsCreatingPrivate(false);
+    }
+  };
+
+  const handleCopyJoinCode = async () => {
+    if (privateMatchJoinCode) {
+      const copied = await copyToClipboard(privateMatchJoinCode);
+      if (copied) {
+        toast.success("کد کپی شد!");
+      } else {
+        toast.error("خطا در کپی کردن کد");
+      }
+    }
+  };
+
+  const handleJoinByCode = async () => {
+    if (!joinCodeInput || joinCodeInput.length !== 6) {
+      toast.error("لطفاً کد 6 رقمی را وارد کنید");
+      return;
+    }
+
+    const code = joinCodeInput.toUpperCase();
+    
+    try {
+      setIsJoiningByCode(true);
+      const matchId = await joinMatch({ joinCode: code });
+      toast.success("به بازی پیوستید!");
+      setShowJoinByCodeModal(false);
+      setJoinCodeInput("");
+      router.push(`/(tabs)/play?matchId=${matchId}`);
+    } catch (error) {
+      console.error("Error joining match by code:", error);
+      toast.error(getCleanErrorMessage(error));
+      setIsJoiningByCode(false);
     }
   };
 
@@ -128,23 +202,52 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
             ایجاد بازی جدید
           </Text>
           
+          <View className="flex-row gap-3 mb-3">
+            <TouchableOpacity
+              onPress={handleCreateMatch}
+              disabled={isCreating || isCreatingPrivate}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-4 bg-accent rounded-xl disabled:opacity-50"
+              activeOpacity={0.7}
+            >
+              {isCreating ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="globe-outline" size={20} color="#fff" />
+              )}
+              <Text className="text-white font-semibold text-sm">عمومی</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={handleCreatePrivateMatch}
+              disabled={isCreating || isCreatingPrivate}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-4 bg-purple-600 rounded-xl disabled:opacity-50"
+              activeOpacity={0.7}
+            >
+              {isCreatingPrivate ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+              )}
+              <Text className="text-white font-semibold text-sm">خصوصی</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <Text className="text-gray-400 text-sm mb-3 text-center">
+            بازی عمومی: برای همه قابل مشاهده است
+          </Text>
+          <Text className="text-gray-400 text-sm text-center">
+            بازی خصوصی: فقط با کد قابل پیوستن است
+          </Text>
+
+          {/* Join by Code Button */}
           <TouchableOpacity
-            onPress={handleCreateMatch}
-            disabled={isCreating}
-            className="flex-row items-center justify-center gap-3 px-6 py-4 bg-accent rounded-xl disabled:opacity-50"
+            onPress={() => setShowJoinByCodeModal(true)}
+            className="mt-4 flex-row items-center justify-center gap-2 px-4 py-3 bg-blue-600 rounded-xl"
             activeOpacity={0.7}
           >
-            {isCreating ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-            <Ionicons name="add-circle-outline" size={24} color="#fff" />
-            )}
-            <Text className="text-white font-semibold">ساخت بازی جدید</Text>
+            <Ionicons name="key-outline" size={20} color="#fff" />
+            <Text className="text-white font-semibold text-sm">پیوستن با کد</Text>
           </TouchableOpacity>
-          
-          <Text className="text-gray-400 text-sm mt-3 text-center">
-            بازی ایجاد می‌شود و 24 ساعت منتظر نفر دوم می‌ماند
-          </Text>
         </View>
 
         {/* Active Matches - User needs to complete */}
@@ -212,11 +315,50 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
             {myWaitingMatches.map((match) => (
               <View key={match._id} className="bg-gray-800/50 rounded-lg p-4 mb-3">
                 <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-white font-semibold">بازی شما</Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-white font-semibold">بازی شما</Text>
+                    {match.isPrivate ? (
+                      <View className="bg-purple-500/20 px-2 py-1 rounded-full">
+                        <Text className="text-purple-400 text-xs">خصوصی</Text>
+                      </View>
+                    ) : (
+                      <View className="bg-blue-500/20 px-2 py-1 rounded-full">
+                        <Text className="text-blue-400 text-xs">عمومی</Text>
+                      </View>
+                    )}
+                  </View>
                   <View className="bg-yellow-500/20 px-3 py-1 rounded-full">
                     <Text className="text-yellow-500 text-xs">در انتظار</Text>
                   </View>
                 </View>
+                
+                {match.isPrivate && match.joinCode && (
+                  <View className="bg-purple-900/20 border border-purple-800/30 rounded-lg p-3 mb-3">
+                    <Text className="text-gray-400 text-xs mb-1">کد بازی:</Text>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-white text-lg font-bold tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                        {match.joinCode}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          const copied = await copyToClipboard(match.joinCode!);
+                          if (copied) {
+                            toast.success("کد کپی شد!");
+                          } else {
+                            toast.error("خطا در کپی کردن کد");
+                          }
+                        }}
+                        className="bg-purple-600 px-3 py-1 rounded-lg"
+                        activeOpacity={0.7}
+                      >
+                        <View className="flex-row items-center gap-1">
+                          <Ionicons name="copy-outline" size={16} color="#fff" />
+                          <Text className="text-white text-xs font-semibold">کپی</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
                 
                 <Text className="text-gray-400 text-sm mb-3">
                   زمان باقی‌مانده: {formatTimeRemaining(match.expiresAt)}
@@ -385,6 +527,126 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
           </View>
         </View>
       </View>
+
+      {/* Join Code Modal */}
+      <Modal
+        isOpen={showJoinCodeModal}
+        onClose={() => {
+          setShowJoinCodeModal(false);
+          setPrivateMatchJoinCode(null);
+        }}
+        title="بازی خصوصی ایجاد شد"
+        description="کد زیر را با دوست خود به اشتراک بگذارید"
+        icon={<Ionicons name="lock-closed-outline" size={24} color="#ff701a" />}
+      >
+        <View className="space-y-4">
+          <View className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <Text className="text-gray-400 text-sm mb-2 text-center">کد بازی</Text>
+            <Text className="text-white text-3xl font-bold text-center tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              {privateMatchJoinCode}
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            onPress={handleCopyJoinCode}
+            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="copy-outline" size={20} color="#fff" />
+            <Text className="text-white font-semibold">کپی کردن کد</Text>
+          </TouchableOpacity>
+          
+          <Text className="text-gray-400 text-sm text-center">
+            این کد را به دوست خود بدهید تا به بازی بپیوندد
+          </Text>
+        </View>
+      </Modal>
+
+      {/* Join By Code Modal */}
+      <Modal
+        isOpen={showJoinByCodeModal}
+        onClose={() => {
+          setShowJoinByCodeModal(false);
+          setJoinCodeInput("");
+        }}
+        title="پیوستن با کد"
+        description="کد 6 رقمی بازی را وارد کنید"
+        icon={<Ionicons name="key-outline" size={24} color="#ff701a" />}
+      >
+        <View className="space-y-4">
+          <View>
+            <Text className="text-gray-300 mb-2 font-medium">کد بازی</Text>
+            <TextInput
+              placeholder="کد 6 رقمی"
+              placeholderTextColor="#6b7280"
+              value={joinCodeInput}
+              onChangeText={(text) => {
+                // Only allow alphanumeric, uppercase, max 6 characters
+                const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
+                setJoinCodeInput(cleaned);
+              }}
+              maxLength={6}
+              className="text-center text-2xl tracking-widest font-bold"
+              style={{ fontFamily: 'Vazirmatn-Bold' }}
+            />
+          </View>
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 6 && matchByJoinCode && (
+            <View className="bg-blue-900/20 border border-blue-800/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2 mb-2">
+                <Ionicons name="information-circle-outline" size={20} color="#60a5fa" />
+                <Text className="text-blue-400 font-semibold">بازی پیدا شد</Text>
+              </View>
+              <Text className="text-blue-300 text-sm">
+                سازنده: {matchByJoinCode.creatorName}
+              </Text>
+              {matchByJoinCode.isAlreadyParticipant && (
+                <Text className="text-yellow-400 text-sm mt-1">
+                  شما قبلاً در این بازی عضو هستید
+                </Text>
+              )}
+            </View>
+          )}
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 6 && matchByJoinCode === null && (
+            <View className="bg-red-900/20 border border-red-800/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="alert-circle-outline" size={20} color="#f87171" />
+                <Text className="text-red-400 text-sm">
+                  بازی با این کد یافت نشد
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 0 && (
+            <View className="bg-gray-800/20 border border-gray-700/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="#9ca3af" />
+                <Text className="text-gray-400 text-sm">
+                  در حال جستجو...
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity
+            onPress={handleJoinByCode}
+            disabled={isJoiningByCode || joinCodeInput.length !== 6 || debouncedJoinCode.length !== 6 || !matchByJoinCode || (matchByJoinCode?.isAlreadyParticipant ?? false)}
+            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg disabled:opacity-50"
+            activeOpacity={0.7}
+          >
+            {isJoiningByCode ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="play-circle-outline" size={20} color="#fff" />
+                <Text className="text-white font-semibold">پیوستن به بازی</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

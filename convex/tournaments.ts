@@ -16,6 +16,7 @@ export {
   getUserActiveTournaments,
   getWaitingTournaments,
   getMyWaitingTournaments,
+  getTournamentByJoinCode,
   leaveTournament,
   checkTournamentMatch,
 } from "./tournamentCore";

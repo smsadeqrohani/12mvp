@@ -25,8 +25,35 @@ async function getQuestionCategories(ctx: any, questionId: string) {
  * Core match operations - creating, joining, leaving matches
  */
 
+// Helper function to generate unique join code
+async function generateUniqueJoinCode(ctx: any): Promise<string> {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluding confusing characters
+  let code: string;
+  let exists = true;
+  
+  // Try generating codes until we find a unique one
+  while (exists) {
+    code = "";
+    for (let i = 0; i < 6; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    // Check if code already exists
+    const existingMatch = await ctx.db
+      .query("matches")
+      .withIndex("by_joinCode", (q: any) => q.eq("joinCode", code))
+      .first();
+    
+    exists = !!existingMatch;
+  }
+  
+  return code!;
+}
+
 export const createMatch = mutation({
-  args: {},
+  args: {
+    isPrivate: v.optional(v.boolean()),
+  },
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
@@ -81,6 +108,10 @@ export const createMatch = mutation({
     
     const expiresAt = now + (24 * 60 * 60 * 1000); // 24 hours from now
     
+    // Generate join code for private matches
+    const isPrivate = args.isPrivate ?? false;
+    const joinCode = isPrivate ? await generateUniqueJoinCode(ctx) : undefined;
+    
     // Create new match in waiting state
     const matchId = await ctx.db.insert("matches", {
       status: "waiting",
@@ -88,6 +119,8 @@ export const createMatch = mutation({
       expiresAt,
       questions: selectedQuestions,
       creatorId: currentUserId,
+      isPrivate,
+      joinCode,
     });
     
     // Add creator as first participant
@@ -97,7 +130,7 @@ export const createMatch = mutation({
       joinedAt: now,
     });
     
-    return matchId;
+    return { matchId, joinCode };
   },
 });
 
@@ -376,13 +409,83 @@ export const getUserActiveMatchStatus = query({
   },
 });
 
+export const getMatchByJoinCode = query({
+  args: { joinCode: v.string() },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return null;
+    }
+    
+    // Find match by join code
+    const match = await ctx.db
+      .query("matches")
+      .withIndex("by_joinCode", (q: any) => q.eq("joinCode", args.joinCode))
+      .first();
+    
+    if (!match) {
+      return null;
+    }
+    
+    // Check if match is waiting
+    if (match.status !== "waiting") {
+      return null;
+    }
+    
+    // Check if match has expired
+    if (Date.now() > match.expiresAt) {
+      return null;
+    }
+    
+    // Get participants
+    const participants = await ctx.db
+      .query("matchParticipants")
+      .withIndex("by_match", (q) => q.eq("matchId", match._id))
+      .collect();
+    
+    // Get creator profile
+    const creator = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", match.creatorId))
+      .unique();
+    
+    return {
+      _id: match._id,
+      createdAt: match.createdAt,
+      expiresAt: match.expiresAt,
+      creatorName: creator?.name || "Unknown",
+      creatorAvatarId: creator?.avatarId ?? DEFAULT_AVATAR_ID,
+      participantCount: participants.length,
+      isUserCreator: match.creatorId === currentUserId,
+      isAlreadyParticipant: participants.some(p => p.userId === currentUserId),
+    };
+  },
+});
+
 export const joinMatch = mutation({
-  args: { matchId: v.id("matches") },
+  args: { 
+    matchId: v.optional(v.id("matches")),
+    joinCode: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const currentUserId = await requireAuth(ctx);
     
-    // Get match
-    const match = await ctx.db.get(args.matchId);
+    if (!args.matchId && !args.joinCode) {
+      throw new Error("Either matchId or joinCode must be provided");
+    }
+    
+    let match;
+    
+    // Get match by ID or join code
+    if (args.matchId) {
+      match = await ctx.db.get(args.matchId);
+    } else if (args.joinCode) {
+      match = await ctx.db
+        .query("matches")
+        .withIndex("by_joinCode", (q: any) => q.eq("joinCode", args.joinCode))
+        .first();
+    }
+    
     if (!match) {
       throw new Error("Match not found");
     }
@@ -400,7 +503,7 @@ export const joinMatch = mutation({
     // Get participants
     const participants = await ctx.db
       .query("matchParticipants")
-      .withIndex("by_match", (q) => q.eq("matchId", args.matchId))
+      .withIndex("by_match", (q) => q.eq("matchId", match._id))
       .collect();
     
     // Check if user is already a participant
@@ -417,21 +520,21 @@ export const joinMatch = mutation({
     
     // Add user as second participant
     await ctx.db.insert("matchParticipants", {
-      matchId: args.matchId,
+      matchId: match._id,
       userId: currentUserId,
       joinedAt: now,
     });
     
     // Update match to active and set new expiration
     const newExpiresAt = now + (24 * 60 * 60 * 1000); // 24 hours for both to complete
-    await ctx.db.patch(args.matchId, {
+    await ctx.db.patch(match._id, {
       status: "active",
       startedAt: now,
       expiresAt: newExpiresAt,
       currentQuestionIndex: 0,
     });
     
-    return args.matchId;
+    return match._id;
   },
 });
 
@@ -499,10 +602,10 @@ export const getWaitingMatches = query({
     
     const now = Date.now();
     
-    // Filter out expired matches and get match details
+    // Filter out expired matches, private matches, and get match details
     const matchesWithDetails = await Promise.all(
       waitingMatches
-        .filter(match => match.expiresAt > now)
+        .filter(match => match.expiresAt > now && !match.isPrivate) // Exclude private matches
         .map(async (match) => {
           const participants = await ctx.db
             .query("matchParticipants")
@@ -559,6 +662,8 @@ export const getMyWaitingMatches = query({
           createdAt: match.createdAt,
           expiresAt: match.expiresAt,
           participantCount: participants.length,
+          isPrivate: match.isPrivate ?? false,
+          joinCode: match.joinCode,
         };
       })
     );

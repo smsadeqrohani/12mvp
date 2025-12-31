@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
-import { getCleanErrorMessage } from "../../../lib/helpers";
+import { getCleanErrorMessage, copyToClipboard } from "../../../lib/helpers";
 import { Ionicons } from "@expo/vector-icons";
-import { Avatar } from "../../../components/ui";
+import { Avatar, Modal, TextInput } from "../../../components/ui";
 
 interface TournamentLobbyProps {
   onTournamentStart?: (tournamentId: string) => void;
@@ -15,10 +15,17 @@ interface TournamentLobbyProps {
 
 export function TournamentLobby({ onTournamentStart, onTournamentFound }: TournamentLobbyProps) {
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreatingPrivate, setIsCreatingPrivate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [privateTournamentJoinCode, setPrivateTournamentJoinCode] = useState<string | null>(null);
+  const [showJoinCodeModal, setShowJoinCodeModal] = useState(false);
+  const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
+  const [joinCodeInput, setJoinCodeInput] = useState("");
+  const [debouncedJoinCode, setDebouncedJoinCode] = useState("");
+  const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const router = useRouter();
   
   const userProfile = useQuery(api.auth.getUserProfile);
@@ -26,6 +33,26 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const myWaitingTournaments = useQuery(api.tournaments.getMyWaitingTournaments);
   const activeTournaments = useQuery(api.tournaments.getUserActiveTournaments);
   const categories = useQuery(api.questionCategories.getCategoriesWithCounts);
+  
+  // Debounce join code input - only query when user stops typing for 500ms
+  useEffect(() => {
+    if (joinCodeInput.length !== 6) {
+      setDebouncedJoinCode("");
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setDebouncedJoinCode(joinCodeInput.toUpperCase());
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [joinCodeInput]);
+  
+  // Only query when we have a valid 6-character debounced code
+  const tournamentByJoinCode = useQuery(
+    api.tournaments.getTournamentByJoinCode,
+    debouncedJoinCode.length === 6 ? { joinCode: debouncedJoinCode } : "skip"
+  );
   
   const createTournament = useMutation(api.tournaments.createTournament);
   const joinTournament = useMutation(api.tournaments.joinTournament);
@@ -40,24 +67,72 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
     return () => clearInterval(interval);
   }, []);
 
-  const handleCreateTournament = async () => {
+  const handleCreateTournament = async (isPrivate: boolean = false) => {
     try {
-      setIsCreating(true);
+      if (isPrivate) {
+        setIsCreatingPrivate(true);
+      } else {
+        setIsCreating(true);
+      }
+      
       // Only pass categoryId if selected, otherwise omit it (don't pass null)
       const args: any = {
         isRandom: !selectedCategory,
+        isPrivate,
       };
       if (selectedCategory) {
         args.categoryId = selectedCategory;
       }
-      const tournamentId = await createTournament(args);
-      toast.success("تورنومنت ایجاد شد! منتظر بازیکنان دیگر باشید");
+      const result = await createTournament(args);
+      
+      if (isPrivate && result.joinCode) {
+        setPrivateTournamentJoinCode(result.joinCode);
+        setShowJoinCodeModal(true);
+      } else {
+        toast.success("تورنومنت ایجاد شد! منتظر بازیکنان دیگر باشید");
+      }
+      
       setIsCreating(false);
+      setIsCreatingPrivate(false);
       setSelectedCategory(null);
     } catch (error) {
       console.error("Error creating tournament:", error);
       toast.error(getCleanErrorMessage(error));
       setIsCreating(false);
+      setIsCreatingPrivate(false);
+    }
+  };
+
+  const handleCopyJoinCode = async () => {
+    if (privateTournamentJoinCode) {
+      const copied = await copyToClipboard(privateTournamentJoinCode);
+      if (copied) {
+        toast.success("کد کپی شد!");
+      } else {
+        toast.error("خطا در کپی کردن کد");
+      }
+    }
+  };
+
+  const handleJoinByCode = async () => {
+    if (!joinCodeInput || joinCodeInput.length !== 6) {
+      toast.error("لطفاً کد 6 رقمی را وارد کنید");
+      return;
+    }
+
+    const code = joinCodeInput.toUpperCase();
+    
+    try {
+      setIsJoiningByCode(true);
+      const tournamentId = await joinTournament({ joinCode: code });
+      toast.success("به تورنومنت پیوستید!");
+      setShowJoinByCodeModal(false);
+      setJoinCodeInput("");
+      router.push(`/tournament/${tournamentId}`);
+    } catch (error) {
+      console.error("Error joining tournament by code:", error);
+      toast.error(getCleanErrorMessage(error));
+      setIsJoiningByCode(false);
     }
   };
 
@@ -185,23 +260,52 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             </View>
           )}
           
+          <View className="flex-row gap-3 mb-3">
+            <TouchableOpacity
+              onPress={() => handleCreateTournament(false)}
+              disabled={isCreating || isCreatingPrivate}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-4 bg-accent rounded-xl disabled:opacity-50"
+              activeOpacity={0.7}
+            >
+              {isCreating ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="globe-outline" size={20} color="#fff" />
+              )}
+              <Text className="text-white font-semibold text-sm">عمومی</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => handleCreateTournament(true)}
+              disabled={isCreating || isCreatingPrivate}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-4 bg-purple-600 rounded-xl disabled:opacity-50"
+              activeOpacity={0.7}
+            >
+              {isCreatingPrivate ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+              )}
+              <Text className="text-white font-semibold text-sm">خصوصی</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <Text className="text-gray-400 text-sm mb-3 text-center">
+            تورنومنت عمومی: برای همه قابل مشاهده است
+          </Text>
+          <Text className="text-gray-400 text-sm text-center">
+            تورنومنت خصوصی: فقط با کد قابل پیوستن است (3 نفر دیگر)
+          </Text>
+
+          {/* Join by Code Button */}
           <TouchableOpacity
-            onPress={handleCreateTournament}
-            disabled={isCreating}
-            className="flex-row items-center justify-center gap-3 px-6 py-4 bg-accent rounded-xl disabled:opacity-50"
+            onPress={() => setShowJoinByCodeModal(true)}
+            className="mt-4 flex-row items-center justify-center gap-2 px-4 py-3 bg-blue-600 rounded-xl"
             activeOpacity={0.7}
           >
-            {isCreating ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-            <Ionicons name="trophy-outline" size={24} color="#fff" />
-            )}
-            <Text className="text-white font-semibold">ساخت تورنومنت جدید</Text>
+            <Ionicons name="key-outline" size={20} color="#fff" />
+            <Text className="text-white font-semibold text-sm">پیوستن با کد</Text>
           </TouchableOpacity>
-          
-          <Text className="text-gray-400 text-sm mt-3 text-center">
-            تورنومنت ایجاد می‌شود و 24 ساعت منتظر 3 بازیکن دیگر می‌ماند
-          </Text>
         </View>
 
         {/* Active Tournaments - User is in */}
@@ -255,11 +359,50 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             {myWaitingTournaments.map((tournament) => (
               <View key={tournament.tournamentId} className="bg-gray-800/50 rounded-lg p-4 mb-3">
                 <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-white font-semibold">تورنومنت شما</Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-white font-semibold">تورنومنت شما</Text>
+                    {tournament.isPrivate ? (
+                      <View className="bg-purple-500/20 px-2 py-1 rounded-full">
+                        <Text className="text-purple-400 text-xs">خصوصی</Text>
+                      </View>
+                    ) : (
+                      <View className="bg-blue-500/20 px-2 py-1 rounded-full">
+                        <Text className="text-blue-400 text-xs">عمومی</Text>
+                      </View>
+                    )}
+                  </View>
                   <View className="bg-yellow-500/20 px-3 py-1 rounded-full">
                     <Text className="text-yellow-500 text-xs">در انتظار</Text>
                   </View>
                 </View>
+                
+                {tournament.isPrivate && tournament.joinCode && (
+                  <View className="bg-purple-900/20 border border-purple-800/30 rounded-lg p-3 mb-3">
+                    <Text className="text-gray-400 text-xs mb-1">کد تورنومنت:</Text>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-white text-lg font-bold tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                        {tournament.joinCode}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          const copied = await copyToClipboard(tournament.joinCode!);
+                          if (copied) {
+                            toast.success("کد کپی شد!");
+                          } else {
+                            toast.error("خطا در کپی کردن کد");
+                          }
+                        }}
+                        className="bg-purple-600 px-3 py-1 rounded-lg"
+                        activeOpacity={0.7}
+                      >
+                        <View className="flex-row items-center gap-1">
+                          <Ionicons name="copy-outline" size={16} color="#fff" />
+                          <Text className="text-white text-xs font-semibold">کپی</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
                 
                 <Text className="text-gray-400 text-sm mb-3">
                   شرکت‌کنندگان: {tournament.participantCount} / 4
@@ -362,6 +505,129 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
           </View>
         </View>
       </View>
+
+      {/* Join Code Modal */}
+      <Modal
+        isOpen={showJoinCodeModal}
+        onClose={() => {
+          setShowJoinCodeModal(false);
+          setPrivateTournamentJoinCode(null);
+        }}
+        title="تورنومنت خصوصی ایجاد شد"
+        description="کد زیر را برای 3 بازیکن دیگر بفرستید"
+        icon={<Ionicons name="lock-closed-outline" size={24} color="#ff701a" />}
+      >
+        <View className="space-y-4">
+          <View className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <Text className="text-gray-400 text-sm mb-2 text-center">کد تورنومنت</Text>
+            <Text className="text-white text-3xl font-bold text-center tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              {privateTournamentJoinCode}
+            </Text>
+          </View>
+          
+          <TouchableOpacity
+            onPress={handleCopyJoinCode}
+            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="copy-outline" size={20} color="#fff" />
+            <Text className="text-white font-semibold">کپی کردن کد</Text>
+          </TouchableOpacity>
+          
+          <Text className="text-gray-400 text-sm text-center">
+            این کد را به 3 نفر دیگر بدهید تا به تورنومنت بپیوندند
+          </Text>
+        </View>
+      </Modal>
+
+      {/* Join By Code Modal */}
+      <Modal
+        isOpen={showJoinByCodeModal}
+        onClose={() => {
+          setShowJoinByCodeModal(false);
+          setJoinCodeInput("");
+        }}
+        title="پیوستن با کد"
+        description="کد 6 رقمی تورنومنت را وارد کنید"
+        icon={<Ionicons name="key-outline" size={24} color="#ff701a" />}
+      >
+        <View className="space-y-4">
+          <View>
+            <Text className="text-gray-300 mb-2 font-medium">کد تورنومنت</Text>
+            <TextInput
+              placeholder="کد 6 رقمی"
+              placeholderTextColor="#6b7280"
+              value={joinCodeInput}
+              onChangeText={(text) => {
+                // Only allow alphanumeric, uppercase, max 6 characters
+                const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(0, 6);
+                setJoinCodeInput(cleaned);
+              }}
+              maxLength={6}
+              className="text-center text-2xl tracking-widest font-bold"
+              style={{ fontFamily: 'Vazirmatn-Bold' }}
+            />
+          </View>
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 6 && tournamentByJoinCode && (
+            <View className="bg-blue-900/20 border border-blue-800/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2 mb-2">
+                <Ionicons name="information-circle-outline" size={20} color="#60a5fa" />
+                <Text className="text-blue-400 font-semibold">تورنومنت پیدا شد</Text>
+              </View>
+              <Text className="text-blue-300 text-sm">
+                سازنده: {tournamentByJoinCode.creatorName}
+              </Text>
+              <Text className="text-blue-300 text-sm">
+                شرکت‌کنندگان: {tournamentByJoinCode.participantCount} / {tournamentByJoinCode.maxParticipants}
+              </Text>
+              {tournamentByJoinCode.isAlreadyParticipant && (
+                <Text className="text-yellow-400 text-sm mt-1">
+                  شما قبلاً در این تورنومنت عضو هستید
+                </Text>
+              )}
+            </View>
+          )}
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 6 && tournamentByJoinCode === null && (
+            <View className="bg-red-900/20 border border-red-800/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="alert-circle-outline" size={20} color="#f87171" />
+                <Text className="text-red-400 text-sm">
+                  تورنومنت با این کد یافت نشد
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {joinCodeInput.length === 6 && debouncedJoinCode.length === 0 && (
+            <View className="bg-gray-800/20 border border-gray-700/30 rounded-lg p-3">
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="#9ca3af" />
+                <Text className="text-gray-400 text-sm">
+                  در حال جستجو...
+                </Text>
+              </View>
+            </View>
+          )}
+
+          <TouchableOpacity
+            onPress={handleJoinByCode}
+            disabled={isJoiningByCode || joinCodeInput.length !== 6 || debouncedJoinCode.length !== 6 || !tournamentByJoinCode || (tournamentByJoinCode?.isAlreadyParticipant ?? false)}
+            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg disabled:opacity-50"
+            activeOpacity={0.7}
+          >
+            {isJoiningByCode ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="play-circle-outline" size={20} color="#fff" />
+                <Text className="text-white font-semibold">پیوستن به تورنومنت</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }

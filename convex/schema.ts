@@ -62,7 +62,9 @@ const applicationTables = {
     questions: v.array(v.id("questions")),
     currentQuestionIndex: v.optional(v.number()),
     creatorId: v.optional(v.id("users")),
-  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]),
+    isPrivate: v.optional(v.boolean()),
+    joinCode: v.optional(v.string()),
+  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]).index("by_joinCode", ["joinCode"]),
   
   matchParticipants: defineTable({
     matchId: v.id("matches"),
@@ -102,7 +104,9 @@ const applicationTables = {
     tournamentId: v.string(), // Unique tournament identifier
     categoryId: v.optional(v.id("categories")), // Tournament category, null for random
     isRandom: v.boolean(), // Whether tournament uses random questions
-  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]),
+    isPrivate: v.optional(v.boolean()),
+    joinCode: v.optional(v.string()),
+  }).index("by_status", ["status"]).index("by_expiration", ["expiresAt"]).index("by_joinCode", ["joinCode"]),
   
   tournamentParticipants: defineTable({
     tournamentId: v.string(),
