@@ -104,6 +104,17 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
     }
   };
 
+  const handleShareMatchCode = async (joinCode: string) => {
+    try {
+      await Share.share({
+        message: `کد بازی: ${joinCode}\n\nبرای پیوستن به بازی این کد را در اپلیکیشن وارد کنید.`,
+        title: "کد بازی",
+      });
+    } catch (error) {
+      console.error("Error sharing match code:", error);
+    }
+  };
+
   const handleJoinByCode = async () => {
     if (!joinCodeInput || joinCodeInput.length !== 6) {
       toast.error("لطفاً کد 6 رقمی را وارد کنید");
