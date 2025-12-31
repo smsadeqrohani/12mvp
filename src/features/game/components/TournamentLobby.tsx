@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -111,6 +111,17 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
       } else {
         toast.error("خطا در کپی کردن کد");
       }
+    }
+  };
+
+  const handleShareTournamentCode = async (joinCode: string) => {
+    try {
+      await Share.share({
+        message: `کد تورنومنت: ${joinCode}\n\nبرای پیوستن به تورنومنت این کد را در اپلیکیشن وارد کنید.`,
+        title: "کد تورنومنت",
+      });
+    } catch (error) {
+      console.error("Error sharing tournament code:", error);
     }
   };
 
@@ -525,14 +536,24 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             </Text>
           </View>
           
-          <TouchableOpacity
-            onPress={handleCopyJoinCode}
-            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
-            activeOpacity={0.7}
-          >
-            <Ionicons name="copy-outline" size={20} color="#fff" />
-            <Text className="text-white font-semibold">کپی کردن کد</Text>
-          </TouchableOpacity>
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={handleCopyJoinCode}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="copy-outline" size={20} color="#fff" />
+              <Text className="text-white font-semibold">کپی</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => privateTournamentJoinCode && handleShareTournamentCode(privateTournamentJoinCode)}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-3 bg-blue-600 rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={20} color="#fff" />
+              <Text className="text-white font-semibold">اشتراک</Text>
+            </TouchableOpacity>
+          </View>
           
           <Text className="text-gray-400 text-sm text-center">
             این کد را به 3 نفر دیگر بدهید تا به تورنومنت بپیوندند

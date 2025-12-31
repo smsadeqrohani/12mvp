@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
@@ -335,10 +335,12 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
                 {match.isPrivate && match.joinCode && (
                   <View className="bg-purple-900/20 border border-purple-800/30 rounded-lg p-3 mb-3">
                     <Text className="text-gray-400 text-xs mb-1">کد بازی:</Text>
-                    <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center justify-between mb-2">
                       <Text className="text-white text-lg font-bold tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
                         {match.joinCode}
                       </Text>
+                    </View>
+                    <View className="flex-row gap-2">
                       <TouchableOpacity
                         onPress={async () => {
                           const copied = await copyToClipboard(match.joinCode!);
@@ -348,12 +350,22 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
                             toast.error("خطا در کپی کردن کد");
                           }
                         }}
-                        className="bg-purple-600 px-3 py-1 rounded-lg"
+                        className="flex-1 bg-purple-600 px-3 py-2 rounded-lg"
                         activeOpacity={0.7}
                       >
-                        <View className="flex-row items-center gap-1">
+                        <View className="flex-row items-center justify-center gap-1">
                           <Ionicons name="copy-outline" size={16} color="#fff" />
                           <Text className="text-white text-xs font-semibold">کپی</Text>
+                        </View>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleShareMatchCode(match.joinCode!)}
+                        className="flex-1 bg-blue-600 px-3 py-2 rounded-lg"
+                        activeOpacity={0.7}
+                      >
+                        <View className="flex-row items-center justify-center gap-1">
+                          <Ionicons name="share-outline" size={16} color="#fff" />
+                          <Text className="text-white text-xs font-semibold">اشتراک</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
@@ -547,14 +559,24 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
             </Text>
           </View>
           
-          <TouchableOpacity
-            onPress={handleCopyJoinCode}
-            className="flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
-            activeOpacity={0.7}
-          >
-            <Ionicons name="copy-outline" size={20} color="#fff" />
-            <Text className="text-white font-semibold">کپی کردن کد</Text>
-          </TouchableOpacity>
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={handleCopyJoinCode}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-3 bg-accent rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="copy-outline" size={20} color="#fff" />
+              <Text className="text-white font-semibold">کپی</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => privateMatchJoinCode && handleShareMatchCode(privateMatchJoinCode)}
+              className="flex-1 flex-row items-center justify-center gap-2 px-4 py-3 bg-blue-600 rounded-lg"
+              activeOpacity={0.7}
+            >
+              <Ionicons name="share-outline" size={20} color="#fff" />
+              <Text className="text-white font-semibold">اشتراک</Text>
+            </TouchableOpacity>
+          </View>
           
           <Text className="text-gray-400 text-sm text-center">
             این کد را به دوست خود بدهید تا به بازی بپیوندد
