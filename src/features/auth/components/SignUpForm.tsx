@@ -1,17 +1,30 @@
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
+import { setStorageItem } from "../../../lib/storage";
 
-export function SignUpForm() {
+interface SignUpFormProps {
+  initialReferralCode?: string;
+}
+
+export function SignUpForm({ initialReferralCode }: SignUpFormProps = {} as SignUpFormProps) {
   const { signIn } = useAuthActions();
   const [loading, setLoading] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [referralCode, setReferralCode] = useState(initialReferralCode?.toUpperCase().trim() || "");
   const router = useRouter();
+  
+  // Update referral code if initialReferralCode changes (e.g., from URL params)
+  useEffect(() => {
+    if (initialReferralCode) {
+      setReferralCode(initialReferralCode.toUpperCase().trim());
+    }
+  }, [initialReferralCode]);
 
   // Password validation function
   const validatePassword = (password: string): string[] => {
@@ -40,7 +53,7 @@ export function SignUpForm() {
     return errors;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setLoading(true);
 
     // Validate password
@@ -61,6 +74,11 @@ export function SignUpForm() {
 
     // Clear any previous errors
     setPasswordErrors([]);
+
+    // Store referral code if provided (for use in profile setup)
+    if (referralCode.trim()) {
+      await setStorageItem("pending_referral_code", referralCode.trim().toUpperCase());
+    }
 
     signIn("password", { email, password, flow: "signUp" })
       .then(() => {
@@ -166,6 +184,24 @@ export function SignUpForm() {
             className="auth-input-field"
             editable={!loading}
           />
+        </View>
+
+        {/* Referral Code Field (Optional) */}
+        <View>
+          <Text className="text-gray-300 mb-2 font-medium">کد معرف (اختیاری)</Text>
+          <TextInput
+            value={referralCode}
+            onChangeText={(text) => setReferralCode(text.toUpperCase().trim())}
+            placeholder="کد معرف را وارد کنید"
+            placeholderTextColor="#6b7280"
+            className="auth-input-field"
+            editable={!loading}
+            autoCapitalize="characters"
+            maxLength={8}
+          />
+          <Text className="text-gray-500 text-xs mt-1 text-right">
+            اگر کد معرف دارید، آن را وارد کنید
+          </Text>
         </View>
 
         <TouchableOpacity onPress={handleSubmit} className="auth-button mt-2" disabled={loading}>

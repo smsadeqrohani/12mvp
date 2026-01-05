@@ -1,4 +1,4 @@
-import { View, Text, ActivityIndicator, TouchableOpacity, TextInput } from "react-native";
+import { View, Text, ActivityIndicator, TouchableOpacity, TextInput, Share } from "react-native";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -6,6 +6,9 @@ import { SignOutButton } from "../../../features/auth";
 import { Avatar, Modal } from "../../../components/ui";
 import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID, isFreeAvatar, isPremiumAvatar } from "../../../../shared/avatarOptions";
 import { toast } from "../../../lib/toast";
+import { copyToClipboard } from "../../../lib/helpers";
+import { generateReferralLink } from "../../../lib/referral";
+import { Ionicons } from "@expo/vector-icons";
 
 const MODAL_DESCRIPTION = "یکی از آواتارهای از پیش بارگذاری‌شده را انتخاب کنید. آواتار شما بلافاصله در تمامی بخش‌های بازی به‌روزرسانی می‌شود.";
 
@@ -17,6 +20,7 @@ export function HelloPage() {
   const userPurchases = useQuery(api.store.getUserPurchases);
   const storeItems = useQuery(api.store.getStoreItems);
   const ownedAvatars = useQuery(api.store.getUserOwnedAvatars);
+  const referralStats = useQuery(api.auth.getReferralStats);
   const updateProfileAvatar = useMutation(api.auth.updateProfileAvatar);
   const updateProfileName = useMutation(api.auth.updateProfileName);
 
@@ -104,6 +108,19 @@ export function HelloPage() {
       .finally(() => setIsSavingName(false));
   };
 
+  const handleShareReferralCode = async (referralCode: string) => {
+    try {
+      const referralLink = generateReferralLink(referralCode);
+      await Share.share({
+        message: `کد معرف من: ${referralCode}\n\nلینک ثبت‌نام: ${referralLink}\n\nبا استفاده از این کد در هنگام ثبت‌نام، 2 امتیاز رایگان دریافت کنید و من هم 5 امتیاز دریافت می‌کنم!`,
+        title: "کد معرف",
+        url: referralLink, // For platforms that support URL sharing
+      });
+    } catch (error) {
+      console.error("Error sharing referral code:", error);
+    }
+  };
+
   if (!userProfile || !loggedInUser) {
     return (
       <View className="flex justify-center items-center p-8">
@@ -167,6 +184,67 @@ export function HelloPage() {
           </View>
         </View>
       </View>
+
+      {/* Referral Code Section */}
+      {referralStats && referralStats.referralCode && (
+        <View className="bg-background-light rounded-lg p-6 border border-gray-600">
+          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            کد معرف
+          </Text>
+          <View className="space-y-4">
+            <View className="bg-gray-800/50 rounded-lg p-4">
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-1 items-end mr-3">
+                  <Text className="text-2xl font-bold text-accent font-mono" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    {referralStats.referralCode}
+                  </Text>
+                </View>
+              </View>
+              <View className="flex-row items-center gap-3 mt-3">
+                <TouchableOpacity
+                  onPress={async () => {
+                    const copied = await copyToClipboard(referralStats.referralCode!);
+                    if (copied) {
+                      toast.success("کد معرف کپی شد!");
+                    } else {
+                      toast.error("خطا در کپی کردن کد");
+                    }
+                  }}
+                  activeOpacity={0.7}
+                  className="flex-1 flex-row items-center justify-center gap-2 px-4 py-2 bg-gray-700 rounded-lg"
+                >
+                  <Ionicons name="copy-outline" size={18} color="#fff" />
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    کپی
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => handleShareReferralCode(referralStats.referralCode!)}
+                  activeOpacity={0.7}
+                  className="flex-1 flex-row items-center justify-center gap-2 px-4 py-2 bg-accent rounded-lg"
+                >
+                  <Ionicons name="share-outline" size={18} color="#fff" />
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    اشتراک‌گذاری
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text className="text-gray-400 text-sm text-right mt-3" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                این کد را با دوستان خود به اشتراک بگذارید و از آنها دعوت کنید
+              </Text>
+            </View>
+            
+            {referralStats.referredCount > 0 && (
+              <View className="flex-row items-center justify-between pt-3 border-t border-gray-700">
+                <Text className="text-accent text-lg font-bold">
+                  {referralStats.referredCount.toLocaleString('fa-IR')}
+                </Text>
+                <Text className="font-medium text-gray-300 ml-3">کاربر معرفی شده:</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Daily Limits */}
       {dailyLimits && (

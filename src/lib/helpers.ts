@@ -59,12 +59,39 @@ export function generateId(prefix: string = ""): string {
 }
 
 /**
- * Copy text to clipboard
+ * Copy text to clipboard (cross-platform)
+ * Works on web (navigator.clipboard) and React Native (via Clipboard API)
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    // Check if we're on web
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    
+    // For React Native, we'll need to use a library or handle differently
+    // For now, fallback to a simple implementation
+    // Note: This works on web with react-native-web, but for native you'd need expo-clipboard
+    if (typeof navigator !== 'undefined' && (navigator as any).clipboard) {
+      await (navigator as any).clipboard.writeText(text);
+      return true;
+    }
+    
+    // Fallback: try to use document.execCommand for older browsers
+    if (typeof document !== 'undefined') {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return successful;
+    }
+    
+    return false;
   } catch (error) {
     console.error("Failed to copy to clipboard:", error);
     return false;

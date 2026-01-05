@@ -10,7 +10,12 @@ const applicationTables = {
     points: v.optional(v.number()),
     correctAnswersTotal: v.optional(v.number()),
     avatarId: v.optional(v.string()),
-  }).index("by_user", ["userId"]),
+    referralCode: v.optional(v.string()),
+    inviterId: v.optional(v.id("users")),
+    referredCount: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_referralCode", ["referralCode"]),
   
   categories: defineTable({
     persianName: v.string(),

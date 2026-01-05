@@ -1,8 +1,9 @@
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { DEFAULT_AVATAR_ID, isValidAvatarId, isPremiumAvatar, isFreeAvatar } from "../shared/avatarOptions";
+import { awardPoints } from "./utils";
 
 /**
  * Authentication and User Profile Management
@@ -11,6 +12,33 @@ import { DEFAULT_AVATAR_ID, isValidAvatarId, isPremiumAvatar, isFreeAvatar } fro
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [Password],
 });
+
+/**
+ * Helper function to generate unique referral code
+ */
+async function generateUniqueReferralCode(ctx: any): Promise<string> {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluding confusing characters (0, O, 1, I)
+  let code: string;
+  let exists = true;
+  
+  // Try generating codes until we find a unique one
+  while (exists) {
+    code = "";
+    for (let i = 0; i < 8; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    
+    // Check if code already exists
+    const existingProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_referralCode", (q: any) => q.eq("referralCode", code))
+      .first();
+    
+    exists = !!existingProfile;
+  }
+  
+  return code!;
+}
 
 export const loggedInUser = query({
   handler: async (ctx) => {
@@ -41,7 +69,11 @@ export const getUserProfile = query({
 });
 
 export const createProfile = mutation({
-  args: { name: v.string(), avatarId: v.optional(v.string()) },
+  args: { 
+    name: v.string(), 
+    avatarId: v.optional(v.string()),
+    referralCode: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -83,14 +115,115 @@ export const createProfile = mutation({
       }
     }
 
+    // Generate unique referral code for the new user
+    const referralCode = await generateUniqueReferralCode(ctx);
+
+    // Handle referral code if provided
+    let inviterId: any = undefined;
+    let initialPoints = 0;
+    
+    if (args.referralCode) {
+      const referralCodeUpper = args.referralCode.toUpperCase().trim();
+      // Find the user who owns this referral code
+      const inviterProfile = await ctx.db
+        .query("profiles")
+        .withIndex("by_referralCode", (q: any) => q.eq("referralCode", referralCodeUpper))
+        .first();
+      
+      if (inviterProfile && inviterProfile.userId !== userId) {
+        inviterId = inviterProfile.userId;
+        
+        // Increment the inviter's referredCount
+        await ctx.db.patch(inviterProfile._id, {
+          referredCount: (inviterProfile.referredCount ?? 0) + 1,
+        });
+        
+        // Award 5 points to the inviter
+        await awardPoints(ctx, inviterProfile.userId, 5);
+        
+        // Award 2 points to the invitee (new user)
+        initialPoints = 2;
+      }
+    }
+
     await ctx.db.insert("profiles", {
       userId,
       name: args.name,
       isAdmin: false,
-      points: 0,
+      points: initialPoints,
       correctAnswersTotal: 0,
       avatarId,
+      referralCode,
+      inviterId,
+      referredCount: 0,
     });
+  },
+});
+
+export const getMyReferralCode = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+    
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .unique();
+    
+    return profile?.referralCode ?? null;
+  },
+});
+
+export const validateReferralCode = query({
+  args: { referralCode: v.string() },
+  handler: async (ctx, args) => {
+    const referralCode = args.referralCode.toUpperCase().trim();
+    if (!referralCode) {
+      return { valid: false, message: "Referral code cannot be empty" };
+    }
+    
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_referralCode", (q: any) => q.eq("referralCode", referralCode))
+      .first();
+    
+    if (!profile) {
+      return { valid: false, message: "Invalid referral code" };
+    }
+    
+    // Check if user is trying to use their own referral code
+    const userId = await getAuthUserId(ctx);
+    if (userId && profile.userId === userId) {
+      return { valid: false, message: "You cannot use your own referral code" };
+    }
+    
+    return { valid: true };
+  },
+});
+
+export const getReferralStats = query({
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+    
+    const profile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q: any) => q.eq("userId", userId))
+      .unique();
+    
+    if (!profile) {
+      return null;
+    }
+    
+    return {
+      referralCode: profile.referralCode,
+      referredCount: profile.referredCount ?? 0,
+      hasInviter: !!profile.inviterId,
+    };
   },
 });
 
@@ -370,5 +503,46 @@ export const updateProfileName = mutation({
     await ctx.db.patch(profile._id, {
       name: trimmedName,
     });
+  },
+});
+
+/**
+ * Migration: Add referral codes to existing profiles that don't have them
+ * This should be run once to migrate existing users
+ * Can be run from the Convex dashboard (internalMutation for security)
+ */
+export const migrateReferralCodes = internalMutation({
+  handler: async (ctx) => {
+    // Get all profiles
+    const allProfiles = await ctx.db.query("profiles").collect();
+    
+    let migratedCount = 0;
+    let skippedCount = 0;
+    
+    for (const profile of allProfiles) {
+      // Skip if profile already has a referral code
+      if (profile.referralCode) {
+        skippedCount++;
+        continue;
+      }
+      
+      // Generate unique referral code
+      const referralCode = await generateUniqueReferralCode(ctx);
+      
+      // Update profile with referral code and set referredCount to 0 if not set
+      await ctx.db.patch(profile._id, {
+        referralCode,
+        referredCount: profile.referredCount ?? 0,
+      });
+      
+      migratedCount++;
+    }
+    
+    return {
+      success: true,
+      migratedCount,
+      skippedCount,
+      total: allProfiles.length,
+    };
   },
 });

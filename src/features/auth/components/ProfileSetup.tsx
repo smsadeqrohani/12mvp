@@ -1,12 +1,13 @@
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, SafeAreaView } from "react-native";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
 import { Avatar, KeyboardAvoidingContainer } from "../../../components/ui";
 import { AVATAR_OPTIONS, DEFAULT_AVATAR_ID, isFreeAvatar, isPremiumAvatar } from "../../../../shared/avatarOptions";
 import { Ionicons } from "@expo/vector-icons";
+import { getStorageItem, removeStorageItem } from "../../../lib/storage";
 
 export function ProfileSetup() {
   const createProfile = useMutation(api.auth.createProfile);
@@ -14,22 +15,44 @@ export function ProfileSetup() {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [selectedAvatarId, setSelectedAvatarId] = useState(DEFAULT_AVATAR_ID);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const router = useRouter();
   const isFormValid = name.trim().length > 0;
 
-  const handleSubmit = () => {
+  // Load referral code from storage on mount
+  useEffect(() => {
+    const loadReferralCode = async () => {
+      const code = await getStorageItem<string | null>("pending_referral_code", null);
+      if (code) {
+        setReferralCode(code);
+      }
+    };
+    loadReferralCode();
+  }, []);
+
+  const handleSubmit = async () => {
     setLoading(true);
 
-    createProfile({ name, avatarId: selectedAvatarId })
-      .then(() => {
-        toast.success("پروفایل ایجاد شد!");
-        router.replace("/");
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("نمی‌توان پروفایل ایجاد کرد");
-      })
-      .finally(() => setLoading(false));
+    try {
+      await createProfile({ 
+        name, 
+        avatarId: selectedAvatarId,
+        referralCode: referralCode || undefined,
+      });
+      
+      // Clear the referral code from storage after successful profile creation
+      if (referralCode) {
+        await removeStorageItem("pending_referral_code");
+      }
+      
+      toast.success("پروفایل ایجاد شد!");
+      router.replace("/");
+    } catch (error) {
+      console.error(error);
+      toast.error("نمی‌توان پروفایل ایجاد کرد");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

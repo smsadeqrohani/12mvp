@@ -1,10 +1,11 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useState, useEffect } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
 import { getCleanErrorMessage, copyToClipboard } from "../../../lib/helpers";
+import { generateTournamentJoinLink } from "../../../lib/referral";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar, Modal, TextInput } from "../../../components/ui";
 
@@ -14,6 +15,7 @@ interface TournamentLobbyProps {
 }
 
 export function TournamentLobby({ onTournamentStart, onTournamentFound }: TournamentLobbyProps) {
+  const { joinCode: urlJoinCode } = useLocalSearchParams<{ joinCode?: string }>();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreatingPrivate, setIsCreatingPrivate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,6 +35,14 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const myWaitingTournaments = useQuery(api.tournaments.getMyWaitingTournaments);
   const activeTournaments = useQuery(api.tournaments.getUserActiveTournaments);
   const categories = useQuery(api.questionCategories.getCategoriesWithCounts);
+  
+  // Handle URL join code - open join dialog if code is in URL
+  useEffect(() => {
+    if (urlJoinCode && urlJoinCode.length === 6) {
+      setJoinCodeInput(urlJoinCode.toUpperCase());
+      setShowJoinByCodeModal(true);
+    }
+  }, [urlJoinCode]);
   
   // Debounce join code input - only query when user stops typing for 500ms
   useEffect(() => {
@@ -116,9 +126,11 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
 
   const handleShareTournamentCode = async (joinCode: string) => {
     try {
+      const joinLink = generateTournamentJoinLink(joinCode);
       await Share.share({
-        message: `کد تورنومنت: ${joinCode}\n\nبرای پیوستن به تورنومنت این کد را در اپلیکیشن وارد کنید.`,
+        message: `کد تورنومنت: ${joinCode}\n\nلینک پیوستن: ${joinLink}\n\nبرای پیوستن به تورنومنت این کد را در اپلیکیشن وارد کنید یا روی لینک کلیک کنید.`,
         title: "کد تورنومنت",
+        url: joinLink, // For platforms that support URL sharing
       });
     } catch (error) {
       console.error("Error sharing tournament code:", error);

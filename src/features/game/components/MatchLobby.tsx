@@ -1,11 +1,12 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useState, useEffect, useMemo } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { Id } from "../../../../convex/_generated/dataModel";
 import { toast } from "../../../lib/toast";
 import { getCleanErrorMessage, copyToClipboard } from "../../../lib/helpers";
+import { generateMatchJoinLink } from "../../../lib/referral";
 import { Ionicons } from "@expo/vector-icons";
 import { Avatar, Modal, TextInput } from "../../../components/ui";
 
@@ -15,6 +16,7 @@ interface MatchLobbyProps {
 }
 
 export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
+  const { joinCode: urlJoinCode } = useLocalSearchParams<{ joinCode?: string }>();
   const [isCreating, setIsCreating] = useState(false);
   const [isCreatingPrivate, setIsCreatingPrivate] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -26,6 +28,14 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
   const [debouncedJoinCode, setDebouncedJoinCode] = useState("");
   const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const router = useRouter();
+  
+  // Handle URL join code - open join dialog if code is in URL
+  useEffect(() => {
+    if (urlJoinCode && urlJoinCode.length === 6) {
+      setJoinCodeInput(urlJoinCode.toUpperCase());
+      setShowJoinByCodeModal(true);
+    }
+  }, [urlJoinCode]);
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const waitingMatches = useQuery(api.matches.getWaitingMatches);
@@ -106,9 +116,11 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
 
   const handleShareMatchCode = async (joinCode: string) => {
     try {
+      const joinLink = generateMatchJoinLink(joinCode);
       await Share.share({
-        message: `کد بازی: ${joinCode}\n\nبرای پیوستن به بازی این کد را در اپلیکیشن وارد کنید.`,
+        message: `کد بازی: ${joinCode}\n\nلینک پیوستن: ${joinLink}\n\nبرای پیوستن به بازی این کد را در اپلیکیشن وارد کنید یا روی لینک کلیک کنید.`,
         title: "کد بازی",
+        url: joinLink, // For platforms that support URL sharing
       });
     } catch (error) {
       console.error("Error sharing match code:", error);

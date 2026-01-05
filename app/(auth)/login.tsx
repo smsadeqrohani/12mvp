@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
 import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { SignInForm, SignUpForm } from "../../src/features/auth";
 import { api } from "../../convex/_generated/api";
 
 export default function LoginScreen() {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const { referralCode: urlReferralCode, mode } = useLocalSearchParams<{ 
+    referralCode?: string; 
+    mode?: string;
+  }>();
+  const [isSignUp, setIsSignUp] = useState(mode === 'signup');
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
@@ -44,7 +48,11 @@ export default function LoginScreen() {
 
           {/* Form Container */}
           <View className="bg-background-light rounded-2xl p-6 border border-gray-700 shadow-lg">
-            {isSignUp ? <SignUpForm /> : <SignInForm />}
+            {isSignUp ? (
+              <SignUpForm initialReferralCode={urlReferralCode} />
+            ) : (
+              <SignInForm />
+            )}
           </View>
           
           {/* Toggle Form */}
