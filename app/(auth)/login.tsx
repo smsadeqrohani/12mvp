@@ -1,84 +1,158 @@
 import { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  ImageBackground,
+  Dimensions,
+} from "react-native";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useQuery } from "convex/react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SignInForm, SignUpForm } from "../../src/features/auth";
 import { api } from "../../convex/_generated/api";
 
+// YekDo login design - Figma node 320-605
+// width: 390px, height: 844px
+// background: var(--blue-blue-900, #07193D)
+
 export default function LoginScreen() {
-  const { referralCode: urlReferralCode, mode } = useLocalSearchParams<{ 
-    referralCode?: string; 
+  const { referralCode: urlReferralCode, mode } = useLocalSearchParams<{
+    referralCode?: string;
     mode?: string;
   }>();
-  const [isSignUp, setIsSignUp] = useState(mode === 'signup');
+  const [isSignUp, setIsSignUp] = useState(mode === "signup");
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
   const userProfile = useQuery(api.auth.getUserProfile);
 
-  // Handle authentication and profile setup
   useEffect(() => {
     if (loggedInUser && userProfile === null) {
-      // User is logged in but no profile exists, redirect to profile setup
       router.replace("/(auth)/profile-setup");
     } else if (loggedInUser && userProfile) {
-      // User is logged in and has profile, redirect to main app
       router.replace("/(tabs)");
     }
   }, [loggedInUser, userProfile, router]);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
-      <ScrollView 
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}
-      >
-        <View className="max-w-md w-full mx-auto">
-          {/* Header */}
-          <View className="items-center mb-10">
-            <View className="bg-accent/20 rounded-full p-6 mb-6">
-              <Text className="text-5xl">🏆</Text>
-            </View>
-            <Text className="text-4xl font-bold text-accent mb-3 text-center">
-              به 12 MVP خوش آمدید
+    <ImageBackground
+      source={require("../../assets/login-background.png")}
+      style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={{ flex: 1, width: "100%" }}>
+        <ScrollView
+          style={{ flex: 1, width: "100%" }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 24,
+            paddingVertical: 24,
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: SCREEN_HEIGHT - 48,
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Login card - centered vertically and horizontally */}
+          <View
+            style={{
+              width: "100%",
+              maxWidth: 400,
+              backgroundColor: "rgba(15, 35, 80, 0.75)",
+              borderRadius: 24,
+              paddingHorizontal: 24,
+              paddingTop: 32,
+              paddingBottom: 28,
+              borderWidth: 1,
+              borderColor: "rgba(148, 163, 184, 0.12)",
+              alignSelf: "center",
+            }}
+          >
+            {/* Welcome message */}
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: "700",
+                color: "#ffffff",
+                textAlign: "center",
+                marginBottom: 8,
+              }}
+            >
+              {isSignUp ? "باشگاه جدید بسازید" : "به یک دو خوش آمدید!"}
             </Text>
-            <Text className="text-lg text-gray-300 text-center">
-              {isSignUp ? "حساب کاربری خود را ایجاد کنید" : "برای ادامه وارد شوید"}
+            <Text
+              style={{
+                fontSize: 15,
+                color: "#9ca3af",
+                textAlign: "center",
+                marginBottom: 28,
+              }}
+            >
+              {isSignUp
+                ? "حساب کاربری خود را ایجاد کنید"
+                : "برای رفتن به باشگاه وارد شوید"}
             </Text>
-          </View>
 
-          {/* Form Container */}
-          <View className="bg-background-light rounded-2xl p-6 border border-gray-700 shadow-lg">
+            {/* Form */}
             {isSignUp ? (
               <SignUpForm initialReferralCode={urlReferralCode} />
             ) : (
               <SignInForm />
             )}
-          </View>
-          
-          {/* Toggle Form */}
-          <View className="items-center mt-6">
-            <TouchableOpacity 
-              onPress={() => setIsSignUp(!isSignUp)}
-              className="py-3 px-6 rounded-lg bg-background-light border border-gray-700"
-            >
-              <Text className="text-accent font-semibold">
-                {isSignUp 
-                  ? "قبلاً حساب دارید؟ وارد شوید" 
-                  : "حساب ندارید؟ ثبت نام کنید"
-                }
-              </Text>
-            </TouchableOpacity>
+
+            {/* Secondary toggle link */}
+            <View className="items-center mt-5">
+              <TouchableOpacity
+                onPress={() => setIsSignUp(!isSignUp)}
+                className="py-2 px-4"
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: "#9ca3af",
+                    textAlign: "center",
+                  }}
+                >
+                  {isSignUp ? (
+                    <>
+                      <Text>قبلاً حساب دارید؟ </Text>
+                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                        وارد شوید
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text>حساب کاربری ندارید؟ </Text>
+                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                        ساخت باشگاه جدید
+                      </Text>
+                    </>
+                  )}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          {/* Footer */}
-          <View className="items-center mt-8">
-            <Text className="text-gray-400 text-sm text-center">
+          {/* Footer - terms */}
+          <View className="items-center mt-6 pt-4">
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#9ca3af",
+                textAlign: "center",
+                lineHeight: 20,
+              }}
+            >
               با ورود به برنامه، شرایط و قوانین را می‌پذیرید
             </Text>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
-

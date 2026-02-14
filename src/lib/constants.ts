@@ -94,6 +94,12 @@ export const COLORS = {
   BACKGROUND_LIGHT: '#0a2840',
   ACCENT: '#ff701a',
   ACCENT_HOVER: '#e55a00',
+  // YekDo login design
+  LOGIN_BACKGROUND: '#07193D', // blue-blue-900
+  LOGIN_BUTTON: '#3B82F6',
+  LOGIN_BUTTON_HOVER: '#2563EB',
+  FORM_CARD: 'rgba(15, 35, 80, 0.95)',
+  INPUT_FIELD: 'rgba(30, 58, 110, 0.8)',
 } as const;
 
 // Screen Breakpoints (matches Tailwind)

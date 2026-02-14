@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { View, I18nManager, Text, TextInput, Platform } from "react-native";
 import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
@@ -10,7 +10,7 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from "../convex/_generated/api";
 import { toastConfig } from "../src/lib/toast";
-import { ErrorBoundary } from "../src/components/ui";
+import { ErrorBoundary, SplashScreen as AppSplashScreen } from "../src/components/ui";
 import "../global.css";
 
 // Initialize Convex client
@@ -67,8 +67,8 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (loggedInUser === null && !inAuthGroup) {
-      // Redirect to login if not authenticated
-      router.replace("/(auth)/login");
+      // Redirect to onboarding first (logged-out users)
+      router.replace("/(auth)/onboarding");
     } else if (loggedInUser !== null && inAuthGroup) {
       // Check if user needs profile setup
       if (userProfile === null && segments[1] !== "profile-setup") {
@@ -77,7 +77,7 @@ function RootLayoutNav() {
       } else if (userProfile && segments[1] === "profile-setup") {
         // User has profile but is on profile setup page, redirect to main app
         router.replace("/(tabs)");
-      } else if (userProfile && segments[1] === "login") {
+      } else if (userProfile && (segments[1] === "login" || segments[1] === "onboarding")) {
         // User has profile but is on login page, redirect to main app
         router.replace("/(tabs)");
       }
@@ -99,11 +99,27 @@ export default function RootLayout() {
     "Vazirmatn-Bold": require("../assets/fonts/Vazirmatn-Bold.ttf"),
   });
 
+  const [appReady, setAppReady] = useState(false);
+  const [splashStartTime] = useState(() => Date.now());
+
+  // Hide native splash when showing custom splash
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    void SplashScreen.hideAsync();
+  }, []);
+
+  // Minimum 2 second splash duration, then show app when fonts ready
+  useEffect(() => {
+    if (!fontsLoaded && !fontError) return;
+
+    const elapsed = Date.now() - splashStartTime;
+    const remaining = Math.max(0, 2000 - elapsed);
+
+    const timer = setTimeout(() => {
+      setAppReady(true);
+    }, remaining);
+
+    return () => clearTimeout(timer);
+  }, [fontsLoaded, fontError, splashStartTime]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -126,23 +142,58 @@ export default function RootLayout() {
     };
   }, []);
 
-  if (!fontsLoaded && !fontError) {
-    return null;
+  // Mobile viewport width for web (shared by splash and app)
+  const MOBILE_VIEWPORT_WIDTH = 430;
+
+  const mobileViewportWrapper = (child: React.ReactNode) =>
+    Platform.OS === "web" ? (
+      <View
+        style={{
+          flex: 1,
+          minHeight: "100vh",
+          backgroundColor: "#e5e7eb",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        }}
+      >
+        <View
+          style={{
+            width: MOBILE_VIEWPORT_WIDTH,
+            maxWidth: "100%",
+            minHeight: "100vh",
+            flex: 1,
+            backgroundColor: "#06202F",
+            direction: "rtl",
+          }}
+        >
+          {child}
+        </View>
+      </View>
+    ) : (
+      child
+    );
+
+  if (!appReady) {
+    return mobileViewportWrapper(<AppSplashScreen />);
   }
+
+  const appContent = (
+    <View 
+      className="flex-1 bg-background" 
+      style={Platform.OS !== 'web' ? { direction: 'rtl' } : undefined}
+    >
+      <RootLayoutNav />
+      <Toast config={toastConfig} />
+    </View>
+  );
+
+  const content = mobileViewportWrapper(appContent);
 
   return (
     <AppThemeProvider>
       <ConvexProvider client={convex}>
         <ConvexAuthProvider client={convex} storage={AsyncStorage}>
-          <SafeAreaProvider>
-            <View 
-              className="flex-1 bg-background" 
-              style={Platform.OS !== 'web' ? { direction: 'rtl' } : undefined}
-            >
-              <RootLayoutNav />
-              <Toast config={toastConfig} />
-            </View>
-          </SafeAreaProvider>
+          <SafeAreaProvider>{content}</SafeAreaProvider>
         </ConvexAuthProvider>
       </ConvexProvider>
     </AppThemeProvider>

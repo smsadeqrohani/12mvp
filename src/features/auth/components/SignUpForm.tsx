@@ -1,4 +1,11 @@
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState, useEffect } from "react";
 import { toast } from "../../../lib/toast";
@@ -94,52 +101,45 @@ export function SignUpForm({ initialReferralCode }: SignUpFormProps = {} as Sign
   return (
     <View className="w-full">
       <View className="flex flex-col gap-4">
-        {/* Email Field */}
+        {/* Email Field - YekDo design */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">ایمیل</Text>
+          <Text style={authStyles.label}>ایمیل</Text>
           <TextInput
+            style={authStyles.input}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
-            placeholder="example@email.com"
-            placeholderTextColor="#6b7280"
-            className="auth-input-field"
+            placeholder="ایمیل خود را وارد کنید"
+            placeholderTextColor="#9ca3af"
             editable={!loading}
             autoCapitalize="none"
           />
         </View>
 
-        {/* Password Requirements Info */}
-        <View className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-          <Text className="text-blue-400 text-sm font-semibold mb-2">معیارهای رمز عبور:</Text>
+        {/* Password Requirements Info - YekDo blue theme */}
+        <View style={authStyles.requirementsBox}>
+          <Text style={authStyles.requirementsTitle}>معیارهای رمز عبور:</Text>
           <View className="space-y-1">
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-blue-400">•</Text>
-              <Text className="text-blue-300 text-sm">حداقل ۸ کاراکتر</Text>
-            </View>
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-blue-400">•</Text>
-              <Text className="text-blue-300 text-sm">یک حرف بزرگ انگلیسی</Text>
-            </View>
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-blue-400">•</Text>
-              <Text className="text-blue-300 text-sm">یک حرف کوچک انگلیسی</Text>
-            </View>
-            <View className="flex-row items-center gap-2 mb-1">
-              <Text className="text-blue-400">•</Text>
-              <Text className="text-blue-300 text-sm">یک عدد</Text>
-            </View>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-blue-400">•</Text>
-              <Text className="text-blue-300 text-sm">یک کاراکتر ویژه (!@#$%^&*...)</Text>
-            </View>
+            {[
+              "حداقل ۸ کاراکتر",
+              "یک حرف بزرگ انگلیسی",
+              "یک حرف کوچک انگلیسی",
+              "یک عدد",
+              "یک کاراکتر ویژه (!@#$%^&*...)",
+            ].map((item, i) => (
+              <View key={i} className="flex-row items-center gap-2 mb-1">
+                <Text style={authStyles.requirementsBullet}>•</Text>
+                <Text style={authStyles.requirementsText}>{item}</Text>
+              </View>
+            ))}
           </View>
         </View>
 
         {/* Password Field */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">رمز عبور</Text>
+          <Text style={authStyles.label}>رمز عبور</Text>
           <TextInput
+            style={authStyles.input}
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -152,15 +152,16 @@ export function SignUpForm({ initialReferralCode }: SignUpFormProps = {} as Sign
             }}
             secureTextEntry
             placeholder="رمز عبور خود را وارد کنید"
-            placeholderTextColor="#6b7280"
-            className="auth-input-field"
+            placeholderTextColor="#9ca3af"
             editable={!loading}
           />
         </View>
 
         {passwordErrors.length > 0 && (
           <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-            <Text className="text-red-400 text-sm font-semibold mb-2">رمز عبور باید شامل موارد زیر باشد:</Text>
+            <Text className="text-red-400 text-sm font-semibold mb-2">
+              رمز عبور باید شامل موارد زیر باشد:
+            </Text>
             <View className="space-y-1">
               {passwordErrors.map((error, index) => (
                 <View key={index} className="flex-row items-center gap-2 mb-1">
@@ -174,47 +175,102 @@ export function SignUpForm({ initialReferralCode }: SignUpFormProps = {} as Sign
 
         {/* Confirm Password Field */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">تأیید رمز عبور</Text>
+          <Text style={authStyles.label}>تأیید رمز عبور</Text>
           <TextInput
+            style={authStyles.input}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
             placeholder="رمز عبور را دوباره وارد کنید"
-            placeholderTextColor="#6b7280"
-            className="auth-input-field"
+            placeholderTextColor="#9ca3af"
             editable={!loading}
           />
         </View>
 
-        {/* Referral Code Field (Optional) */}
+        {/* Referral Code Field */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">کد معرف (اختیاری)</Text>
+          <Text style={authStyles.label}>کد معرف (اختیاری)</Text>
           <TextInput
+            style={authStyles.input}
             value={referralCode}
             onChangeText={(text) => setReferralCode(text.toUpperCase().trim())}
             placeholder="کد معرف را وارد کنید"
-            placeholderTextColor="#6b7280"
-            className="auth-input-field"
+            placeholderTextColor="#9ca3af"
             editable={!loading}
             autoCapitalize="characters"
             maxLength={8}
           />
-          <Text className="text-gray-500 text-xs mt-1 text-right">
-            اگر کد معرف دارید، آن را وارد کنید
-          </Text>
+          <Text style={authStyles.helperText}>اگر کد معرف دارید، آن را وارد کنید</Text>
         </View>
 
-        <TouchableOpacity onPress={handleSubmit} className="auth-button mt-2" disabled={loading}>
+        <TouchableOpacity
+          style={[authStyles.button, loading && authStyles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
           {loading ? (
             <View className="flex-row items-center justify-center gap-2">
               <ActivityIndicator size="small" color="#fff" />
-              <Text className="text-white font-semibold text-base">در حال ایجاد حساب...</Text>
+              <Text style={authStyles.buttonText}>در حال ایجاد حساب...</Text>
             </View>
           ) : (
-            <Text className="text-white font-semibold text-base">ثبت نام</Text>
+            <Text style={authStyles.buttonText}>ثبت نام</Text>
           )}
         </TouchableOpacity>
       </View>
     </View>
   );
 }
+
+// YekDo login design - Figma node 320-605
+const authStyles = StyleSheet.create({
+  label: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "rgba(30, 58, 110, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(148, 163, 184, 0.2)",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    color: "#ffffff",
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  buttonDisabled: { opacity: 0.7 },
+  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  requirementsBox: {
+    backgroundColor: "rgba(30, 58, 110, 0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(59, 130, 246, 0.3)",
+    borderRadius: 12,
+    padding: 12,
+  },
+  requirementsTitle: {
+    color: "#93c5fd",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  requirementsBullet: { color: "#93c5fd" },
+  requirementsText: { color: "#bfdbfe", fontSize: 14 },
+  helperText: {
+    color: "#9ca3af",
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "right",
+  },
+});

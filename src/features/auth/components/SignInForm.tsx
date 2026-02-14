@@ -1,5 +1,12 @@
 "use client";
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "../../../lib/toast";
@@ -79,14 +86,14 @@ export function SignInForm() {
   return (
     <KeyboardAvoidingContainer className="w-full">
       <View className="flex flex-col gap-4">
-        {/* Email Field */}
+        {/* Email Field - YekDo design */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">ایمیل</Text>
+          <Text style={styles.label}>ایمیل</Text>
           <TextInput
-            className="auth-input-field"
+            style={styles.input}
             keyboardType="email-address"
-            placeholder="example@email.com"
-            placeholderTextColor="#6b7280"
+            placeholder="ایمیل خود را وارد کنید"
+            placeholderTextColor="#9ca3af"
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -96,12 +103,12 @@ export function SignInForm() {
 
         {/* Password Field */}
         <View>
-          <Text className="text-gray-300 mb-2 font-medium">رمز عبور</Text>
+          <Text style={styles.label}>رمز عبور</Text>
           <TextInput
-            className="auth-input-field"
+            style={styles.input}
             secureTextEntry
-            placeholder="رمز عبور خود را وارد کنید"
-            placeholderTextColor="#6b7280"
+            placeholder="رمز عبور را وارد کنید"
+            placeholderTextColor="#9ca3af"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -118,7 +125,9 @@ export function SignInForm() {
 
         {flow === "signUp" && passwordErrors.length > 0 && (
           <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-            <Text className="text-red-400 text-sm font-semibold mb-2">رمز عبور باید شامل موارد زیر باشد:</Text>
+            <Text className="text-red-400 text-sm font-semibold mb-2">
+              رمز عبور باید شامل موارد زیر باشد:
+            </Text>
             <View className="space-y-1">
               {passwordErrors.map((error, index) => (
                 <View key={index} className="flex-row items-center gap-2 mb-1">
@@ -130,18 +139,19 @@ export function SignInForm() {
           </View>
         )}
 
-        <TouchableOpacity 
-          className="auth-button mt-2" 
-          onPress={handleSubmit} 
+        <TouchableOpacity
+          style={[styles.button, submitting && styles.buttonDisabled]}
+          onPress={handleSubmit}
           disabled={submitting}
+          activeOpacity={0.8}
         >
           {submitting ? (
             <View className="flex-row items-center justify-center gap-2">
               <ActivityIndicator size="small" color="#fff" />
-              <Text className="text-white font-semibold text-base">در حال پردازش...</Text>
+              <Text style={styles.buttonText}>در حال پردازش...</Text>
             </View>
           ) : (
-            <Text className="text-white font-semibold text-base">
+            <Text style={styles.buttonText}>
               {flow === "signIn" ? "ورود" : "ثبت نام"}
             </Text>
           )}
@@ -150,3 +160,40 @@ export function SignInForm() {
     </KeyboardAvoidingContainer>
   );
 }
+
+// YekDo login design - Figma node 320-605
+const styles = StyleSheet.create({
+  label: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "500",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "rgba(30, 58, 110, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(148, 163, 184, 0.2)",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    color: "#ffffff",
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
