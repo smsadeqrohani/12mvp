@@ -50,6 +50,28 @@ border-gray-600        /* Medium borders */
 border-accent          /* Orange borders */
 ```
 
+### YekDo Color Guide (`src/lib/colors.ts`)
+
+For programmatic access to the full YekDo palette, import from `src/lib/colors`:
+
+```ts
+import { COLORS } from "../src/lib/colors";
+
+// Blue palette - backgrounds, inactive tabs
+COLORS.blue[900]  // #07193D - navbar, login background
+COLORS.blue[300]  // #5C92FF - inactive tab icons
+
+// Yellow palette - active tab, accents
+COLORS.yellow[400]  // #FF7B14 - active tab, CTAs
+
+// Navbar specific
+COLORS.navbar.background  // #07193D
+COLORS.navbar.active      // #FF7B14 (gold)
+COLORS.navbar.inactive    // #5C92FF (light blue)
+```
+
+Tailwind classes: `yekdo-blue-900`, `yekdo-yellow-400`, `yekdo-navbar-bg`, etc.
+
 ### Usage Guidelines
 
 **Background Colors:**

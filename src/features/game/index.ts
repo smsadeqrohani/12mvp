@@ -5,4 +5,5 @@ export { MatchResults } from './components/MatchResults';
 export { MatchHistory } from './components/MatchHistory';
 export { HelloPage } from './components/HelloPage';
 export { TournamentLobby } from './components/TournamentLobby';
+export { Leaderboard } from './components/Leaderboard';
 

@@ -1,4 +1,5 @@
 import { View, Text, ActivityIndicator, TouchableOpacity, TextInput, Share } from "react-native";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -13,9 +14,9 @@ import { Ionicons } from "@expo/vector-icons";
 const MODAL_DESCRIPTION = "یکی از آواتارهای از پیش بارگذاری‌شده را انتخاب کنید. آواتار شما بلافاصله در تمامی بخش‌های بازی به‌روزرسانی می‌شود.";
 
 export function HelloPage() {
+  const router = useRouter();
   const userProfile = useQuery(api.auth.getUserProfile);
   const loggedInUser = useQuery(api.auth.loggedInUser);
-  const topUsers = useQuery(api.auth.getTopUsers, { limit: 5 });
   const dailyLimits = useQuery(api.matches.getDailyLimits);
   const userPurchases = useQuery(api.store.getUserPurchases);
   const storeItems = useQuery(api.store.getStoreItems);
@@ -417,63 +418,17 @@ export function HelloPage() {
         );
       })()}
 
-      {/* Leaderboard */}
-      <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-        <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-          🏆 جدول برترین‌ها
+      {/* Leaderboard link */}
+      <TouchableOpacity
+        onPress={() => router.push("/(tabs)/leaderboard")}
+        activeOpacity={0.7}
+        className="bg-background-light rounded-lg p-4 border border-gray-600 flex-row items-center justify-between"
+      >
+        <Text className="text-accent font-semibold" style={{ fontFamily: "Vazirmatn-SemiBold" }}>
+          مشاهده جدول برترین‌ها
         </Text>
-        {topUsers === undefined ? (
-          <View className="flex items-center justify-center py-8">
-            <ActivityIndicator size="small" color="#ff701a" />
-          </View>
-        ) : topUsers.length === 0 ? (
-          <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
-            هنوز کاربری با پاسخ درست وجود ندارد
-          </Text>
-        ) : (
-          <View className="space-y-3">
-            {topUsers.map((user, index) => (
-              <View
-                key={user.rank}
-                className={`flex-row items-center justify-between p-3 rounded-lg border ${
-                  index === 0
-                    ? "bg-accent/20 border-accent/50"
-                    : index === 1
-                    ? "bg-yellow-900/20 border-yellow-800/50"
-                    : index === 2
-                    ? "bg-orange-900/20 border-orange-800/50"
-                    : "bg-background border-gray-700"
-                }`}
-              >
-                <View className="flex-row items-center gap-3 flex-1">
-                  <Avatar avatarId={user.avatarId} size="sm" highlighted={index === 0} />
-                  <View className={`w-8 h-8 rounded-full items-center justify-center ${
-                    index === 0
-                      ? "bg-accent"
-                      : index === 1
-                      ? "bg-yellow-600"
-                      : index === 2
-                      ? "bg-orange-600"
-                      : "bg-gray-600"
-                  }`}>
-                    <Text className="text-white font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                      {user.rank}
-                    </Text>
-                  </View>
-                  <Text className="text-white font-medium flex-1 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
-                    {user.name}
-                  </Text>
-                </View>
-                <View className="bg-accent/20 rounded-lg px-3 py-1 border border-accent/30">
-                  <Text className="text-accent font-bold" style={{ fontFamily: 'Vazirmatn-Bold' }}>
-                    {user.correctAnswers.toLocaleString('fa-IR')}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+        <Ionicons name="trophy" size={24} color="#ff701a" />
+      </TouchableOpacity>
 
       <View className="bg-accent/20 rounded-lg p-6 border border-accent/30">
         <Text className="text-lg font-semibold text-accent mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>🎉 همه چیز آماده است!</Text>

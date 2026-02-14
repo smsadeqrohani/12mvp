@@ -1,13 +1,17 @@
 import { Tabs } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Crown, Trophy, Gamepad2, ShoppingBag, Shirt } from "lucide-react-native";
 import { toast } from "../../src/lib/toast";
+import { COLORS } from "../../src/lib/colors";
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const userProfile = useQuery(api.auth.getUserProfile);
   const router = useRouter();
   const { signOut } = useAuthActions();
@@ -25,42 +29,60 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      initialRouteName="leaderboard"
       screenOptions={{
         headerStyle: {
-          backgroundColor: "#0a2840",
+          backgroundColor: COLORS.blue[900],
         },
-        headerTintColor: "#ff701a",
+        headerTintColor: COLORS.yellow[400],
         headerTitleStyle: {
           fontFamily: "Vazirmatn-Bold",
           fontSize: 20,
         },
         headerTitleAlign: "center",
         tabBarStyle: {
-          backgroundColor: "#0a2840",
-          borderTopColor: "#374151",
+          backgroundColor: COLORS.navbar.background,
+          borderTopColor: "rgba(148, 163, 184, 0.2)",
           direction: "rtl",
+          paddingBottom: insets.bottom || 16,
+          height: 64 + (insets.bottom || 16),
         },
-        tabBarActiveTintColor: "#ff701a",
-        tabBarInactiveTintColor: "#9ca3af",
         tabBarLabelStyle: {
           fontFamily: "Vazirmatn-SemiBold",
           fontSize: 12,
+          marginBottom: 4,
         },
+        tabBarActiveTintColor: COLORS.navbar.active,
+        tabBarInactiveTintColor: COLORS.navbar.inactive,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "داشبورد",
+          title: "باشگاه",
+          tabBarIcon: ({ color, size }) => (
+            <Shirt size={size} color={color} strokeWidth={2} />
+          ),
           headerRight: () => (
             <View className="flex-row items-center gap-3 mr-4">
               {userProfile?.isAdmin && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   onPress={() => router.push("/admin")}
                   className="flex-row items-center gap-2"
                 >
-                  <Ionicons name="chevron-forward-outline" size={16} color="#ff701a" />
-                  <Text className="text-accent font-semibold">پنل مدیریت</Text>
+                  <Ionicons
+                    name="chevron-forward-outline"
+                    size={16}
+                    color={COLORS.yellow[400]}
+                  />
+                  <Text
+                    style={{
+                      color: COLORS.yellow[400],
+                      fontFamily: "Vazirmatn-SemiBold",
+                    }}
+                  >
+                    پنل مدیریت
+                  </Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={handleSignOut}>
@@ -71,44 +93,62 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="store"
+        options={{
+          title: "فروشگاه",
+          tabBarIcon: ({ color, size }) => (
+            <ShoppingBag size={size} color={color} strokeWidth={2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="new-match"
         options={{
-          title: "مسابقه جدید",
+          title: "بازی",
+          tabBarIcon: ({ color, size }) => (
+            <Gamepad2 size={size} color={color} strokeWidth={2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="tournaments"
+        options={{
+          title: "جام",
+          tabBarIcon: ({ color, size }) => (
+            <Trophy size={size} color={color} strokeWidth={2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: "جدول",
+          tabBarIcon: ({ color, size }) => (
+            <Crown size={size} color={color} strokeWidth={2} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
           title: "تاریخچه",
-        }}
-      />
-      <Tabs.Screen
-        name="tournaments"
-        options={{
-          title: "تورنومنت‌ها",
-        }}
-      />
-      <Tabs.Screen
-        name="store"
-        options={{
-          title: "فروشگاه",
+          href: null,
         }}
       />
       <Tabs.Screen
         name="play"
         options={{
           title: "بازی",
-          href: null, // Hide from tab bar
+          href: null,
         }}
       />
       <Tabs.Screen
         name="results/[id]"
         options={{
           title: "نتایج",
-          href: null, // Hide from tab bar
+          href: null,
         }}
       />
     </Tabs>
   );
 }
-

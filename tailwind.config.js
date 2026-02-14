@@ -37,11 +37,38 @@ module.exports = {
           light: "#0a2840",
         },
         // YekDo login design (Figma node 320-605)
-        "blue-900": "#07193D", // var(--blue-blue-900) - login background
-        "blue-accent": "#3B82F6", // bright blue for login button
-        "blue-accent-hover": "#2563EB",
-        "form-card": "rgba(15, 35, 80, 0.95)", // dark blue semi-transparent form
-        "input-field": "rgba(30, 58, 110, 0.8)", // dark blue inputs
+        "blue-900": "#07193D",
+        "blue-accent": "#3B82F6",
+        "form-card": "rgba(15, 35, 80, 0.95)",
+        "input-field": "rgba(30, 58, 110, 0.8)",
+        // YekDo color guide - full palette
+        "yekdo-blue": {
+          900: "#07193D",
+          800: "#00297A",
+          700: "#0036A3",
+          600: "#0044CC",
+          500: "#0055FE",
+          400: "#3377FF",
+          300: "#5C92FF",
+          200: "#7FA6F5",
+          100: "#C2D6FF",
+        },
+        "yekdo-yellow": {
+          900: "#AD4B00",
+          800: "#C25400",
+          700: "#D65D00",
+          600: "#EB6600",
+          500: "#FF6F00",
+          400: "#FF7B14",
+          300: "#FF923D",
+          200: "#FFA966",
+          100: "#FFC08F",
+        },
+        "yekdo-navbar": {
+          bg: "#07193D",
+          active: "#FF7B14",
+          inactive: "#5C92FF",
+        },
       },
       borderRadius: {
         DEFAULT: "8px",

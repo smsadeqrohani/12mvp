@@ -14,7 +14,7 @@ export default function HistoryScreen() {
   // Authentication guard
   useEffect(() => {
     if (loggedInUser === null) {
-      router.replace("/(auth)/login");
+      router.replace("/(auth)/onboarding");
     }
   }, [loggedInUser, router]);
 
