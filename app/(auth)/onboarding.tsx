@@ -22,7 +22,7 @@ export default function OnboardingScreen() {
       >
         {/* CTA Button - Figma design: height 64px, yellow-500, 3D shadow */}
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/login?mode=signup")}
+          onPress={() => router.push("/(auth)/login")}
           activeOpacity={0.85}
           style={{
             height: 64,
