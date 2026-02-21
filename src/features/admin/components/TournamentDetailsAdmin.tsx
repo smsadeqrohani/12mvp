@@ -76,10 +76,10 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
               <Ionicons name="trophy" size={24} color="#a78bfa" />
             </View>
             <View>
-              <Text className="text-2xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white" style={{ fontFamily: 'Meem-Bold' }}>
                 جزئیات تورنومنت
               </Text>
-              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                 {tournamentId.slice(-12)}
               </Text>
             </View>
@@ -88,17 +88,17 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
 
         {/* Tournament Info */}
         <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 mb-4">
-          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
             اطلاعات تورنومنت
           </Text>
 
           {/* Status */}
           <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-gray-700/30">
-            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
               وضعیت
             </Text>
             <View className={`px-3 py-1 rounded-full ${getStatusColor(tournament.status)}`}>
-              <Text className={`text-sm font-semibold`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className={`text-sm font-semibold`} style={{ fontFamily: 'Meem-SemiBold' }}>
                 {getStatusText(tournament.status)}
               </Text>
             </View>
@@ -106,12 +106,12 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
 
           {/* Creator */}
           <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-gray-700/30">
-            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
               سازنده
             </Text>
             <View className="flex-row items-center gap-2">
               <Avatar avatarId={creator?.avatarId} size="sm" highlighted />
-              <Text className="text-white" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white" style={{ fontFamily: 'Meem-SemiBold' }}>
                 {creator?.name || "ناشناس"}
               </Text>
             </View>
@@ -119,20 +119,20 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
 
           {/* Participants Count */}
           <View className="flex-row items-center justify-between mb-4 pb-4 border-b border-gray-700/30">
-            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
               شرکت‌کنندگان
             </Text>
-            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               {participants.length} / 4
             </Text>
           </View>
 
           {/* Created Date */}
           <View className="flex-row items-center justify-between">
-            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
               تاریخ ایجاد
             </Text>
-            <Text className="text-white" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-white" style={{ fontFamily: 'Meem-Regular' }}>
               {new Date(tournament.createdAt).toLocaleDateString('fa-IR', {
                 year: 'numeric',
                 month: 'long',
@@ -144,7 +144,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
 
         {/* Participants */}
         <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 mb-4">
-          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
             شرکت‌کنندگان
           </Text>
           <View className="space-y-3">
@@ -155,16 +155,16 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
               >
                 <View className="flex-row items-center gap-3">
                   <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-                    <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Meem-Bold' }}>
                       {index + 1}
                     </Text>
                   </View>
                   <Avatar avatarId={p.profile?.avatarId} size="sm" />
-                  <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-medium" style={{ fontFamily: 'Meem-SemiBold' }}>
                     {p.profile?.name || "ناشناس"}
                   </Text>
                 </View>
-                <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                   {new Date(p.joinedAt).toLocaleDateString('fa-IR')}
                 </Text>
               </View>
@@ -174,7 +174,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
 
         {/* Matches */}
         <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 mb-4">
-          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+          <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
             مسابقات ({matches.length})
           </Text>
           {matches.length > 0 ? (
@@ -187,7 +187,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                       <View className="w-8 h-8 bg-purple-600/20 rounded-lg items-center justify-center">
                         <Ionicons name="trophy" size={16} color="#a78bfa" />
                       </View>
-                      <Text className="text-purple-400 font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      <Text className="text-purple-400 font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                         {getRoundText(tm.round)}
                       </Text>
                     </View>
@@ -199,7 +199,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                           ? "bg-blue-600/20 border border-blue-500/30"
                           : "bg-yellow-600/20 border border-yellow-500/30"
                       }`}>
-                        <Text className="text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        <Text className="text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                           {tm.match.status === "completed" ? "تکمیل شده" : tm.match.status === "active" ? "فعال" : "منتظر"}
                         </Text>
                       </View>
@@ -211,7 +211,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                     <View className="flex-1">
                       <View className="flex-row items-center gap-2">
                     <Avatar avatarId={tm.player1Profile?.avatarId} size="sm" />
-                        <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        <Text className="text-white text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                           {tm.player1Profile?.name || "ناشناس"}
                         </Text>
                       </View>
@@ -220,7 +220,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                     <View className="flex-1 flex-row-reverse">
                       <View className="flex-row items-center gap-2">
                     <Avatar avatarId={tm.player2Profile?.avatarId} size="sm" />
-                        <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                        <Text className="text-white text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                           {tm.player2Profile?.name || "ناشناس"}
                         </Text>
                       </View>
@@ -231,11 +231,11 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
                   {tm.result && (
                     <View className="bg-green-900/20 border border-green-800/30 rounded-lg p-3">
                       {tm.result.isDraw ? (
-                        <Text className="text-yellow-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                        <Text className="text-yellow-400 text-center font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                           مساوی {tm.result.player1Score} - {tm.result.player2Score}
                         </Text>
                       ) : (
-                        <Text className="text-green-400 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                        <Text className="text-green-400 text-center font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                           برنده: {tm.result.winnerId === tm.player1Id ? tm.player1Profile?.name : tm.player2Profile?.name}
                           {" "}
                           ({tm.result.player1Score} - {tm.result.player2Score})
@@ -249,7 +249,7 @@ export function TournamentDetailsAdmin({ tournamentId, onBack }: TournamentDetai
           ) : (
             <View className="py-8 items-center">
               <Ionicons name="trophy-outline" size={48} color="#6b7280" />
-              <Text className="text-gray-500 mt-4" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-500 mt-4" style={{ fontFamily: 'Meem-Regular' }}>
                 هنوز مسابقه‌ای شروع نشده است
               </Text>
             </View>

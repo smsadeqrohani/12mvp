@@ -123,10 +123,10 @@ export function FilesTable() {
             <Ionicons name="document" size={20} color="#ff701a" />
           </View>
           <View className="flex-1">
-            <Text className="text-white font-medium text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-medium text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               {file.originalName}
             </Text>
-            <Text className="text-gray-400 text-xs text-right mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-400 text-xs text-right mt-1" style={{ fontFamily: 'Meem-Regular' }}>
               {file.fileType}
             </Text>
           </View>
@@ -137,7 +137,7 @@ export function FilesTable() {
       key: 'size',
       header: 'حجم',
       render: (file) => (
-        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
           {formatFileSize(file.fileSize)}
         </Text>
       ),
@@ -146,7 +146,7 @@ export function FilesTable() {
       key: 'date',
       header: 'تاریخ آپلود',
       render: (file) => (
-        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
           {formatDate(file.uploadedAt)}
         </Text>
       ),
@@ -251,7 +251,7 @@ export function FilesTable() {
       >
         <View className="flex-1 bg-background">
           <View className="flex-row items-center justify-between p-4 border-b border-gray-700">
-            <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Meem-Bold' }}>
               آپلود فایل جدید
             </Text>
             <TouchableOpacity

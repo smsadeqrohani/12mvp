@@ -86,15 +86,15 @@ export function MatchResults({ matchId, onPlayAgain }: MatchResultsProps) {
             />
             <Text className={`text-xl font-bold ${
               isDraw ? "text-yellow-400" : isWinner ? "text-green-400" : "text-red-400"
-            }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            }`} style={{ fontFamily: 'Meem-Bold' }}>
               {isDraw ? "مساوی!" : isWinner ? "برنده شدید!" : "باختید"}
             </Text>
           </View>
           
-          <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+          <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Meem-Bold' }}>
             نتایج مسابقه
           </Text>
-          <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
             مسابقه در {new Date(match.completedAt!).toLocaleString('fa-IR')} به پایان رسید
           </Text>
         </View>

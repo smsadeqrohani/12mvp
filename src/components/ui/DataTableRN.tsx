@@ -58,10 +58,10 @@ export function DataTableRN<T>({
             {emptyState.icon}
           </View>
         )}
-        <Text className="text-gray-400 text-lg" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+        <Text className="text-gray-400 text-lg" style={{ fontFamily: 'Meem-SemiBold' }}>
           {emptyState.title}
         </Text>
-        <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'Meem-Regular' }}>
           {emptyState.description}
         </Text>
         {emptyState.action && (
@@ -89,14 +89,14 @@ export function DataTableRN<T>({
                   {/* Column header */}
                   <View className="flex-row items-center gap-2 mb-1">
                     {column.icon}
-                    <Text className="text-gray-400 text-xs font-semibold uppercase" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    <Text className="text-gray-400 text-xs font-semibold uppercase" style={{ fontFamily: 'Meem-SemiBold' }}>
                       {column.header}
                     </Text>
                   </View>
                   {/* Column content */}
                   <View>
                     {typeof renderedContent === 'string' || typeof renderedContent === 'number' ? (
-                      <Text className="text-white" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      <Text className="text-white" style={{ fontFamily: 'Meem-Regular' }}>
                         {String(renderedContent)}
                       </Text>
                     ) : (

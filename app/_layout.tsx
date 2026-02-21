@@ -36,13 +36,13 @@ import { useColorScheme } from 'nativewind';
 const defaultTextProps = Text.defaultProps || {};
 Text.defaultProps = {
   ...defaultTextProps,
-  style: [{ fontFamily: 'Vazirmatn-Regular' }, defaultTextProps.style],
+  style: [{ fontFamily: 'Meem-Regular' }, defaultTextProps.style],
 };
 
 const defaultTextInputProps = TextInput.defaultProps || {};
 TextInput.defaultProps = {
   ...defaultTextInputProps,
-  style: [{ fontFamily: 'Vazirmatn-Regular' }, defaultTextInputProps.style],
+  style: [{ fontFamily: 'Meem-Regular' }, defaultTextInputProps.style],
 };
 
 function AppThemeProvider({ children }: { children: React.ReactNode }) {
@@ -96,10 +96,10 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    "Vazirmatn-Regular": require("../assets/fonts/Vazirmatn-Regular.ttf"),
-    "Vazirmatn-Medium": require("../assets/fonts/Vazirmatn-Medium.ttf"),
-    "Vazirmatn-SemiBold": require("../assets/fonts/Vazirmatn-SemiBold.ttf"),
-    "Vazirmatn-Bold": require("../assets/fonts/Vazirmatn-Bold.ttf"),
+    "Meem-Regular": require("../Fonts-ttf/meem-ttf/ttf/Meem-Regular.ttf"),
+    "Meem-Medium": require("../Fonts-ttf/meem-ttf/ttf/Meem-Medium.ttf"),
+    "Meem-SemiBold": require("../Fonts-ttf/meem-ttf/ttf/Meem-SemiBold.ttf"),
+    "Meem-Bold": require("../Fonts-ttf/meem-ttf/ttf/Meem-Bold.ttf"),
   });
 
   const [appReady, setAppReady] = useState(false);

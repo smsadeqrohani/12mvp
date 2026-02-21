@@ -135,7 +135,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
     <ScrollView className="flex-1 bg-background" showsVerticalScrollIndicator={false}>
       <View className="p-4 space-y-4">
         <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             نام آیتم *
           </Text>
           <TextInput
@@ -150,7 +150,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         </View>
 
         <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             توضیحات
           </Text>
           <TextInput
@@ -167,7 +167,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         </View>
 
         <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             نوع آیتم *
           </Text>
           <View className="flex-row gap-3">
@@ -182,7 +182,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             >
               <Text className={`text-center font-semibold ${
                 formData.itemType === "stadium" ? "text-accent" : "text-gray-400"
-              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                 استادیوم
               </Text>
             </TouchableOpacity>
@@ -197,7 +197,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             >
               <Text className={`text-center font-semibold ${
                 formData.itemType === "mentor" ? "text-accent" : "text-gray-400"
-              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                 منتور
               </Text>
             </TouchableOpacity>
@@ -212,7 +212,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             >
               <Text className={`text-center font-semibold ${
                 formData.itemType === "avatar" ? "text-accent" : "text-gray-400"
-              }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                 آواتار
               </Text>
             </TouchableOpacity>
@@ -220,7 +220,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         </View>
 
         <View>
-          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             قیمت (امتیاز) *
           </Text>
           <TextInput
@@ -238,7 +238,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
         {formData.itemType === "stadium" && (
           <>
             <View>
-              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
                 تعداد بازی اضافی
               </Text>
               <TextInput
@@ -254,7 +254,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             </View>
 
             <View>
-              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
                 تعداد تورنومنت اضافی
               </Text>
               <TextInput
@@ -273,7 +273,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
 
         {formData.itemType === "mentor" && (
           <View>
-            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               مدل منتور *
             </Text>
             <View className="flex-row gap-3">
@@ -288,7 +288,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
               >
                 <Text className={`text-center font-semibold ${
                   formData.mentorMode === "1" ? "text-accent" : "text-gray-400"
-                }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                   حذف ۱ گزینه
                 </Text>
               </TouchableOpacity>
@@ -303,7 +303,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
               >
                 <Text className={`text-center font-semibold ${
                   formData.mentorMode === "2" ? "text-accent" : "text-gray-400"
-                }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                   حذف ۲ گزینه
                 </Text>
               </TouchableOpacity>
@@ -313,7 +313,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
 
         {formData.itemType === "avatar" && (
           <View>
-            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               انتخاب آواتار ویژه *
             </Text>
             <View className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/60">
@@ -334,7 +334,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
                     >
                       <Text className={`text-xs text-center ${
                         isSelected ? "text-accent" : "text-gray-400"
-                      }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                         {avatarOption?.label || avatarId}
                       </Text>
                     </TouchableOpacity>
@@ -343,7 +343,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
               </ScrollView>
             </View>
             {formData.avatarId && (
-              <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 انتخاب شده: {formData.avatarId}
               </Text>
             )}
@@ -352,7 +352,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
 
         {formData.itemType !== "avatar" && (
           <View>
-            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               مدت اعتبار (روز)
             </Text>
             <View className="flex-row items-center gap-2">
@@ -369,11 +369,11 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
                 keyboardType="numeric"
                 editable={!isSubmitting}
               />
-              <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400" style={{ fontFamily: 'Meem-Regular' }}>
                 روز
               </Text>
             </View>
-            <Text className="text-gray-400 text-xs mt-1 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-400 text-xs mt-1 text-right" style={{ fontFamily: 'Meem-Regular' }}>
               {calculateDurationDays() === 0 ? "0 = فعال دائمی (هرگز expire نمی‌شود)" : ""}
             </Text>
           </View>
@@ -381,14 +381,14 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
 
         {formData.itemType === "avatar" && (
           <View className="bg-accent/10 rounded-lg p-3 border border-accent/30">
-            <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               آواتارها همیشه دائمی هستند (فعال دائمی)
             </Text>
           </View>
         )}
 
         <View className="flex-row items-center justify-between p-4 bg-gray-800/50 rounded-lg">
-          <Text className="text-white" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white" style={{ fontFamily: 'Meem-SemiBold' }}>
             فعال
           </Text>
           <Switch
@@ -406,7 +406,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             disabled={isSubmitting}
             className="flex-1 p-4 bg-gray-700 rounded-lg"
           >
-            <Text className="text-white text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white text-center font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               انصراف
             </Text>
           </TouchableOpacity>
@@ -415,7 +415,7 @@ export function StoreItemForm({ item, defaultItemType, onClose }: StoreItemFormP
             disabled={isSubmitting}
             className="flex-1 p-4 bg-accent rounded-lg"
           >
-            <Text className="text-white text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white text-center font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               {isSubmitting ? "در حال ذخیره..." : item ? "به‌روزرسانی" : "ذخیره"}
             </Text>
           </TouchableOpacity>

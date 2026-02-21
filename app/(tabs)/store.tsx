@@ -92,18 +92,18 @@ export default function StoreScreen() {
       >
         <View className="flex-row items-start justify-between mb-4">
           <View className="flex-1">
-            <Text className="text-xl font-bold text-white text-right mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-xl font-bold text-white text-right mb-2" style={{ fontFamily: 'Meem-Bold' }}>
               {item.name}
             </Text>
             {item.description && item.description.trim() && (
-              <Text className="text-gray-300 text-right mb-4" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-300 text-right mb-4" style={{ fontFamily: 'Meem-Regular' }}>
                 {item.description}
               </Text>
             )}
             
             {/* Price */}
             <View className="bg-accent/10 rounded-lg p-3 mb-4 border border-accent/30">
-              <Text className="text-accent font-bold text-lg text-center" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-accent font-bold text-lg text-center" style={{ fontFamily: 'Meem-Bold' }}>
                 {item.price.toLocaleString('fa-IR')} امتیاز
               </Text>
             </View>
@@ -112,18 +112,18 @@ export default function StoreScreen() {
             {item.itemType === "stadium" && (
               <View className="bg-gray-800/50 rounded-lg p-3 mb-4 border border-gray-700/30">
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-gray-400" style={{ fontFamily: 'Meem-Regular' }}>
                     بازی اضافی:
                   </Text>
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     +{item.matchesBonus ?? 0}
                   </Text>
                 </View>
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-gray-400" style={{ fontFamily: 'Meem-Regular' }}>
                     تورنومنت اضافی:
                   </Text>
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     +{item.tournamentsBonus ?? 0}
                   </Text>
                 </View>
@@ -133,10 +133,10 @@ export default function StoreScreen() {
             {item.itemType === "mentor" && (
               <View className="bg-gray-800/50 rounded-lg p-3 mb-4 border border-gray-700/30">
                 <View className="flex-row items-center justify-between">
-                  <Text className="text-gray-400" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-gray-400" style={{ fontFamily: 'Meem-Regular' }}>
                     مدل:
                   </Text>
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
                   </Text>
                 </View>
@@ -145,7 +145,7 @@ export default function StoreScreen() {
 
             {item.itemType === "avatar" && item.avatarId && (
               <View className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/30 items-center">
-                <Text className="text-gray-400 mb-3" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 mb-3" style={{ fontFamily: 'Meem-Regular' }}>
                   پیش‌نمایش آواتار:
                 </Text>
                 <Avatar
@@ -155,7 +155,7 @@ export default function StoreScreen() {
                 />
                 {isAvatarOwned(item.avatarId) && (
                   <View className="mt-2 bg-accent/20 rounded-full px-3 py-1">
-                    <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    <Text className="text-accent text-xs" style={{ fontFamily: 'Meem-SemiBold' }}>
                       ✓ در اختیار شما
                     </Text>
                   </View>
@@ -166,7 +166,7 @@ export default function StoreScreen() {
             {/* Status */}
             {isActive && (
               <View className="bg-accent/20 rounded-lg p-3 border border-accent/30 mb-4">
-                <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-accent text-sm text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
                   {purchase?.durationMs === 0 || item.itemType === "avatar"
                     ? "✓ فعال دائمی"
                     : `✓ فعال تا ${daysRemaining && daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}${hoursRemaining || 0} ساعت دیگر`
@@ -177,7 +177,7 @@ export default function StoreScreen() {
 
             {purchased && !isActive && (
               <View className="bg-gray-700/50 rounded-lg p-3 border border-gray-600 mb-4">
-                <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Meem-Regular' }}>
                   منقضی شده - می‌توانید دوباره خریداری کنید
                 </Text>
               </View>
@@ -199,7 +199,7 @@ export default function StoreScreen() {
             className={`text-center font-bold text-lg ${
               isActive ? "text-gray-400" : "text-white"
             }`}
-            style={{ fontFamily: 'Vazirmatn-Bold' }}
+            style={{ fontFamily: 'Meem-Bold' }}
           >
             {isActive 
               ? (item.itemType === "avatar" ? "در اختیار شما" : "در حال استفاده")
@@ -216,10 +216,10 @@ export default function StoreScreen() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-4 space-y-6">
           <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-            <Text className="text-2xl font-bold text-white text-right mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-2xl font-bold text-white text-right mb-2" style={{ fontFamily: 'Meem-Bold' }}>
               فروشگاه
             </Text>
-            <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
               آیتم‌های ویژه برای بهبود تجربه بازی شما
             </Text>
           </View>
@@ -230,7 +230,7 @@ export default function StoreScreen() {
             </View>
           ) : storeItems.length === 0 ? (
             <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-              <Text className="text-gray-400 text-center" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-center" style={{ fontFamily: 'Meem-Regular' }}>
                 در حال حاضر آیتمی در فروشگاه موجود نیست
               </Text>
             </View>
@@ -239,7 +239,7 @@ export default function StoreScreen() {
               {/* Stadium Items */}
               {storeItems.filter(item => item.itemType === "stadium").length > 0 && (
                 <View>
-                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                     استادیوم‌ها
                   </Text>
                   <View className="space-y-4">
@@ -253,7 +253,7 @@ export default function StoreScreen() {
               {/* Mentor Items */}
               {storeItems.filter(item => item.itemType === "mentor").length > 0 && (
                 <View>
-                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                     منتورها
                   </Text>
                   <View className="space-y-4">
@@ -267,7 +267,7 @@ export default function StoreScreen() {
               {/* Avatar Items */}
               {storeItems.filter(item => item.itemType === "avatar").length > 0 && (
                 <View>
-                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className="text-xl font-bold text-white mb-4 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                     آواتارهای ویژه
                   </Text>
                   <View className="space-y-4">

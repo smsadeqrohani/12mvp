@@ -11,7 +11,7 @@ export function Leaderboard() {
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">
         <Text
           className="text-xl font-semibold mb-4 text-white text-right"
-          style={{ fontFamily: "Vazirmatn-SemiBold" }}
+          style={{ fontFamily: "Meem-SemiBold" }}
         >
           🏆 جدول برترین‌ها
         </Text>
@@ -22,7 +22,7 @@ export function Leaderboard() {
         ) : topUsers.length === 0 ? (
           <Text
             className="text-gray-400 text-right py-8"
-            style={{ fontFamily: "Vazirmatn-Regular" }}
+            style={{ fontFamily: "Meem-Regular" }}
           >
             هنوز کاربری با پاسخ درست وجود ندارد
           </Text>
@@ -56,14 +56,14 @@ export function Leaderboard() {
                   >
                     <Text
                       className="text-white font-bold text-sm"
-                      style={{ fontFamily: "Vazirmatn-Bold" }}
+                      style={{ fontFamily: "Meem-Bold" }}
                     >
                       {user.rank}
                     </Text>
                   </View>
                   <Text
                     className="text-white font-medium flex-1 text-right"
-                    style={{ fontFamily: "Vazirmatn-SemiBold" }}
+                    style={{ fontFamily: "Meem-SemiBold" }}
                   >
                     {user.name}
                   </Text>
@@ -71,7 +71,7 @@ export function Leaderboard() {
                 <View className="bg-yellow-400/20 rounded-lg px-3 py-1 border border-yellow-400/30">
                   <Text
                     className="text-yellow-400 font-bold"
-                    style={{ fontFamily: "Vazirmatn-Bold" }}
+                    style={{ fontFamily: "Meem-Bold" }}
                   >
                     {user.correctAnswers.toLocaleString("fa-IR")}
                   </Text>

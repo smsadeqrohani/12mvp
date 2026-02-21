@@ -211,10 +211,10 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
       <View className="w-full px-6 py-8 space-y-6">
       {/* Header */}
       <View className="items-center">
-        <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+        <Text className="text-3xl font-bold text-accent mb-2" style={{ fontFamily: 'Meem-Bold' }}>
           مسابقه کویز دو نفره
         </Text>
-          <Text className="text-gray-300 text-center" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-center" style={{ fontFamily: 'Meem-Regular' }}>
             بازی جدید بساز یا به بازی‌های دیگران بپیوند
           </Text>
         </View>
@@ -359,7 +359,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
                   <View className="bg-purple-900/20 border border-purple-800/30 rounded-lg p-3 mb-3">
                     <Text className="text-gray-400 text-xs mb-1">کد بازی:</Text>
                     <View className="flex-row items-center justify-between mb-2">
-                      <Text className="text-white text-lg font-bold tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                      <Text className="text-white text-lg font-bold tracking-widest" style={{ fontFamily: 'Meem-Bold' }}>
                         {match.joinCode}
                       </Text>
                     </View>
@@ -577,7 +577,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
         <View className="space-y-4">
           <View className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
             <Text className="text-gray-400 text-sm mb-2 text-center">کد بازی</Text>
-            <Text className="text-white text-3xl font-bold text-center tracking-widest" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-white text-3xl font-bold text-center tracking-widest" style={{ fontFamily: 'Meem-Bold' }}>
               {privateMatchJoinCode}
             </Text>
           </View>
@@ -632,7 +632,7 @@ export function MatchLobby({ onMatchStart, onMatchFound }: MatchLobbyProps) {
               }}
               maxLength={6}
               className="text-center text-2xl tracking-widest font-bold"
-              style={{ fontFamily: 'Vazirmatn-Bold' }}
+              style={{ fontFamily: 'Meem-Bold' }}
             />
           </View>
 

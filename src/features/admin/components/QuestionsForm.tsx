@@ -473,11 +473,11 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
                 <View className="bg-yellow-900/20 border border-yellow-800/30 rounded-lg p-4">
                   <View className="flex-row items-center gap-2 mb-2">
                     <Ionicons name="warning" size={20} color="#fbbf24" />
-                    <Text className="text-yellow-400 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    <Text className="text-yellow-400 font-semibold text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
                       هیچ دسته‌بندی‌ای یافت نشد
                     </Text>
                   </View>
-                  <Text className="text-yellow-300 text-xs text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-yellow-300 text-xs text-right" style={{ fontFamily: 'Meem-Regular' }}>
                     لطفاً ابتدا از بخش "مدیریت دسته‌بندی‌ها" حداقل یک دسته‌بندی ایجاد کنید.
                   </Text>
                 </View>
@@ -690,11 +690,11 @@ export function QuestionsForm({ question, onClose }: QuestionsFormProps) {
                 <View className="bg-yellow-900/20 border border-yellow-800/30 rounded-lg p-4">
                   <View className="flex-row items-center gap-2 mb-2">
                     <Ionicons name="warning" size={20} color="#fbbf24" />
-                    <Text className="text-yellow-400 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                    <Text className="text-yellow-400 font-semibold text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
                       هیچ دسته‌بندی‌ای یافت نشد
                     </Text>
                   </View>
-                  <Text className="text-yellow-300 text-xs text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-yellow-300 text-xs text-right" style={{ fontFamily: 'Meem-Regular' }}>
                     لطفاً ابتدا از بخش "مدیریت دسته‌بندی‌ها" حداقل یک دسته‌بندی ایجاد کنید.
                   </Text>
                 </View>

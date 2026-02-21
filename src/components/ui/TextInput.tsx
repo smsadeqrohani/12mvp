@@ -28,7 +28,7 @@ export function TextInput({
       padding: '12px 16px',
       fontSize: '14px',
       lineHeight: '1.5',
-      fontFamily: 'Vazirmatn-Regular, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily: 'Meem-Regular, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       
       // Colors and borders
       backgroundColor: '#0a2840',

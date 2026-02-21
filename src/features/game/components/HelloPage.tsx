@@ -134,10 +134,10 @@ export function HelloPage() {
     <View className="flex-1 p-4 space-y-6">
       <View className="items-center">
         <Avatar avatarId={userProfile.avatarId} size="xl" highlighted className="mb-4" />
-        <Text className="text-4xl font-bold text-accent mb-4" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+        <Text className="text-4xl font-bold text-accent mb-4" style={{ fontFamily: 'Meem-Bold' }}>
           سلام، {userProfile.name}! 👋
         </Text>
-        <Text className="text-lg text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-lg text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
           به داشبورد خود خوش آمدید
         </Text>
         <TouchableOpacity
@@ -145,14 +145,14 @@ export function HelloPage() {
           activeOpacity={0.7}
           className="mt-4 px-4 py-2 rounded-lg bg-accent"
         >
-          <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
             تغییر آواتار
           </Text>
         </TouchableOpacity>
       </View>
       
       <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-        <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>حساب شما</Text>
+        <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Meem-SemiBold' }}>حساب شما</Text>
         <View className="space-y-3">
           <View className="flex-row items-center justify-between gap-3">
             <TouchableOpacity
@@ -160,7 +160,7 @@ export function HelloPage() {
               activeOpacity={0.7}
               className="px-3 py-1 rounded-lg border border-accent/40 bg-accent/10"
             >
-              <Text className="text-accent text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-accent text-sm font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 ویرایش
               </Text>
             </TouchableOpacity>
@@ -189,14 +189,14 @@ export function HelloPage() {
       {/* Referral Code Section */}
       {referralStats && referralStats.referralCode && (
         <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             کد معرف
           </Text>
           <View className="space-y-4">
             <View className="bg-gray-800/50 rounded-lg p-4">
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-1 items-end mr-3">
-                  <Text className="text-2xl font-bold text-accent font-mono" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className="text-2xl font-bold text-accent font-mono" style={{ fontFamily: 'Meem-Bold' }}>
                     {referralStats.referralCode}
                   </Text>
                 </View>
@@ -215,7 +215,7 @@ export function HelloPage() {
                   className="flex-1 flex-row items-center justify-center gap-2 px-4 py-2 bg-gray-700 rounded-lg"
                 >
                   <Ionicons name="copy-outline" size={18} color="#fff" />
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     کپی
                   </Text>
                 </TouchableOpacity>
@@ -225,12 +225,12 @@ export function HelloPage() {
                   className="flex-1 flex-row items-center justify-center gap-2 px-4 py-2 bg-accent rounded-lg"
                 >
                   <Ionicons name="share-outline" size={18} color="#fff" />
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     اشتراک‌گذاری
                   </Text>
                 </TouchableOpacity>
               </View>
-              <Text className="text-gray-400 text-sm text-right mt-3" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-sm text-right mt-3" style={{ fontFamily: 'Meem-Regular' }}>
                 این کد را با دوستان خود به اشتراک بگذارید و از آنها دعوت کنید
               </Text>
             </View>
@@ -250,7 +250,7 @@ export function HelloPage() {
       {/* Daily Limits */}
       {dailyLimits && (
         <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
             محدودیت‌های روزانه
           </Text>
           <View className="space-y-4">
@@ -259,24 +259,24 @@ export function HelloPage() {
               <View className="flex-row items-center justify-between mb-2">
                 <View className="flex-row items-center gap-2">
                   <View className={`w-3 h-3 rounded-full ${dailyLimits.canCreateMatch ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     بازی‌های ایجاد شده
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Text className={`font-bold ${dailyLimits.canCreateMatch ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className={`font-bold ${dailyLimits.canCreateMatch ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Meem-Bold' }}>
                     {dailyLimits.matchesCreated} / {dailyLimits.matchesLimit}
                   </Text>
                   {dailyLimits.matchesBonus > 0 && (
                     <View className="bg-accent/20 rounded px-2 py-1">
-                      <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      <Text className="text-accent text-xs" style={{ fontFamily: 'Meem-SemiBold' }}>
                         +{dailyLimits.matchesBonus}
                       </Text>
                     </View>
                   )}
                 </View>
               </View>
-              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 {dailyLimits.canCreateMatch 
                   ? `شما می‌توانید ${dailyLimits.matchesLimit - dailyLimits.matchesCreated} بازی دیگر ایجاد کنید`
                   : 'شما به حداکثر بازی‌های روزانه رسیده‌اید'
@@ -289,24 +289,24 @@ export function HelloPage() {
               <View className="flex-row items-center justify-between mb-2">
                 <View className="flex-row items-center gap-2">
                   <View className={`w-3 h-3 rounded-full ${dailyLimits.canCreateTournament ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     تورنومنت‌های ایجاد شده
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Text className={`font-bold ${dailyLimits.canCreateTournament ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  <Text className={`font-bold ${dailyLimits.canCreateTournament ? 'text-green-400' : 'text-red-400'}`} style={{ fontFamily: 'Meem-Bold' }}>
                     {dailyLimits.tournamentsCreated} / {dailyLimits.tournamentsLimit}
                   </Text>
                   {dailyLimits.tournamentsBonus > 0 && (
                     <View className="bg-accent/20 rounded px-2 py-1">
-                      <Text className="text-accent text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                      <Text className="text-accent text-xs" style={{ fontFamily: 'Meem-SemiBold' }}>
                         +{dailyLimits.tournamentsBonus}
                       </Text>
                     </View>
                   )}
                 </View>
               </View>
-              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-sm text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 {dailyLimits.canCreateTournament 
                   ? 'شما می‌توانید یک تورنومنت دیگر ایجاد کنید'
                   : 'شما به حداکثر تورنومنت‌های روزانه رسیده‌اید'
@@ -328,7 +328,7 @@ export function HelloPage() {
               return (
                 <View className="bg-accent/10 rounded-lg p-3 border border-accent/30">
                   <View className="flex-row items-center gap-2">
-                    <Text className="text-accent text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                    <Text className="text-accent text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                       ⏰ محدودیت‌ها در{' '}
                       {hoursUntilReset > 0 ? `${hoursUntilReset} ساعت و ` : ''}
                       {minutesUntilReset} دقیقه{' '}
@@ -363,7 +363,7 @@ export function HelloPage() {
 
         return (
           <View className="bg-background-light rounded-lg p-6 border border-gray-600">
-            <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-xl font-semibold mb-4 text-white text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               🛒 خریدهای فعال
             </Text>
             <View className="space-y-3">
@@ -375,17 +375,17 @@ export function HelloPage() {
                 return (
                   <View key={purchase._id} className="bg-accent/10 rounded-lg p-4 border border-accent/30">
                     <View className="flex-row items-center justify-between mb-2">
-                      <Text className="text-accent font-bold text-lg text-right flex-1" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                      <Text className="text-accent font-bold text-lg text-right flex-1" style={{ fontFamily: 'Meem-Bold' }}>
                         {item.name}
                       </Text>
                     </View>
                     {item.description && (
-                      <Text className="text-gray-300 text-sm text-right mb-2" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      <Text className="text-gray-300 text-sm text-right mb-2" style={{ fontFamily: 'Meem-Regular' }}>
                         {item.description}
                       </Text>
                     )}
                     <View className="flex-row items-center gap-2 mt-2">
-                      <Text className="text-accent text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      <Text className="text-accent text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                         {expiresAt === null 
                           ? "⏰ فعال دائمی"
                           : `⏰ باقی‌مانده: ${daysRemaining !== null && daysRemaining > 0 ? `${daysRemaining} روز و ` : ''}${hoursRemaining !== null ? hoursRemaining : 0} ساعت`
@@ -396,14 +396,14 @@ export function HelloPage() {
                       <View className="mt-2 flex-row items-center gap-2">
                         {item.matchesBonus > 0 && (
                           <View className="bg-green-500/20 rounded px-2 py-1">
-                            <Text className="text-green-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                            <Text className="text-green-400 text-xs" style={{ fontFamily: 'Meem-SemiBold' }}>
                               +{item.matchesBonus} بازی
                             </Text>
                           </View>
                         )}
                         {item.tournamentsBonus > 0 && (
                           <View className="bg-blue-500/20 rounded px-2 py-1">
-                            <Text className="text-blue-400 text-xs" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                            <Text className="text-blue-400 text-xs" style={{ fontFamily: 'Meem-SemiBold' }}>
                               +{item.tournamentsBonus} تورنومنت
                             </Text>
                           </View>
@@ -424,15 +424,15 @@ export function HelloPage() {
         activeOpacity={0.7}
         className="bg-background-light rounded-lg p-4 border border-gray-600 flex-row items-center justify-between"
       >
-        <Text className="text-accent font-semibold" style={{ fontFamily: "Vazirmatn-SemiBold" }}>
+        <Text className="text-accent font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
           مشاهده جدول برترین‌ها
         </Text>
         <Ionicons name="trophy" size={24} color="#ff701a" />
       </TouchableOpacity>
 
       <View className="bg-accent/20 rounded-lg p-6 border border-accent/30">
-        <Text className="text-lg font-semibold text-accent mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>🎉 همه چیز آماده است!</Text>
-        <Text className="text-gray-300 text-right leading-6" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-lg font-semibold text-accent mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>🎉 همه چیز آماده است!</Text>
+        <Text className="text-gray-300 text-right leading-6" style={{ fontFamily: 'Meem-Regular' }}>
           حساب شما با موفقیت ایجاد شد. اکنون می‌توانید از برنامه استفاده کنید.
         </Text>
       </View>
@@ -493,7 +493,7 @@ export function HelloPage() {
             activeOpacity={0.7}
             className="px-4 py-3 rounded-lg border border-gray-600 bg-background"
           >
-            <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               انصراف
             </Text>
           </TouchableOpacity>
@@ -506,7 +506,7 @@ export function HelloPage() {
             {isSavingAvatar ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 ذخیره آواتار
               </Text>
             )}
@@ -523,7 +523,7 @@ export function HelloPage() {
       >
         <View className="space-y-4">
           <View>
-            <Text className="text-gray-300 mb-2 text-right" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-gray-300 mb-2 text-right" style={{ fontFamily: 'Meem-SemiBold' }}>
               نام جدید
             </Text>
             <TextInput
@@ -545,7 +545,7 @@ export function HelloPage() {
               activeOpacity={0.7}
               className="px-4 py-3 rounded-lg border border-gray-600 bg-background"
             >
-              <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-gray-200 font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 انصراف
               </Text>
             </TouchableOpacity>
@@ -562,7 +562,7 @@ export function HelloPage() {
               {isSavingName ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                   ذخیره نام
                 </Text>
               )}

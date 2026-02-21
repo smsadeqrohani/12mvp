@@ -87,13 +87,13 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           <View className="w-16 h-16 bg-accent/20 rounded-full items-center justify-center mb-4">
             <Ionicons name="cloud-upload-outline" size={32} color="#ff701a" />
           </View>
-          <Text className="text-white font-semibold text-lg mb-2" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white font-semibold text-lg mb-2" style={{ fontFamily: 'Meem-SemiBold' }}>
             انتخاب فایل برای آپلود
           </Text>
-          <Text className="text-gray-400 text-sm text-center" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-400 text-sm text-center" style={{ fontFamily: 'Meem-Regular' }}>
             کلیک کنید تا فایل را از دستگاه خود انتخاب کنید
           </Text>
-          <Text className="text-gray-500 text-xs text-center mt-2" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-500 text-xs text-center mt-2" style={{ fontFamily: 'Meem-Regular' }}>
             پشتیبانی از تمام فرمت‌های فایل
           </Text>
         </TouchableOpacity>
@@ -115,10 +115,10 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
                 />
               </View>
               <View className="flex-1">
-                <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-white font-medium" style={{ fontFamily: 'Meem-SemiBold' }}>
                   {selectedFile.name}
                 </Text>
-                <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                   {formatFileSize(selectedFile.size)}
                 </Text>
               </View>
@@ -145,14 +145,14 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
           {isUploading ? (
             <View className="flex-row items-center gap-2">
               <ActivityIndicator color="#fff" size="small" />
-              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 در حال آپلود...
               </Text>
             </View>
           ) : (
             <View className="flex-row items-center gap-2">
               <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 آپلود فایل
               </Text>
             </View>

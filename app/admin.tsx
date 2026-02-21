@@ -173,12 +173,12 @@ export default function AdminScreen() {
           </View>
 
           {/* Title */}
-          <Text className="text-white text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+          <Text className="text-white text-2xl font-bold text-center mb-3" style={{ fontFamily: 'Meem-Bold' }}>
             پنل مدیریت
           </Text>
 
           {/* Message */}
-          <Text className="text-gray-300 text-center text-base mb-6 max-w-md" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-center text-base mb-6 max-w-md" style={{ fontFamily: 'Meem-Regular' }}>
             برای استفاده از پنل مدیریت، لطفاً از یکی از موارد زیر استفاده کنید:
           </Text>
 
@@ -188,7 +188,7 @@ export default function AdminScreen() {
               <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
                 <Ionicons name="checkmark" size={20} color="#10b981" />
               </View>
-              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                 کامپیوتر رومیزی یا لپ‌تاپ
               </Text>
             </View>
@@ -197,7 +197,7 @@ export default function AdminScreen() {
               <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
                 <Ionicons name="checkmark" size={20} color="#10b981" />
               </View>
-              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                 آیپد در حالت افقی (Landscape)
               </Text>
             </View>
@@ -206,7 +206,7 @@ export default function AdminScreen() {
               <View className="w-8 h-8 bg-green-900/30 rounded-full items-center justify-center">
                 <Ionicons name="checkmark" size={20} color="#10b981" />
               </View>
-              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white text-base flex-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                 مرورگر وب
               </Text>
             </View>
@@ -217,16 +217,16 @@ export default function AdminScreen() {
             <View className="flex-row items-start gap-2">
               <Ionicons name="information-circle" size={20} color="#60a5fa" />
               <View className="flex-1">
-                <Text className="text-blue-400 text-sm mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-blue-400 text-sm mb-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                   اطلاعات فنی:
                 </Text>
-                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                   حداقل عرض صفحه: ۱۰۲۴ پیکسل
                 </Text>
-                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                   عرض فعلی: {Math.round(width).toLocaleString('fa-IR')} پیکسل
                 </Text>
-                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-blue-300 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                   جهت: {orientation === 'landscape' ? 'افقی' : 'عمودی'}
                 </Text>
               </View>
@@ -240,7 +240,7 @@ export default function AdminScreen() {
             style={{ minHeight: touchTargetSize }}
             activeOpacity={0.7}
           >
-            <Text className="text-white font-semibold text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-semibold text-center" style={{ fontFamily: 'Meem-SemiBold' }}>
               بازگشت به داشبورد
             </Text>
           </TouchableOpacity>
@@ -588,7 +588,7 @@ export default function AdminScreen() {
         render: (user) => (
           <View className="flex-row items-center gap-3">
             <Avatar avatarId={user.avatarId} size="md" />
-            <Text className="text-white font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-medium" style={{ fontFamily: 'Meem-SemiBold' }}>
               {user.name}
             </Text>
           </View>
@@ -598,7 +598,7 @@ export default function AdminScreen() {
         key: 'email',
         header: 'ایمیل',
         render: (user) => (
-          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
             {user.email}
           </Text>
         ),
@@ -626,7 +626,7 @@ export default function AdminScreen() {
         render: (user) => (
           <View className="flex-row items-center gap-2">
             <View className="bg-accent/20 rounded-lg px-3 py-1 border border-accent/30">
-              <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Meem-Bold' }}>
                 {(user.points ?? 0).toLocaleString('fa-IR')}
               </Text>
             </View>
@@ -651,7 +651,7 @@ export default function AdminScreen() {
             </View>
             <Text className={`text-sm font-medium ${
               user.isAdmin ? "text-accent" : "text-gray-400"
-            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            }`} style={{ fontFamily: 'Meem-SemiBold' }}>
               {user.isAdmin ? "مدیر" : "کاربر عادی"}
             </Text>
           </TouchableOpacity>
@@ -668,7 +668,7 @@ export default function AdminScreen() {
             style={{ minHeight: touchTargetSize }}
             activeOpacity={0.7}
           >
-            <Text className="text-red-400 text-sm font-semibold text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-red-400 text-sm font-semibold text-center" style={{ fontFamily: 'Meem-SemiBold' }}>
               بازنشانی رمز عبور
             </Text>
           </TouchableOpacity>
@@ -684,10 +684,10 @@ export default function AdminScreen() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت کاربران
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 مدیریت و تنظیم کاربران سیستم
               </Text>
             </View>
@@ -737,12 +737,12 @@ export default function AdminScreen() {
         render: (question) => (
                       <View className="flex-row items-start gap-3">
                         <View className="w-8 h-8 bg-accent rounded-full items-center justify-center">
-                          <Text className="text-white font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                          <Text className="text-white font-bold text-xs" style={{ fontFamily: 'Meem-Bold' }}>
                             س
                           </Text>
                         </View>
                         <View className="flex-1">
-                          <Text className="text-white font-medium text-sm leading-5" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          <Text className="text-white font-medium text-sm leading-5" style={{ fontFamily: 'Meem-SemiBold' }}>
                             {question.questionText}
                           </Text>
                           {(question.mediaPath || question.mediaStorageId) && (
@@ -761,7 +761,7 @@ export default function AdminScreen() {
         key: 'timeToRespond',
         header: 'زمان پاسخ (ثانیه)',
         render: (question) => (
-                      <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                      <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                         {question.timeToRespond.toLocaleString('fa-IR')}
                       </Text>
         ),
@@ -825,7 +825,7 @@ export default function AdminScreen() {
                           style={{ minHeight: touchTargetSize }}
                           activeOpacity={0.7}
                         >
-                          <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                             ویرایش
                           </Text>
                         </TouchableOpacity>
@@ -835,7 +835,7 @@ export default function AdminScreen() {
                           style={{ minHeight: touchTargetSize }}
                           activeOpacity={0.7}
                         >
-                          <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                          <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                             حذف
                           </Text>
                         </TouchableOpacity>
@@ -852,10 +852,10 @@ export default function AdminScreen() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت سؤالات
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 مدیریت و تنظیم سؤالات سیستم
               </Text>
             </View>
@@ -926,7 +926,7 @@ export default function AdminScreen() {
             <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
               <Ionicons name="folder" size={20} color="#ff701a" />
             </View>
-            <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Meem-SemiBold' }}>
               {category.persianName}
             </Text>
           </View>
@@ -966,7 +966,7 @@ export default function AdminScreen() {
               style={{ minHeight: touchTargetSize }}
               activeOpacity={0.7}
             >
-              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 ویرایش
               </Text>
             </TouchableOpacity>
@@ -976,7 +976,7 @@ export default function AdminScreen() {
               style={{ minHeight: touchTargetSize }}
               activeOpacity={0.7}
             >
-              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 حذف
               </Text>
             </TouchableOpacity>
@@ -993,10 +993,10 @@ export default function AdminScreen() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت دسته‌بندی‌ها
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 مدیریت و تنظیم دسته‌بندی‌های سیستم
               </Text>
             </View>
@@ -1056,10 +1056,10 @@ export default function AdminScreen() {
       <View className="mb-6">
         <View className="flex-row items-center justify-between mb-4">
           <View>
-        <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+        <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
           مدیریت فایل‌ها
         </Text>
-        <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
           مدیریت فایل‌های آپلود شده
         </Text>
           </View>
@@ -1087,7 +1087,7 @@ export default function AdminScreen() {
         key: 'id',
         header: 'شناسه',
         render: (matchData) => (
-          <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
             {matchData.match._id.slice(-8)}
           </Text>
         ),
@@ -1100,11 +1100,11 @@ export default function AdminScreen() {
           return (
             <View className="flex-row items-center gap-2">
               <View className="w-8 h-8 bg-accent/20 rounded-full items-center justify-center">
-                <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Meem-Bold' }}>
                   {creator?.name[0] || "?"}
                 </Text>
               </View>
-              <Text className="text-white text-sm font-medium" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white text-sm font-medium" style={{ fontFamily: 'Meem-SemiBold' }}>
                 {creator?.name || "ناشناس"}
               </Text>
             </View>
@@ -1121,11 +1121,11 @@ export default function AdminScreen() {
               {participants.map((p) => (
                 <View key={p.userId} className="flex-row items-center gap-2">
                   <View className="w-6 h-6 bg-accent/20 rounded-full items-center justify-center">
-                    <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                    <Text className="text-accent font-bold text-xs" style={{ fontFamily: 'Meem-Bold' }}>
                       {p.profile?.name[0] || "?"}
                     </Text>
                   </View>
-                  <Text className="text-white text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-white text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                     {p.profile?.name || "ناشناس"}
                   </Text>
                   {p.completedAt && (
@@ -1153,7 +1153,7 @@ export default function AdminScreen() {
           }
           return (
             <View className="px-3 py-1 rounded-full bg-gray-700/50 border border-gray-600/30">
-              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                 عادی
               </Text>
             </View>
@@ -1173,10 +1173,10 @@ export default function AdminScreen() {
             };
             return (
               <View className="flex-1">
-                <Text className="text-purple-400 text-sm font-medium mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-purple-400 text-sm font-medium mb-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                   {roundText[tournamentInfo.round]}
                 </Text>
-                <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                   {tournamentInfo.tournamentId.slice(-12)}
                 </Text>
               </View>
@@ -1184,7 +1184,7 @@ export default function AdminScreen() {
           }
           return (
             <View className="px-3 py-1 rounded-full bg-gray-700/50 border border-gray-600/30">
-              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                 ندارد
               </Text>
             </View>
@@ -1211,7 +1211,7 @@ export default function AdminScreen() {
           
           return (
             <View className={`px-3 py-1 rounded-full border ${statusColors[match.status]} w-fit`}>
-              <Text className="text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-sm font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 {statusText[match.status]}
               </Text>
             </View>
@@ -1225,10 +1225,10 @@ export default function AdminScreen() {
           const { match } = matchData;
           return (
             <View>
-              <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                 {new Date(match.createdAt).toLocaleDateString("fa-IR")}
               </Text>
-              <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-500 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                 {new Date(match.createdAt).toLocaleTimeString("fa-IR", { 
                   hour: '2-digit', 
                   minute: '2-digit' 
@@ -1249,7 +1249,7 @@ export default function AdminScreen() {
           
           if (result.isDraw) {
             return (
-              <Text className="text-yellow-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-yellow-400 text-sm font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 مساوی
               </Text>
             );
@@ -1257,10 +1257,10 @@ export default function AdminScreen() {
           
           return (
             <View>
-              <Text className="text-green-400 text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-green-400 text-sm font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 برنده: {participants.find(p => p.userId === result.winnerId)?.profile?.name || "ناشناس"}
               </Text>
-              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Meem-Regular' }}>
                 {result.player1Score} - {result.player2Score}
               </Text>
             </View>
@@ -1281,7 +1281,7 @@ export default function AdminScreen() {
                 style={{ minHeight: touchTargetSize }}
                 activeOpacity={0.7}
               >
-                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                   جزئیات
                 </Text>
               </TouchableOpacity>
@@ -1298,7 +1298,7 @@ export default function AdminScreen() {
                   style={{ minHeight: touchTargetSize }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     لغو مسابقه
                   </Text>
                 </TouchableOpacity>
@@ -1317,10 +1317,10 @@ export default function AdminScreen() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت مسابقات
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 مشاهده و مدیریت تمام مسابقات
               </Text>
             </View>
@@ -1397,11 +1397,11 @@ export default function AdminScreen() {
               />
             </View>
             <View className="flex-1">
-              <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Meem-SemiBold' }}>
                 {item.name}
               </Text>
               {item.description && item.description.trim() && (
-                <Text className="text-gray-400 text-sm mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-sm mt-1" style={{ fontFamily: 'Meem-Regular' }}>
                   {item.description}
                 </Text>
               )}
@@ -1420,7 +1420,7 @@ export default function AdminScreen() {
           }`}>
             <Text className={`font-semibold text-sm ${
               item.itemType === "stadium" ? "text-accent" : "text-purple-300"
-            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            }`} style={{ fontFamily: 'Meem-SemiBold' }}>
               {item.itemType === "stadium" ? "استادیوم" : "منتور"}
             </Text>
           </View>
@@ -1431,7 +1431,7 @@ export default function AdminScreen() {
         header: 'قیمت',
         render: (item) => (
           <View className="bg-accent/10 rounded-lg px-3 py-1 border border-accent/30 w-fit">
-            <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-accent font-bold text-sm" style={{ fontFamily: 'Meem-Bold' }}>
               {item.price.toLocaleString('fa-IR')} امتیاز
             </Text>
           </View>
@@ -1442,7 +1442,7 @@ export default function AdminScreen() {
         header: 'بازی اضافی',
         render: (item) => (
           item.itemType === "stadium" ? (
-            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               +{item.matchesBonus ?? 0}
             </Text>
           ) : (
@@ -1455,7 +1455,7 @@ export default function AdminScreen() {
         header: 'تورنومنت اضافی',
         render: (item) => (
           item.itemType === "stadium" ? (
-            <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               +{item.tournamentsBonus ?? 0}
             </Text>
           ) : (
@@ -1469,7 +1469,7 @@ export default function AdminScreen() {
         render: (item) => (
           item.itemType === "mentor" ? (
             <View className="bg-purple-600/20 rounded-lg px-3 py-1 border border-purple-500/30 w-fit">
-              <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
                 {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
               </Text>
             </View>
@@ -1482,7 +1482,7 @@ export default function AdminScreen() {
         key: 'duration',
         header: 'مدت اعتبار',
         render: (item) => (
-          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
             {item.durationMs === 0 
               ? "دائمی"
               : `${Math.floor(item.durationMs / (24 * 60 * 60 * 1000))} روز`
@@ -1501,7 +1501,7 @@ export default function AdminScreen() {
           }`}>
             <Text className={`text-xs font-semibold ${
               item.isActive ? "text-green-400" : "text-gray-400"
-            }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            }`} style={{ fontFamily: 'Meem-SemiBold' }}>
               {item.isActive ? "فعال" : "غیرفعال"}
             </Text>
           </View>
@@ -1519,7 +1519,7 @@ export default function AdminScreen() {
               style={{ minHeight: touchTargetSize }}
               activeOpacity={0.7}
             >
-              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 ویرایش
               </Text>
             </TouchableOpacity>
@@ -1537,7 +1537,7 @@ export default function AdminScreen() {
                 className={`text-xs font-semibold ${
                   item.isActive ? "text-yellow-400" : "text-green-400"
                 }`}
-                style={{ fontFamily: 'Vazirmatn-SemiBold' }}
+                style={{ fontFamily: 'Meem-SemiBold' }}
               >
                 {item.isActive ? "غیرفعال" : "فعال"}
               </Text>
@@ -1548,7 +1548,7 @@ export default function AdminScreen() {
               style={{ minHeight: touchTargetSize }}
               activeOpacity={0.7}
             >
-              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 حذف
               </Text>
             </TouchableOpacity>
@@ -1568,10 +1568,10 @@ export default function AdminScreen() {
             <View className="bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4 mb-4">
               <View className="flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Text className="text-yellow-300 font-semibold mb-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-yellow-300 font-semibold mb-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                     ⚠️ آیتم‌های قدیمی نیاز به به‌روزرسانی دارند
                   </Text>
-                  <Text className="text-yellow-400/80 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-yellow-400/80 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
                     {itemsWithoutType.length} آیتم فیلد itemType ندارد
                   </Text>
                 </View>
@@ -1581,7 +1581,7 @@ export default function AdminScreen() {
                   activeOpacity={0.7}
                 >
                   <Ionicons name="refresh" size={18} color="#fff" />
-                  <Text className="text-white font-semibold text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-white font-semibold text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
                     Migration
                   </Text>
                 </TouchableOpacity>
@@ -1591,10 +1591,10 @@ export default function AdminScreen() {
 
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت فروشگاه
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 استادیوم‌ها و منتورها
               </Text>
             </View>
@@ -1608,7 +1608,7 @@ export default function AdminScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="#fff" />
-              <Text className="text-white font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                 افزودن
               </Text>
             </TouchableOpacity>
@@ -1642,7 +1642,7 @@ export default function AdminScreen() {
         key: 'id',
         header: 'شناسه تورنومنت',
         render: (tournamentData) => (
-          <Text className="text-gray-400 text-sm font-mono" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-400 text-sm font-mono" style={{ fontFamily: 'Meem-Regular' }}>
             {tournamentData.tournament.tournamentId.slice(-12)}
           </Text>
         ),
@@ -1651,7 +1651,7 @@ export default function AdminScreen() {
         key: 'creator',
         header: 'سازنده',
         render: (tournamentData) => (
-          <Text className="text-white text-sm" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-white text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
             {tournamentData.creator?.name || "ناشناس"}
           </Text>
         ),
@@ -1660,7 +1660,7 @@ export default function AdminScreen() {
         key: 'participants',
         header: 'شرکت‌کنندگان',
         render: (tournamentData) => (
-          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
             {tournamentData.participants.length} / 4
           </Text>
         ),
@@ -1679,7 +1679,7 @@ export default function AdminScreen() {
           
           return (
             <View className={`px-3 py-1 rounded-full border ${bgColor} ${borderColor}`}>
-              <Text className={`text-xs font-semibold ${textColor}`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className={`text-xs font-semibold ${textColor}`} style={{ fontFamily: 'Meem-SemiBold' }}>
                 {statusText}
               </Text>
             </View>
@@ -1690,7 +1690,7 @@ export default function AdminScreen() {
         key: 'matches',
         header: 'مسابقات',
         render: (tournamentData) => (
-          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+          <Text className="text-gray-300 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
             {tournamentData.matches.length} مسابقه
           </Text>
         ),
@@ -1701,7 +1701,7 @@ export default function AdminScreen() {
         render: (tournamentData) => {
           const date = new Date(tournamentData.tournament.createdAt);
           return (
-            <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>
               {date.toLocaleDateString('fa-IR', { year: 'numeric', month: 'short', day: 'numeric' })}
             </Text>
           );
@@ -1721,7 +1721,7 @@ export default function AdminScreen() {
                 style={{ minHeight: touchTargetSize }}
                 activeOpacity={0.7}
               >
-                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                   جزئیات
                 </Text>
               </TouchableOpacity>
@@ -1737,7 +1737,7 @@ export default function AdminScreen() {
                   style={{ minHeight: touchTargetSize }}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
                     لغو تورنومنت
                   </Text>
                 </TouchableOpacity>
@@ -1756,10 +1756,10 @@ export default function AdminScreen() {
         <View className="mb-6">
           <View className="flex-row items-center justify-between mb-4">
             <View>
-              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: 'Meem-Bold' }}>
                 مدیریت تورنومنت‌ها
               </Text>
-              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+              <Text className="text-gray-400 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                 مشاهده و مدیریت تمام تورنومنت‌ها
               </Text>
             </View>
@@ -1799,7 +1799,7 @@ export default function AdminScreen() {
                 <View className="w-8 h-8 bg-accent rounded-lg items-center justify-center">
                   <Ionicons name="shield-checkmark" size={20} color="#fff" />
                 </View>
-                <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Meem-Bold' }}>
                   پنل مدیریت
                 </Text>
               </View>
@@ -1808,7 +1808,7 @@ export default function AdminScreen() {
 
             {/* Navigation */}
             <View className="space-y-3">
-              <Text className="text-xs font-semibold text-gray-500 mb-3" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+              <Text className="text-xs font-semibold text-gray-500 mb-3" style={{ fontFamily: 'Meem-SemiBold' }}>
                 مدیریت
               </Text>
               
@@ -1829,7 +1829,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "users" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت کاربران
                   </Text>
                 </View>
@@ -1852,7 +1852,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "questions" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت سؤالات
                   </Text>
                 </View>
@@ -1875,7 +1875,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "categories" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت دسته‌بندی‌ها
                   </Text>
                 </View>
@@ -1898,7 +1898,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "files" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت فایل‌ها
                   </Text>
                 </View>
@@ -1921,7 +1921,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "matches" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت مسابقات
                   </Text>
                 </View>
@@ -1944,7 +1944,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "tournaments" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     مدیریت تورنومنت‌ها
                   </Text>
                 </View>
@@ -1967,7 +1967,7 @@ export default function AdminScreen() {
                   </View>
                   <Text className={`font-medium ${
                     activeTab === "store" ? "text-white" : "text-gray-300"
-                  }`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
                     فروشگاه
                   </Text>
                 </View>
@@ -1985,7 +1985,7 @@ export default function AdminScreen() {
                   <View className="w-10 h-10 rounded-lg items-center justify-center bg-gray-600">
                     <Ionicons name="home-outline" size={20} color="#9ca3af" />
                   </View>
-                  <Text className="font-medium text-gray-300" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="font-medium text-gray-300" style={{ fontFamily: 'Meem-SemiBold' }}>
                     بازگشت به صفحه اصلی
                   </Text>
                 </View>
@@ -2058,7 +2058,7 @@ export default function AdminScreen() {
         <SafeAreaView className="flex-1 bg-background">
           <View className="flex-1">
             <View className="flex-row items-center justify-between p-4 border-b border-gray-700">
-              <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-xl font-bold text-white" style={{ fontFamily: 'Meem-Bold' }}>
                 {editingStoreItem 
                   ? editingStoreItem.itemType === "stadium" 
                     ? "ویرایش استادیوم" 

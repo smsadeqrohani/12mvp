@@ -9,15 +9,15 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     fontFamily: {
-      sans: ["Vazirmatn-Regular", "system-ui", "sans-serif"],
-      body: ["Vazirmatn-Regular", "system-ui", "sans-serif"],
+      sans: ["Meem-Regular", "system-ui", "sans-serif"],
+      body: ["Meem-Regular", "system-ui", "sans-serif"],
     },
     extend: {
       fontFamily: {
-        regular: ["Vazirmatn-Regular"],
-        medium: ["Vazirmatn-Medium"],
-        semibold: ["Vazirmatn-SemiBold"],
-        bold: ["Vazirmatn-Bold"],
+        regular: ["Meem-Regular"],
+        medium: ["Meem-Medium"],
+        semibold: ["Meem-SemiBold"],
+        bold: ["Meem-Bold"],
       },
       colors: {
         primary: {

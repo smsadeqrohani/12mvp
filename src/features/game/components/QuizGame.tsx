@@ -477,34 +477,34 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         <View className="bg-background-light/60 rounded-2xl border border-gray-700/30 p-6 mb-6">
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-2xl font-bold text-accent mb-1" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+            <Text className="text-2xl font-bold text-accent mb-1" style={{ fontFamily: 'Meem-Bold' }}>
               مسابقه کویز
             </Text>
-            <Text className="text-gray-300" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+            <Text className="text-gray-300" style={{ fontFamily: 'Meem-Regular' }}>
               سؤال {currentQuestionIndex + 1} از {matchDetails.questions.length}
             </Text>
           </View>
           
           <View className="flex-row items-center gap-4">
             <View>
-              <Text className="text-xl font-bold text-accent" style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className="text-xl font-bold text-accent" style={{ fontFamily: 'Meem-Bold' }}>
                 {userPoints} امتیاز
               </Text>
-              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Vazirmatn-Regular' }}>امتیاز شما</Text>
+              <Text className="text-gray-400 text-xs" style={{ fontFamily: 'Meem-Regular' }}>امتیاز شما</Text>
             </View>
             
             <TouchableOpacity
               onPress={handleLeaveGame}
               className="px-4 py-2 bg-red-600 rounded-lg"
             >
-              <Text className="text-white text-sm font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>خروج از مسابقه</Text>
+              <Text className="text-white text-sm font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>خروج از مسابقه</Text>
             </TouchableOpacity>
             
             <View>
-              <Text className={`text-3xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-accent'}`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+              <Text className={`text-3xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-accent'}`} style={{ fontFamily: 'Meem-Bold' }}>
                 {formatTime(timeLeft)}
               </Text>
-              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Vazirmatn-Regular' }}>زمان باقی‌مانده</Text>
+              <Text className="text-gray-400 text-sm" style={{ fontFamily: 'Meem-Regular' }}>زمان باقی‌مانده</Text>
             </View>
           </View>
         </View>
@@ -562,7 +562,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
 
         {/* Question Text */}
         <View className="items-center mb-8">
-          <Text className="text-2xl font-semibold text-white text-center" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+          <Text className="text-2xl font-semibold text-white text-center" style={{ fontFamily: 'Meem-SemiBold' }}>
             {currentQuestion.questionText}
           </Text>
         </View>
@@ -575,7 +575,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               <View className="bg-purple-600/20 rounded-lg p-3 border border-purple-500/30 mb-2">
                 <View className="flex-row items-center gap-2">
                   <Ionicons name="school" size={20} color="#a78bfa" />
-                  <Text className="text-purple-300 text-sm flex-1" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+                  <Text className="text-purple-300 text-sm flex-1" style={{ fontFamily: 'Meem-SemiBold' }}>
                     منتور فعال: {activeMentor.name} ({activeMentor.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"})
                   </Text>
                 </View>
@@ -601,10 +601,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                         ? "text-purple-300"
                         : "text-accent"
                       : "text-gray-400"
-                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  }`} style={{ fontFamily: 'Meem-Bold' }}>
                     غیرفعال کردن ۱ گزینه
                   </Text>
-                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Meem-Regular' }}>
                     {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۲ امتیاز"}
                   </Text>
                 </View>
@@ -628,10 +628,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                         ? "text-purple-300"
                         : "text-accent"
                       : "text-gray-400"
-                  }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                  }`} style={{ fontFamily: 'Meem-Bold' }}>
                     غیرفعال کردن ۲ گزینه
                   </Text>
-                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Meem-Regular' }}>
                     {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۵ امتیاز"}
                   </Text>
                 </View>
@@ -652,10 +652,10 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                   userPoints >= 5 && (usedHints[currentQuestion._id] || []).length === 0
                     ? "text-blue-400"
                     : "text-gray-400"
-                }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                }`} style={{ fontFamily: 'Meem-Bold' }}>
                   افزودن زمان (+۱۰ ثانیه)
                 </Text>
-                <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Meem-Regular' }}>
                   ۵ امتیاز
                 </Text>
               </View>
@@ -714,7 +714,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                         isAnswered && showResult
                           ? option.key === selectedAnswer ? "text-white" : "text-gray-400"
                           : selectedAnswer === option.key ? "text-white" : "text-gray-300"
-                      }`} style={{ fontFamily: 'Vazirmatn-Bold' }}>
+                      }`} style={{ fontFamily: 'Meem-Bold' }}>
                         {option.key}
                       </Text>
                     )}
@@ -729,7 +729,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                       : selectedAnswer === option.key
                       ? "text-accent"
                       : "text-white"
-                  }`} style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                  }`} style={{ fontFamily: 'Meem-Regular' }}>
                     {option.text}
                   </Text>
                 </View>

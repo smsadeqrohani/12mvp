@@ -57,7 +57,7 @@ export function ConfirmationDialog({
       }
     >
       <View className="gap-6">
-        <Text className="text-gray-300 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+        <Text className="text-gray-300 text-right" style={{ fontFamily: 'Meem-Regular' }}>
           {message}
         </Text>
         
@@ -67,7 +67,7 @@ export function ConfirmationDialog({
             className="flex-1 py-3 px-4 bg-gray-700/50 border border-gray-600 rounded-lg"
             activeOpacity={0.7}
           >
-            <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className="text-gray-300 text-center font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
               {cancelText}
             </Text>
           </TouchableOpacity>
@@ -79,7 +79,7 @@ export function ConfirmationDialog({
             className={`flex-1 py-3 px-4 ${styles.button} rounded-lg`}
             activeOpacity={0.7}
           >
-            <Text className={`${styles.text} text-center font-semibold`} style={{ fontFamily: 'Vazirmatn-SemiBold' }}>
+            <Text className={`${styles.text} text-center font-semibold`} style={{ fontFamily: 'Meem-SemiBold' }}>
               {confirmText}
             </Text>
           </TouchableOpacity>

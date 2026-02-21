@@ -113,7 +113,7 @@ export function ProfileSetup() {
                     );
                   })}
                 </View>
-                <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Vazirmatn-Regular' }}>
+                <Text className="text-gray-400 text-xs mt-2 text-right" style={{ fontFamily: 'Meem-Regular' }}>
                   آواتارهای ویژه را می‌توانید از فروشگاه خریداری کنید
                 </Text>
               </View>

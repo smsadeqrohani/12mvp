@@ -36,7 +36,7 @@ export default function TabsLayout() {
         },
         headerTintColor: COLORS.yellow[400],
         headerTitleStyle: {
-          fontFamily: "Vazirmatn-Bold",
+          fontFamily: "Meem-Bold",
           fontSize: 20,
         },
         headerTitleAlign: "center",
@@ -48,7 +48,7 @@ export default function TabsLayout() {
           height: 64 + (insets.bottom || 16),
         },
         tabBarLabelStyle: {
-          fontFamily: "Vazirmatn-SemiBold",
+          fontFamily: "Meem-SemiBold",
           fontSize: 12,
           marginBottom: 4,
         },
@@ -78,7 +78,7 @@ export default function TabsLayout() {
                   <Text
                     style={{
                       color: COLORS.yellow[400],
-                      fontFamily: "Vazirmatn-SemiBold",
+                      fontFamily: "Meem-SemiBold",
                     }}
                   >
                     پنل مدیریت
