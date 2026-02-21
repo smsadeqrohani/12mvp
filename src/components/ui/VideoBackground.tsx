@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useVideoPreload } from "./VideoPreloadContext";
 
@@ -10,19 +10,21 @@ const RETRY_DELAY_MS = 1000;
 
 /**
  * Full-screen looping video background for auth screens.
- * Uses preloaded player from context (loaded during splash) when available.
- * Loop + retry on error. Ensures autoplay.
+ * On web: uses preloaded player (loaded during splash).
+ * On native: creates own player - preloaded player doesn't play when attached later on iOS/Android.
  */
 export function VideoBackground() {
   const preloadedPlayer = useVideoPreload();
 
-  // Fallback: create own player if preload not available (e.g. direct nav to login)
   const fallbackPlayer = useVideoPlayer(VIDEO_SOURCE, (p) => {
     p.loop = true;
     p.muted = true;
+    p.play();
   });
 
-  const player = preloadedPlayer ?? fallbackPlayer;
+  // On native, always use fallback - preload causes video not to play on mobile
+  const player =
+    Platform.OS === "web" && preloadedPlayer ? preloadedPlayer : fallbackPlayer;
   const retryCountRef = useRef(0);
 
   useEffect(() => {
@@ -58,8 +60,9 @@ export function VideoBackground() {
 
     const sub = player.addListener("statusChange", handleStatusChange);
 
-    // Initial play attempt (helps web autoplay after mount)
-    const t = setTimeout(tryPlay, 100);
+    // Initial play - on native use longer delay so VideoView is ready
+    const delay = Platform.OS === "web" ? 100 : 300;
+    const t = setTimeout(tryPlay, delay);
 
     return () => {
       sub.remove();
@@ -76,6 +79,14 @@ export function VideoBackground() {
         nativeControls={false}
         allowsFullscreen={false}
         allowsPictureInPicture={false}
+        onFirstFrameRender={() => {
+          try {
+            player.play();
+          } catch (_e) {}
+        }}
+        {...(Platform.OS === "android" && {
+          surfaceType: "textureView" as const,
+        })}
       />
     </View>
   );
