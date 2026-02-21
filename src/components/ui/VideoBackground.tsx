@@ -8,6 +8,34 @@ const GIF_FALLBACK = require("../../../alter.gif");
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 1000;
+const GIF_LOOP_INTERVAL_MS = 4000;
+
+/**
+ * GIF background that forces loop by remounting + cache-bust every N seconds.
+ * resolveAssetSource exists on native only; on web we rely on key remount.
+ */
+function GifLoopBackground() {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((k) => k + 1), GIF_LOOP_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  let source: (typeof GIF_FALLBACK) | { uri: string } = GIF_FALLBACK;
+  if (typeof Image.resolveAssetSource === "function") {
+    const resolved = Image.resolveAssetSource(GIF_FALLBACK);
+    if (resolved?.uri) {
+      const sep = resolved.uri.includes("?") ? "&" : "?";
+      source = { uri: `${resolved.uri}${sep}t=${tick}` };
+    }
+  }
+
+  return (
+    <View style={styles.container} pointerEvents="none">
+      <Image key={tick} source={source} style={styles.gif} resizeMode="cover" />
+    </View>
+  );
+}
 
 /**
  * Returns true when video autoplay is unlikely to work (mobile web, etc.)
@@ -75,11 +103,7 @@ export function VideoBackground() {
   }, [player, useGifFallback]);
 
   if (useGifFallback) {
-    return (
-      <View style={styles.container} pointerEvents="none">
-        <Image source={GIF_FALLBACK} style={styles.gif} resizeMode="cover" />
-      </View>
-    );
+    return <GifLoopBackground />;
   }
 
   return (
