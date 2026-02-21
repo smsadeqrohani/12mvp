@@ -1,19 +1,49 @@
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { useRef, useState } from "react";
+import {
+  StyleSheet,
+  Platform,
+  Animated,
+  LayoutChangeEvent,
+} from "react-native";
+import LottieView from "lottie-react-native";
 
 /**
- * Custom splash screen matching the app design system.
- * Implements the Figma design (YekDo) - centered logo, brand name, dark background.
+ * Splash screen with Lottie animation.
+ * Full height/width - no empty space. Plays once, then fades out.
  */
-export function SplashScreen() {
+export function SplashScreen({ onComplete }: { onComplete?: () => void }) {
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [size, setSize] = useState(500);
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    if (width > 0 && height > 0) {
+      setSize(Math.max(width, height));
+    }
+  };
+
+  const handleAnimationFinish = (isCancelled: boolean) => {
+    if (isCancelled) return;
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 400,
+      useNativeDriver: true,
+    }).start(() => onComplete?.());
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Logo area - matches login screen branding */}
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoEmoji}>🏆</Text>
-      </View>
-      <Text style={styles.brandName}>۱۲ MVP</Text>
-      <Text style={styles.tagline}>به برنامه تست هوش خوش آمدید</Text>
-    </View>
+    <Animated.View
+      style={[styles.container, { opacity: fadeAnim }]}
+      onLayout={onLayout}
+    >
+      <LottieView
+        source={require("../../../assets/splash.lottie")}
+        autoPlay
+        loop={false}
+        onAnimationFinish={handleAnimationFinish}
+        style={[styles.animation, { width: size, height: size }]}
+      />
+    </Animated.View>
   );
 }
 
@@ -23,29 +53,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#06202F",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 24,
     ...(Platform.OS !== "web" && { direction: "rtl" }),
   },
-  logoContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 24,
-    backgroundColor: "rgba(255, 112, 26, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  logoEmoji: {
-    fontSize: 48,
-  },
-  brandName: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#ffffff",
-    marginBottom: 8,
-  },
-  tagline: {
-    fontSize: 16,
-    color: "#9ca3af",
-  },
+  animation: {},
 });

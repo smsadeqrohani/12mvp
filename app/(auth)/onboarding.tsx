@@ -1,4 +1,5 @@
-import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { LottieBackground } from "../../src/components/ui";
 import { useRouter } from "expo-router";
 
 // YekDo onboarding - Figma node 325-788
@@ -8,11 +9,8 @@ export default function OnboardingScreen() {
   const router = useRouter();
 
   return (
-    <ImageBackground
-      source={require("../../assets/login-background.png")}
-      style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}
-      resizeMode="cover"
-    >
+    <View style={{ flex: 1, width: "100%" }}>
+      <LottieBackground />
       <View
         style={{
           flex: 1,
@@ -22,34 +20,26 @@ export default function OnboardingScreen() {
           paddingBottom: 48,
         }}
       >
-        {/* Logo / Brand */}
-        <Text
-          style={{
-            fontSize: 36,
-            fontWeight: "800",
-            color: "#ffffff",
-            textAlign: "center",
-            marginBottom: 24,
-            textShadowColor: "rgba(0,0,0,0.5)",
-            textShadowOffset: { width: 0, height: 2 },
-            textShadowRadius: 4,
-          }}
-        >
-          یک‌دو
-        </Text>
-
-        {/* CTA Button - bright yellow/golden */}
+        {/* CTA Button - Figma design: height 64px, yellow-500, 3D shadow */}
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/login")}
+          onPress={() => router.push("/(auth)/login?mode=signup")}
           activeOpacity={0.85}
           style={{
-            backgroundColor: "#FACC15",
-            borderRadius: 16,
-            paddingVertical: 16,
-            paddingHorizontal: 24,
+            height: 64,
+            paddingVertical: 12,
+            paddingStart: 64,
+            paddingEnd: 60,
+            borderRadius: 12,
+            backgroundColor: "#EAB308",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 16,
+            // 3D raised: box-shadow 0 -4px 0 0 (darker yellow edge)
+            shadowColor: "#CA8A04",
+            shadowOffset: { width: 0, height: -4 },
+            shadowOpacity: 1,
+            shadowRadius: 0,
+            elevation: 4,
           }}
         >
           <Text
@@ -76,6 +66,6 @@ export default function OnboardingScreen() {
           هر برد، تو رو به صدر جدول نزدیک‌تر میکنه!
         </Text>
       </View>
-    </ImageBackground>
+    </View>
   );
 }

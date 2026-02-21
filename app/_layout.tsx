@@ -66,9 +66,12 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (loggedInUser === null && !inAuthGroup) {
-      // Redirect to onboarding first (logged-out users)
-      router.replace("/(auth)/onboarding");
+    if (loggedInUser === null) {
+      // Logged-out users: redirect to onboarding only if outside auth (e.g. tabs)
+      // Allow staying on login/signup when coming from onboarding button
+      if (!inAuthGroup) {
+        router.replace("/(auth)/onboarding");
+      }
     } else if (loggedInUser !== null && inAuthGroup) {
       // Check if user needs profile setup
       if (userProfile === null && segments[1] !== "profile-setup") {
@@ -100,26 +103,19 @@ export default function RootLayout() {
   });
 
   const [appReady, setAppReady] = useState(false);
-  const [splashStartTime] = useState(() => Date.now());
+  const [splashComplete, setSplashComplete] = useState(false);
 
   // Hide native splash when showing custom splash
   useEffect(() => {
     void SplashScreen.hideAsync();
   }, []);
 
-  // Minimum 2 second splash duration, then show app when fonts ready
+  // Show app when fonts ready (loaded or failed) AND splash animation finished + faded out
   useEffect(() => {
-    if (!fontsLoaded && !fontError) return;
-
-    const elapsed = Date.now() - splashStartTime;
-    const remaining = Math.max(0, 2000 - elapsed);
-
-    const timer = setTimeout(() => {
+    if ((fontsLoaded || fontError) && splashComplete) {
       setAppReady(true);
-    }, remaining);
-
-    return () => clearTimeout(timer);
-  }, [fontsLoaded, fontError, splashStartTime]);
+    }
+  }, [fontsLoaded, fontError, splashComplete]);
 
   useEffect(() => {
     if (Platform.OS !== "web") {
@@ -174,7 +170,9 @@ export default function RootLayout() {
     );
 
   if (!appReady) {
-    return mobileViewportWrapper(<AppSplashScreen />);
+    return mobileViewportWrapper(
+      <AppSplashScreen onComplete={() => setSplashComplete(true)} />
+    );
   }
 
   const appContent = (

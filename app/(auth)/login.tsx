@@ -5,9 +5,9 @@ import {
   TouchableOpacity,
   ScrollView,
   SafeAreaView,
-  ImageBackground,
   Dimensions,
 } from "react-native";
+import { LottieBackground } from "../../src/components/ui";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useQuery } from "convex/react";
@@ -38,12 +38,9 @@ export default function LoginScreen() {
   }, [loggedInUser, userProfile, router]);
 
   return (
-    <ImageBackground
-      source={require("../../assets/login-background.png")}
-      style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}
-      resizeMode="cover"
-    >
-      <SafeAreaView style={{ flex: 1, width: "100%" }}>
+    <View style={{ flex: 1, width: "100%" }}>
+      <LottieBackground />
+      <SafeAreaView style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
         <ScrollView
           style={{ flex: 1, width: "100%" }}
           contentContainerStyle={{
@@ -62,13 +59,13 @@ export default function LoginScreen() {
             style={{
               width: "100%",
               maxWidth: 400,
-              backgroundColor: "rgba(15, 35, 80, 0.75)",
+              backgroundColor: "rgba(0, 0, 0, 0.2)",
               borderRadius: 24,
               paddingHorizontal: 24,
               paddingTop: 32,
               paddingBottom: 28,
               borderWidth: 1,
-              borderColor: "rgba(148, 163, 184, 0.12)",
+              borderColor: "rgba(255, 255, 255, 0.15)",
               alignSelf: "center",
             }}
           >
@@ -153,6 +150,6 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
