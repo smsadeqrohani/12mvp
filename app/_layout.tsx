@@ -138,11 +138,13 @@ export default function RootLayout() {
     };
   }, []);
 
-  // Mobile viewport width for web (shared by splash and app)
+  // Mobile viewport width for web (app pages - NOT admin)
+  const segments = useSegments();
+  const isAdminRoute = segments[0] === "admin";
   const MOBILE_VIEWPORT_WIDTH = 430;
 
   const mobileViewportWrapper = (child: React.ReactNode) =>
-    Platform.OS === "web" ? (
+    Platform.OS === "web" && !isAdminRoute ? (
       <View
         style={{
           flex: 1,
