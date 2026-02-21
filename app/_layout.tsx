@@ -10,7 +10,7 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api } from "../convex/_generated/api";
 import { toastConfig } from "../src/lib/toast";
-import { ErrorBoundary, SplashScreen as AppSplashScreen } from "../src/components/ui";
+import { ErrorBoundary, SplashScreen as AppSplashScreen, VideoPreloadProvider } from "../src/components/ui";
 import "../global.css";
 
 // Initialize Convex client
@@ -190,9 +190,11 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <ConvexProvider client={convex}>
-        <ConvexAuthProvider client={convex} storage={AsyncStorage}>
-          <SafeAreaProvider>{content}</SafeAreaProvider>
-        </ConvexAuthProvider>
+<ConvexAuthProvider client={convex} storage={AsyncStorage}>
+        <SafeAreaProvider>
+          <VideoPreloadProvider>{content}</VideoPreloadProvider>
+        </SafeAreaProvider>
+      </ConvexAuthProvider>
       </ConvexProvider>
     </AppThemeProvider>
   );

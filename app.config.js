@@ -50,7 +50,8 @@ export default {
     },
     plugins: [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-video"
     ],
     scheme: "12mvp",
     experiments: {

@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   Dimensions,
 } from "react-native";
-import { LottieBackground } from "../../src/components/ui";
+import { VideoBackground } from "../../src/components/ui";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useQuery } from "convex/react";
@@ -39,7 +39,7 @@ export default function LoginScreen() {
 
   return (
     <View style={{ flex: 1, width: "100%" }}>
-      <LottieBackground />
+      <VideoBackground />
       <SafeAreaView style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
         <ScrollView
           style={{ flex: 1, width: "100%" }}

@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { LottieBackground } from "../../src/components/ui";
+import { VideoBackground } from "../../src/components/ui";
 import { useRouter } from "expo-router";
 
 // YekDo onboarding - Figma node 325-788
@@ -10,7 +10,7 @@ export default function OnboardingScreen() {
 
   return (
     <View style={{ flex: 1, width: "100%" }}>
-      <LottieBackground />
+      <VideoBackground />
       <View
         style={{
           flex: 1,
