@@ -44,8 +44,8 @@ export default function OnboardingScreen() {
         >
           <Text
             style={{
+              fontFamily: "Meem-Bold",
               fontSize: 18,
-              fontWeight: "700",
               color: "#1a1a1a",
             }}
           >
@@ -56,6 +56,7 @@ export default function OnboardingScreen() {
         {/* Tagline */}
         <Text
           style={{
+            fontFamily: "Meem-Regular",
             fontSize: 14,
             color: "#ffffff",
             textAlign: "center",

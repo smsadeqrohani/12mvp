@@ -6,8 +6,10 @@ import {
   ScrollView,
   SafeAreaView,
   Dimensions,
+  Platform,
 } from "react-native";
 import { VideoBackground } from "../../src/components/ui";
+import { COLORS } from "../../src/lib/colors";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useQuery } from "convex/react";
@@ -54,45 +56,51 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Login card - centered vertically and horizontally */}
+          {/* Login card - design: 358px, gap 40, blur, blue border */}
           <View
             style={{
-              width: "100%",
-              maxWidth: 400,
-              backgroundColor: "rgba(0, 0, 0, 0.2)",
-              borderRadius: 24,
-              paddingHorizontal: 24,
-              paddingTop: 32,
-              paddingBottom: 28,
+              width: 358,
+              maxWidth: "100%",
+              padding: 24,
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 40,
+              borderRadius: 16,
               borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.15)",
+              borderColor: COLORS.blue[700],
+              backgroundColor: "rgba(7, 25, 61, 0.72)",
+              ...(Platform.OS === "web" && {
+                backdropFilter: "blur(12px)",
+              } as Record<string, unknown>),
               alignSelf: "center",
             }}
           >
             {/* Welcome message */}
-            <Text
-              style={{
-                fontSize: 24,
-                fontWeight: "700",
-                color: "#ffffff",
-                textAlign: "center",
-                marginBottom: 8,
-              }}
-            >
-              {isSignUp ? "باشگاه جدید بسازید" : "به یک دو خوش آمدید!"}
-            </Text>
-            <Text
-              style={{
-                fontSize: 15,
-                color: "#9ca3af",
-                textAlign: "center",
-                marginBottom: 28,
-              }}
-            >
-              {isSignUp
-                ? "حساب کاربری خود را ایجاد کنید"
-                : "برای رفتن به باشگاه وارد شوید"}
-            </Text>
+            <View style={{ alignItems: "center", gap: 8 }}>
+              <Text
+                style={{
+                  fontFamily: "Meem-Bold",
+                  fontSize: 24,
+                  color: COLORS.neutral[100],
+                  textAlign: "center",
+                }}
+              >
+                {isSignUp ? "باشگاه جدید بسازید" : "به یک دو خوش آمدید!"}
+              </Text>
+              <Text
+                style={{
+                  fontFamily: "Meem-Regular",
+                  fontSize: 15,
+                  color: COLORS.neutral[300],
+                  textAlign: "center",
+                }}
+              >
+                {isSignUp
+                  ? "حساب کاربری خود را ایجاد کنید"
+                  : "برای رفتن به باشگاه وارد شوید"}
+              </Text>
+            </View>
 
             {/* Form */}
             {isSignUp ? (
@@ -102,7 +110,7 @@ export default function LoginScreen() {
             )}
 
             {/* Secondary toggle link */}
-            <View className="items-center mt-5">
+            <View className="items-center">
               <TouchableOpacity
                 onPress={() => setIsSignUp(!isSignUp)}
                 className="py-2 px-4"
@@ -110,22 +118,23 @@ export default function LoginScreen() {
               >
                 <Text
                   style={{
+                    fontFamily: "Meem-Regular",
                     fontSize: 14,
-                    color: "#9ca3af",
+                    color: COLORS.neutral[300],
                     textAlign: "center",
                   }}
                 >
                   {isSignUp ? (
                     <>
-                      <Text>قبلاً حساب دارید؟ </Text>
-                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                      <Text style={{ fontFamily: "Meem-Regular" }}>قبلاً حساب دارید؟ </Text>
+                      <Text style={{ fontFamily: "Meem-Bold", color: COLORS.yellow[500] }}>
                         وارد شوید
                       </Text>
                     </>
                   ) : (
                     <>
-                      <Text>حساب کاربری ندارید؟ </Text>
-                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                      <Text style={{ fontFamily: "Meem-Regular" }}>حساب کاربری ندارید؟ </Text>
+                      <Text style={{ fontFamily: "Meem-Bold", color: COLORS.yellow[500] }}>
                         ساخت باشگاه جدید
                       </Text>
                     </>
@@ -139,8 +148,9 @@ export default function LoginScreen() {
           <View className="items-center mt-6 pt-4">
             <Text
               style={{
+                fontFamily: "Meem-Regular",
                 fontSize: 12,
-                color: "#9ca3af",
+                color: COLORS.neutral[300],
                 textAlign: "center",
                 lineHeight: 20,
               }}

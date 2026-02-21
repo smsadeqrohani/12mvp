@@ -2,39 +2,50 @@
  * YekDo Design System - Color Guide
  * Use these colors anywhere in the app for consistent styling.
  *
- * Blue: Primary backgrounds, inactive states
+ * Import: import { COLORS } from "@/src/lib/colors"
+ * Usage: COLORS.blue[700], COLORS.yellow[500], etc.
+ *
+ * Blue: Primary backgrounds, borders, inactive states
  * Yellow: Active tab, accents, CTAs
+ * Neutral: Text, grays, surfaces
  * Rosegold: Special accents
+ * Green: Success states
+ * Red: Error, danger states
  */
 
 export const COLORS = {
-  // Blue palette - backgrounds, inactive tabs
   blue: {
     900: "#07193D",
     800: "#00297A",
-    700: "#0036A3",
-    600: "#0044CC",
-    500: "#0055FE",
-    400: "#3377FF",
-    300: "#5C92FF",
+    700: "#073BA3",
+    600: "#1854CC",
+    500: "#1257E0",
+    400: "#3172F5",
+    300: "#588CF5",
     200: "#7FA6F5",
     100: "#C2D6FF",
   },
 
-  // Yellow palette - active tab, accents, CTAs
   yellow: {
-    900: "#AD4B00",
-    800: "#C25400",
-    700: "#D65D00",
-    600: "#EB6600",
-    500: "#FF6F00",
-    400: "#FF7B14",
-    300: "#FF923D",
-    200: "#FFA966",
-    100: "#FFC08F",
+    900: "#7A5E0A",
+    800: "#A37D0D",
+    700: "#B88D0F",
+    600: "#E0AE1B",
+    500: "#F0BB1D",
+    400: "#F5C431",
+    300: "#FFE085",
+    200: "#FFF0C2",
+    100: "#FFFAEB",
   },
 
-  // Rosegold palette - special accents
+  neutral: {
+    500: "#2E333D",
+    400: "#5D677A",
+    300: "#9AA4B8",
+    200: "#C5CEE0",
+    100: "#FFFFFF",
+  },
+
   rosegold: {
     500: "#7A3A0F",
     400: "#A35521",
@@ -43,10 +54,26 @@ export const COLORS = {
     100: "#F5BA93",
   },
 
-  // Navbar specific
+  green: {
+    500: "#0A520A",
+    400: "#0F7A0F",
+    300: "#139E13",
+    200: "#08CC08",
+    100: "#5CFF5C",
+  },
+
+  red: {
+    500: "#8F2211",
+    400: "#B82B16",
+    300: "#D63A22",
+    200: "#FF6047",
+    100: "#FF9585",
+  },
+
+  // Convenience aliases for common use
   navbar: {
-    background: "#07193D",
-    active: "#FF7B14", // yellow-400 - gold for selected tab
-    inactive: "#5C92FF", // blue-300 - light blue for inactive tabs
+    background: "#07193D", // blue.900
+    active: "#F5C431", // yellow.400
+    inactive: "#588CF5", // blue.300
   },
 } as const;

@@ -12,6 +12,7 @@ import { useState } from "react";
 import { toast } from "../../../lib/toast";
 import { useRouter } from "expo-router";
 import { KeyboardAvoidingContainer } from "../../../components/ui";
+import { COLORS } from "../../../lib/colors";
 
 export function SignInForm() {
   const { signIn } = useAuthActions();
@@ -93,7 +94,8 @@ export function SignInForm() {
             style={styles.input}
             keyboardType="email-address"
             placeholder="ایمیل خود را وارد کنید"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={COLORS.neutral[400]}
+            selectionColor={COLORS.neutral[400]}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -108,7 +110,8 @@ export function SignInForm() {
             style={styles.input}
             secureTextEntry
             placeholder="رمز عبور را وارد کنید"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={COLORS.neutral[400]}
+            selectionColor={COLORS.neutral[400]}
             value={password}
             onChangeText={(text) => {
               setPassword(text);
@@ -124,15 +127,23 @@ export function SignInForm() {
         </View>
 
         {flow === "signUp" && passwordErrors.length > 0 && (
-          <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-            <Text className="text-red-400 text-sm font-semibold mb-2">
+          <View
+            style={{
+              backgroundColor: `${COLORS.red[500]}33`,
+              borderWidth: 1,
+              borderColor: COLORS.red[400],
+              borderRadius: 12,
+              padding: 12,
+            }}
+          >
+            <Text style={{ fontFamily: "Meem-SemiBold", color: COLORS.red[400], fontSize: 14, marginBottom: 8 }}>
               رمز عبور باید شامل موارد زیر باشد:
             </Text>
             <View className="space-y-1">
               {passwordErrors.map((error, index) => (
                 <View key={index} className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-red-400">•</Text>
-                  <Text className="text-red-300 text-sm">{error}</Text>
+                  <Text style={{ fontFamily: "Meem-Regular", color: COLORS.red[400] }}>•</Text>
+                  <Text style={{ fontFamily: "Meem-Regular", color: COLORS.red[300], fontSize: 14 }}>{error}</Text>
                 </View>
               ))}
             </View>
@@ -147,7 +158,7 @@ export function SignInForm() {
         >
           {submitting ? (
             <View className="flex-row items-center justify-center gap-2">
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={COLORS.neutral[100]} />
               <Text style={styles.buttonText}>در حال پردازش...</Text>
             </View>
           ) : (
@@ -161,39 +172,49 @@ export function SignInForm() {
   );
 }
 
-// YekDo login design - Figma node 320-605
+// YekDo design - colors from design system
 const styles = StyleSheet.create({
   label: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "500",
+    fontFamily: "Meem-Medium",
+    color: COLORS.neutral[200],
+    fontSize: 14,
     marginBottom: 8,
+    textAlign: "center",
   },
   input: {
-    backgroundColor: "rgba(30, 58, 110, 0.8)",
+    fontFamily: "Meem-Regular",
+    backgroundColor: COLORS.blue[900],
     borderWidth: 1,
-    borderColor: "rgba(148, 163, 184, 0.2)",
+    borderColor: COLORS.blue[700],
     borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    color: "#ffffff",
+    height: 48,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: COLORS.neutral[100],
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: COLORS.blue[500], // blue/blue-500
+    borderWidth: 1,
+    borderColor: COLORS.blue[300], // blue/blue-300
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 24,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.32,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: "#ffffff",
+    fontFamily: "Meem-SemiBold",
+    color: COLORS.neutral[100],
     fontSize: 16,
-    fontWeight: "600",
   },
 });
