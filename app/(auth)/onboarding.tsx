@@ -52,6 +52,7 @@ export default function OnboardingScreen() {
               fontSize: 18,
               fontWeight: "700",
               color: "#1a1a1a",
+              fontFamily: "Meem-Bold",
             }}
           >
             وارد رختکن شو
@@ -66,6 +67,7 @@ export default function OnboardingScreen() {
             textAlign: "center",
             lineHeight: 22,
             opacity: 0.95,
+            fontFamily: "Meem-Regular",
           }}
         >
           هر برد، تو رو به صدر جدول نزدیک‌تر میکنه!

@@ -13,12 +13,12 @@ interface FormFieldProps {
 export function FormField({ label, required, error, help, children }: FormFieldProps) {
   return (
     <View>
-      <Text className="text-sm font-medium text-gray-300 mb-2 text-right">
-        {label} {required && <Text className="text-accent">*</Text>}
+      <Text className="text-sm font-medium text-gray-300 mb-2 text-right" style={{ fontFamily: "Meem-Medium" }}>
+        {label} {required && <Text className="text-accent" style={{ fontFamily: "Meem-Medium" }}>*</Text>}
       </Text>
       {children}
-      {help && <Text className="text-gray-500 text-xs mt-1 text-right">{help}</Text>}
-      {error && <Text className="text-red-400 text-xs mt-1 text-right">{error}</Text>}
+      {help && <Text className="text-gray-500 text-xs mt-1 text-right" style={{ fontFamily: "Meem-Regular" }}>{help}</Text>}
+      {error && <Text className="text-red-400 text-xs mt-1 text-right" style={{ fontFamily: "Meem-Regular" }}>{error}</Text>}
     </View>
   );
 }

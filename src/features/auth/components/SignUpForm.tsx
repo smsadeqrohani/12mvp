@@ -159,14 +159,14 @@ export function SignUpForm({ initialReferralCode }: SignUpFormProps = {} as Sign
 
         {passwordErrors.length > 0 && (
           <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-            <Text className="text-red-400 text-sm font-semibold mb-2">
+            <Text className="text-red-400 text-sm font-semibold mb-2" style={{ fontFamily: "Meem-SemiBold" }}>
               رمز عبور باید شامل موارد زیر باشد:
             </Text>
             <View className="space-y-1">
               {passwordErrors.map((error, index) => (
                 <View key={index} className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-red-400">•</Text>
-                  <Text className="text-red-300 text-sm">{error}</Text>
+                  <Text className="text-red-400" style={{ fontFamily: "Meem-Regular" }}>•</Text>
+                  <Text className="text-red-300 text-sm" style={{ fontFamily: "Meem-Regular" }}>{error}</Text>
                 </View>
               ))}
             </View>
@@ -230,6 +230,7 @@ const authStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     marginBottom: 8,
+    fontFamily: "Meem-Medium",
   },
   input: {
     backgroundColor: "rgba(30, 58, 110, 0.8)",
@@ -240,6 +241,7 @@ const authStyles = StyleSheet.create({
     paddingHorizontal: 16,
     color: "#ffffff",
     fontSize: 16,
+    fontFamily: "Meem-Regular",
   },
   button: {
     backgroundColor: "#3B82F6",
@@ -251,7 +253,7 @@ const authStyles = StyleSheet.create({
     marginTop: 8,
   },
   buttonDisabled: { opacity: 0.7 },
-  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  buttonText: { color: "#ffffff", fontSize: 16, fontWeight: "600", fontFamily: "Meem-SemiBold" },
   requirementsBox: {
     backgroundColor: "rgba(30, 58, 110, 0.4)",
     borderWidth: 1,
@@ -264,13 +266,15 @@ const authStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 8,
+    fontFamily: "Meem-SemiBold",
   },
-  requirementsBullet: { color: "#93c5fd" },
-  requirementsText: { color: "#bfdbfe", fontSize: 14 },
+  requirementsBullet: { color: "#93c5fd", fontFamily: "Meem-Regular" },
+  requirementsText: { color: "#bfdbfe", fontSize: 14, fontFamily: "Meem-Regular" },
   helperText: {
     color: "#9ca3af",
     fontSize: 12,
     marginTop: 4,
     textAlign: "right",
+    fontFamily: "Meem-Regular",
   },
 });

@@ -85,6 +85,7 @@ export default function LoginScreen() {
                 color: "#ffffff",
                 textAlign: "center",
                 marginBottom: 8,
+                fontFamily: "Meem-Bold",
               }}
             >
               {isSignUp ? "باشگاه جدید بسازید" : "به یک دو خوش آمدید!"}
@@ -95,6 +96,7 @@ export default function LoginScreen() {
                 color: "#9ca3af",
                 textAlign: "center",
                 marginBottom: 28,
+                fontFamily: "Meem-Regular",
               }}
             >
               {isSignUp
@@ -121,19 +123,20 @@ export default function LoginScreen() {
                     fontSize: 14,
                     color: "#9ca3af",
                     textAlign: "center",
+                    fontFamily: "Meem-Regular",
                   }}
                 >
                   {isSignUp ? (
                     <>
-                      <Text>قبلاً حساب دارید؟ </Text>
-                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                      <Text style={{ fontFamily: "Meem-Regular" }}>قبلاً حساب دارید؟ </Text>
+                      <Text style={{ color: "#3B82F6", fontWeight: "600", fontFamily: "Meem-SemiBold" }}>
                         وارد شوید
                       </Text>
                     </>
                   ) : (
                     <>
-                      <Text>حساب کاربری ندارید؟ </Text>
-                      <Text style={{ color: "#3B82F6", fontWeight: "600" }}>
+                      <Text style={{ fontFamily: "Meem-Regular" }}>حساب کاربری ندارید؟ </Text>
+                      <Text style={{ color: "#3B82F6", fontWeight: "600", fontFamily: "Meem-SemiBold" }}>
                         ساخت باشگاه جدید
                       </Text>
                     </>
@@ -151,6 +154,7 @@ export default function LoginScreen() {
                 color: "#9ca3af",
                 textAlign: "center",
                 lineHeight: 20,
+                fontFamily: "Meem-Regular",
               }}
             >
               با ورود به برنامه، شرایط و قوانین را می‌پذیرید

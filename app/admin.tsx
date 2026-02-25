@@ -136,7 +136,7 @@ export default function AdminScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 justify-center items-center">
-          <Text className="text-white text-lg">در حال بررسی دسترسی مدیریت...</Text>
+          <Text className="text-white text-lg" style={{ fontFamily: "Meem-Regular" }}>در حال بررسی دسترسی مدیریت...</Text>
         </View>
       </SafeAreaView>
     );
@@ -147,7 +147,7 @@ export default function AdminScreen() {
     return (
       <SafeAreaView className="flex-1 bg-background">
         <View className="flex-1 justify-center items-center">
-          <Text className="text-white text-lg">در حال انتقال...</Text>
+          <Text className="text-white text-lg" style={{ fontFamily: "Meem-Regular" }}>در حال انتقال...</Text>
         </View>
       </SafeAreaView>
     );

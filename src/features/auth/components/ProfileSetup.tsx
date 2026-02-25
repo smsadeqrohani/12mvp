@@ -62,12 +62,12 @@ export function ProfileSetup() {
           {/* Header */}
           <View className="items-center mb-10">
             <View className="bg-accent/20 rounded-full p-6 mb-6">
-              <Text className="text-5xl">👤</Text>
+              <Text className="text-5xl" style={{ fontFamily: "Meem-Regular" }}>👤</Text>
             </View>
-            <Text className="text-4xl font-bold text-accent mb-3 text-center">
+            <Text className="text-4xl font-bold text-accent mb-3 text-center" style={{ fontFamily: "Meem-Bold" }}>
               پروفایل خود را تکمیل کنید
             </Text>
-            <Text className="text-lg text-gray-300 text-center">
+            <Text className="text-lg text-gray-300 text-center" style={{ fontFamily: "Meem-Regular" }}>
               چطور شما را صدا کنیم؟
             </Text>
           </View>
@@ -76,7 +76,7 @@ export function ProfileSetup() {
           <View className="bg-background-light rounded-2xl p-6 border border-gray-700 shadow-lg">
             <View className="flex flex-col gap-4">
               <View>
-                <Text className="text-gray-300 mb-2 font-medium">انتخاب آواتار</Text>
+                <Text className="text-gray-300 mb-2 font-medium" style={{ fontFamily: "Meem-Medium" }}>انتخاب آواتار</Text>
                 <View className="flex-row flex-wrap gap-3">
                   {AVATAR_OPTIONS.filter((option) => {
                     // Show free avatars always
@@ -119,7 +119,7 @@ export function ProfileSetup() {
               </View>
 
               <View>
-                <Text className="text-gray-300 mb-2 font-medium">نام شما</Text>
+                <Text className="text-gray-300 mb-2 font-medium" style={{ fontFamily: "Meem-Medium" }}>نام شما</Text>
                 <TextInput
                   value={name}
                   onChangeText={setName}
@@ -138,10 +138,10 @@ export function ProfileSetup() {
                 {loading ? (
                   <View className="flex-row items-center justify-center gap-2">
                     <ActivityIndicator size="small" color="#fff" />
-                    <Text className="text-white font-semibold text-base">در حال ایجاد پروفایل...</Text>
+                    <Text className="text-white font-semibold text-base" style={{ fontFamily: "Meem-SemiBold" }}>در حال ایجاد پروفایل...</Text>
                   </View>
                 ) : (
-                  <Text className="text-white font-semibold text-base">ادامه</Text>
+                  <Text className="text-white font-semibold text-base" style={{ fontFamily: "Meem-SemiBold" }}>ادامه</Text>
                 )}
               </TouchableOpacity>
             </View>

@@ -125,14 +125,14 @@ export function SignInForm() {
 
         {flow === "signUp" && passwordErrors.length > 0 && (
           <View className="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-            <Text className="text-red-400 text-sm font-semibold mb-2">
+            <Text className="text-red-400 text-sm font-semibold mb-2" style={{ fontFamily: "Meem-SemiBold" }}>
               رمز عبور باید شامل موارد زیر باشد:
             </Text>
             <View className="space-y-1">
               {passwordErrors.map((error, index) => (
                 <View key={index} className="flex-row items-center gap-2 mb-1">
-                  <Text className="text-red-400">•</Text>
-                  <Text className="text-red-300 text-sm">{error}</Text>
+                  <Text className="text-red-400" style={{ fontFamily: "Meem-Regular" }}>•</Text>
+                  <Text className="text-red-300 text-sm" style={{ fontFamily: "Meem-Regular" }}>{error}</Text>
                 </View>
               ))}
             </View>
@@ -168,6 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     marginBottom: 8,
+    fontFamily: "Meem-Medium",
   },
   input: {
     backgroundColor: "rgba(30, 58, 110, 0.8)",
@@ -178,6 +179,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     color: "#ffffff",
     fontSize: 16,
+    fontFamily: "Meem-Regular",
   },
   button: {
     backgroundColor: "#3B82F6",
@@ -195,5 +197,6 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "600",
+    fontFamily: "Meem-SemiBold",
   },
 });
