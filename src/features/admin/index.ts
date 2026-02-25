@@ -7,4 +7,5 @@ export { FilePreview } from './components/FilePreview';
 export { FileUpload } from './components/FileUpload';
 export { MatchDetailsAdmin } from './components/MatchDetailsAdmin';
 export { TournamentDetailsAdmin } from './components/TournamentDetailsAdmin';
+export { AdminSettingsTab } from './components/AdminSettingsTab';
 

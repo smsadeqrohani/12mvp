@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share } from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share, FlatList, Image } from "react-native";
 import { useQuery, useMutation } from "convex/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
@@ -21,7 +21,6 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [privateTournamentJoinCode, setPrivateTournamentJoinCode] = useState<string | null>(null);
   const [showJoinCodeModal, setShowJoinCodeModal] = useState(false);
   const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
@@ -29,6 +28,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const [debouncedJoinCode, setDebouncedJoinCode] = useState("");
   const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const router = useRouter();
+  const categoryCarouselRef = useRef<FlatList>(null);
   
   const userProfile = useQuery(api.auth.getUserProfile);
   const waitingTournaments = useQuery(api.tournaments.getWaitingTournaments);
@@ -234,54 +234,122 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             ایجاد تورنومنت جدید
           </Text>
           
-          {/* Category Selector */}
-          <TouchableOpacity
-            onPress={() => setShowCategorySelector(!showCategorySelector)}
-            className="bg-gray-800/50 rounded-xl p-4 mb-4 flex-row items-center justify-between"
-            activeOpacity={0.7}
-          >
-            <Text className="text-white font-semibold">
-              {selectedCategory 
-                ? categories?.find((c: any) => c._id === selectedCategory)?.persianName 
-                : "انتخاب دسته‌بندی (تصادفی)"}
-            </Text>
-            <Ionicons 
-              name={showCategorySelector ? "chevron-up" : "chevron-down"} 
-              size={20} 
-              color="#fff" 
-            />
-          </TouchableOpacity>
+          {/* Category carousel: infinite horizontal, image above + title, placeholder when no image */}
+          {(() => {
+            const CAROUSEL_ITEM_WIDTH = 100;
+            const CAROUSEL_ITEM_MARGIN = 8;
+            const totalItemWidth = CAROUSEL_ITEM_WIDTH + CAROUSEL_ITEM_MARGIN;
+            const randomOption = { _id: null, persianName: "سوالات تصادفی", isRandom: true as const, questionCount: 0 };
+            const carouselItems: Array<typeof randomOption | (NonNullable<typeof categories>[number] & { isRandom?: false })> = [
+              randomOption,
+              ...(categories || []).map((c: any) => ({ ...c, isRandom: false })),
+            ];
+            const listLength = carouselItems.length;
+            const infiniteData = listLength > 0 ? [...carouselItems, ...carouselItems, ...carouselItems] : [];
 
-          {showCategorySelector && (
-            <View className="bg-gray-900/80 rounded-xl p-2 mb-4 max-h-48">
-              <ScrollView className="flex-1">
+            const renderCarouselItem = ({ item, index }: { item: (typeof carouselItems)[number]; index: number }) => {
+              const isRandom = "isRandom" in item && item.isRandom;
+              const isSelected = isRandom ? !selectedCategory : selectedCategory === (item as any)._id;
+              const imageUrl = isRandom ? null : (item as any).imageUrl;
+              const title = (item as any).persianName;
+              const questionCount = (item as any).questionCount;
+
+              return (
                 <TouchableOpacity
-                  onPress={() => {
-                    setSelectedCategory(null);
-                    setShowCategorySelector(false);
-                  }}
-                  className={`p-3 rounded-lg mb-2 ${!selectedCategory ? 'bg-accent' : 'bg-gray-800'}`}
-                  activeOpacity={0.7}
+                  onPress={() => setSelectedCategory(isRandom ? null : (item as any)._id)}
+                  activeOpacity={0.8}
+                  className="items-center mr-2"
+                  style={{ width: CAROUSEL_ITEM_WIDTH }}
                 >
-                  <Text className="text-white font-semibold">سوالات تصادفی</Text>
-                </TouchableOpacity>
-                {categories?.map((category: any) => (
-                  <TouchableOpacity
-                    key={category._id}
-                    onPress={() => {
-                      setSelectedCategory(category._id);
-                      setShowCategorySelector(false);
-                    }}
-                    className={`p-3 rounded-lg mb-2 ${selectedCategory === category._id ? 'bg-accent' : 'bg-gray-800'}`}
-                    activeOpacity={0.7}
+                  <View
+                    className={`rounded-xl overflow-hidden border-2 ${
+                      isSelected ? "border-accent bg-accent/10" : "border-gray-600 bg-gray-800/50"
+                    }`}
+                    style={{ width: CAROUSEL_ITEM_WIDTH, height: CAROUSEL_ITEM_WIDTH }}
                   >
-                    <Text className="text-white font-semibold">{category.persianName}</Text>
-                    <Text className="text-gray-400 text-xs">{category.questionCount} سوال</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
+                    {imageUrl ? (
+                      <Image
+                        source={{ uri: imageUrl }}
+                        style={{ width: CAROUSEL_ITEM_WIDTH, height: CAROUSEL_ITEM_WIDTH }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View className="w-full h-full items-center justify-center bg-gray-700/50">
+                        <Ionicons
+                          name={isRandom ? "shuffle" : "image-outline"}
+                          size={32}
+                          color="#6b7280"
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <Text
+                    className={`text-center mt-2 text-sm font-semibold ${isSelected ? "text-accent" : "text-gray-300"}`}
+                    numberOfLines={2}
+                    style={{ fontFamily: "Meem-SemiBold", width: CAROUSEL_ITEM_WIDTH }}
+                  >
+                    {title}
+                  </Text>
+                  {!isRandom && questionCount != null && (
+                    <Text className="text-gray-500 text-xs mt-0.5" numberOfLines={1}>
+                      {questionCount} سوال
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              );
+            };
+
+            const carouselRef = categoryCarouselRef;
+            const onMomentumScrollEnd = (e: any) => {
+              const offset = e.nativeEvent.contentOffset.x;
+              const index = Math.round(offset / totalItemWidth);
+              if (index < listLength) {
+                carouselRef.current?.scrollToOffset({
+                  offset: offset + listLength * totalItemWidth,
+                  animated: false,
+                });
+              } else if (index >= 2 * listLength) {
+                carouselRef.current?.scrollToOffset({
+                  offset: offset - listLength * totalItemWidth,
+                  animated: false,
+                });
+              }
+            };
+
+            if (listLength === 0) {
+              return (
+                <View className="bg-gray-800/50 rounded-xl p-4 mb-4 items-center">
+                  <Text className="text-gray-400">در حال بارگذاری دسته‌بندی‌ها...</Text>
+                </View>
+              );
+            }
+
+            return (
+              <View className="mb-4">
+                <Text className="text-gray-400 text-sm mb-2 text-right">انتخاب دسته‌بندی (تصادفی)</Text>
+                <FlatList
+                  ref={carouselRef}
+                  data={infiniteData}
+                  keyExtractor={(item, idx) =>
+                    (item as any).isRandom ? `random-${idx}` : `${(item as any)._id}-${idx}`
+                  }
+                  renderItem={renderCarouselItem}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  initialScrollIndex={listLength}
+                  getItemLayout={(_, index) => ({
+                    length: totalItemWidth,
+                    offset: totalItemWidth * index,
+                    index,
+                  })}
+                  onMomentumScrollEnd={onMomentumScrollEnd}
+                  decelerationRate="fast"
+                  snapToInterval={totalItemWidth}
+                  snapToAlignment="start"
+                />
+              </View>
+            );
+          })()}
           
           <View className="flex-row gap-3 mb-3">
             <TouchableOpacity

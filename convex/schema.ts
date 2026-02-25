@@ -140,11 +140,20 @@ const applicationTables = {
     matchesBonus: v.optional(v.number()), // Additional matches limit (for stadium)
     tournamentsBonus: v.optional(v.number()), // Additional tournaments limit (for stadium)
     // Mentor fields
-    mentorMode: v.optional(v.union(v.literal(1), v.literal(2))), // 1 = disable 1 option, 2 = disable 2 options (for mentor)
+    mentorMode: v.optional(v.union(v.literal(0), v.literal(1), v.literal(2))), // 0 = none, 1 = disable 1 option, 2 = disable 2 options (for mentor)
     // Avatar fields
     avatarId: v.optional(v.string()), // Avatar ID for avatar items
+    // Display image (stadium/mentor, like categories)
+    imagePath: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
     durationMs: v.number(), // Duration in milliseconds (e.g., 30 days = 30 * 24 * 60 * 60 * 1000, 0 = permanent)
     isActive: v.boolean(), // Whether item is available for purchase
+  }),
+  
+  /** Single-row app settings: default stadium and mentor given to new users */
+  appSettings: defineTable({
+    defaultStadiumItemId: v.optional(v.id("storeItems")),
+    defaultMentorItemId: v.optional(v.id("storeItems")),
   }),
   
   purchases: defineTable({

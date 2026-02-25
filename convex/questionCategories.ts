@@ -161,7 +161,7 @@ export const getQuestionsInCategoryPaginated = query({
   },
 });
 
-// Get categories with question counts
+// Get categories with question counts and image URL when available
 export const getCategoriesWithCounts = query({
   args: {},
   handler: async (ctx) => {
@@ -175,9 +175,17 @@ export const getCategoriesWithCounts = query({
           .collect()
           .then(relations => relations.length);
 
+        let imageUrl: string | null = null;
+        if (category.imageStorageId) {
+          imageUrl = await ctx.storage.getUrl(category.imageStorageId);
+        } else if (category.imagePath && category.imagePath.startsWith("http")) {
+          imageUrl = category.imagePath;
+        }
+
         return {
           ...category,
           questionCount,
+          imageUrl,
         };
       })
     );

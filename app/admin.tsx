@@ -6,13 +6,13 @@ import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
-import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin, StoreItemForm } from "../src/features/admin";
+import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin, StoreItemForm, AdminSettingsTab } from "../src/features/admin";
 import { PaginationControls, SkeletonAdminTab, DataTableRN, Avatar, ConfirmationDialog } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store";
+type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store" | "settings";
 
 // Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
@@ -1488,7 +1488,7 @@ export default function AdminScreen() {
           item.itemType === "mentor" ? (
             <View className="bg-purple-600/20 rounded-lg px-3 py-1 border border-purple-500/30 w-fit">
               <Text className="text-purple-300 font-semibold text-sm" style={{ fontFamily: 'Meem-SemiBold' }}>
-                {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
+                {item.mentorMode === 0 ? "حذف ۰ گزینه" : item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
               </Text>
             </View>
           ) : (
@@ -1990,6 +1990,29 @@ export default function AdminScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setActiveTab("settings")}
+                className={`p-4 rounded-xl ${
+                  activeTab === "settings"
+                    ? "bg-accent/20 border border-accent/30"
+                    : "bg-transparent"
+                }`}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
+                    activeTab === "settings" ? "bg-accent" : "bg-gray-700"
+                  }`}>
+                    <Ionicons name="settings" size={20} color={activeTab === "settings" ? "#fff" : "#9ca3af"} />
+                  </View>
+                  <Text className={`font-medium ${
+                    activeTab === "settings" ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
+                    تنظیمات
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </View>
 
             {/* Back to Main Button */}
@@ -2024,6 +2047,7 @@ export default function AdminScreen() {
           {activeTab === "matches" && renderMatchesTab()}
           {activeTab === "tournaments" && renderTournamentsTab()}
           {activeTab === "store" && renderStoreTab()}
+          {activeTab === "settings" && <AdminSettingsTab />}
         </View>
       </View>
 

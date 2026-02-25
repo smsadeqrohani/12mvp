@@ -119,8 +119,8 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
         setQuestionStartTime(Date.now());
         initializedQuestionRef.current = questionId; // Mark this question as initialized
         
-        // Auto-disable options if mentor is active
-        if (activeMentor && activeMentor.mentorMode) {
+        // Auto-disable options if mentor is active and has mode 1 or 2
+        if (activeMentor && activeMentor.mentorMode > 0) {
           const mentorMode = activeMentor.mentorMode;
           // Check if we haven't already processed this question with mentor
           if (!mentorProcessedRef.current.has(questionId)) {
@@ -195,8 +195,8 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
   const handleDisableOptions = async (numOptions: number) => {
     if (!currentQuestion || isAnswered) return;
     
-    // Don't allow manual disable if mentor is active (mentor does it automatically)
-    if (activeMentor && activeMentor.mentorMode) {
+    // Don't allow manual disable if mentor is active with mode 1 or 2 (mentor does it automatically)
+    if (activeMentor && activeMentor.mentorMode > 0) {
       toast.error("منتور فعال است و به صورت خودکار گزینه‌ها را غیرفعال می‌کند");
       return;
     }
@@ -576,7 +576,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                 <View className="flex-row items-center gap-2">
                   <Ionicons name="school" size={20} color="#a78bfa" />
                   <Text className="text-purple-300 text-sm flex-1" style={{ fontFamily: 'Meem-SemiBold' }}>
-                    منتور فعال: {activeMentor.name} ({activeMentor.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"})
+                    منتور فعال: {activeMentor.name} ({activeMentor.mentorMode === 0 ? "حذف ۰ گزینه" : activeMentor.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"})
                   </Text>
                 </View>
               </View>
@@ -585,9 +585,9 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
             <View className="flex-row gap-3">
               <TouchableOpacity
                 onPress={() => handleDisableOptions(1)}
-                disabled={(userPoints < 2 && !(activeMentor && activeMentor.mentorMode === 1)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode)}
+                disabled={(userPoints < 2 && !(activeMentor && activeMentor.mentorMode === 1)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode > 0)}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
+                  (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode > 0)
                     ? activeMentor && activeMentor.mentorMode === 1
                       ? "bg-purple-600/20 border-purple-500"
                       : "bg-accent/20 border-accent"
@@ -596,7 +596,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0 && !(activeMentor && activeMentor.mentorMode)
+                    (userPoints >= 2 || (activeMentor && activeMentor.mentorMode === 1)) && (usedHints[currentQuestion._id] || []).length === 0 && !(activeMentor && activeMentor.mentorMode > 0)
                       ? activeMentor && activeMentor.mentorMode === 1
                         ? "text-purple-300"
                         : "text-accent"
@@ -605,16 +605,16 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                     غیرفعال کردن ۱ گزینه
                   </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Meem-Regular' }}>
-                    {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۲ امتیاز"}
+                    {activeMentor && activeMentor.mentorMode === 1 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode > 0 ? "غیرفعال (منتور فعال)" : "۲ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>
               
               <TouchableOpacity
                 onPress={() => handleDisableOptions(2)}
-                disabled={(userPoints < 5 && !(activeMentor && activeMentor.mentorMode === 2)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode)}
+                disabled={(userPoints < 5 && !(activeMentor && activeMentor.mentorMode === 2)) || (usedHints[currentQuestion._id] || []).includes('used') || (usedHints[currentQuestion._id] || []).includes('mentor') || (activeMentor && activeMentor.mentorMode > 0)}
                 className={`flex-1 px-4 py-3 rounded-xl border-2 ${
-                  (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
+                  (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode > 0)
                     ? activeMentor && activeMentor.mentorMode === 2
                       ? "bg-purple-600/20 border-purple-500"
                       : "bg-accent/20 border-accent"
@@ -623,7 +623,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
               >
                 <View className="items-center">
                   <Text className={`text-lg font-bold ${
-                    (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode)
+                    (userPoints >= 5 || (activeMentor && activeMentor.mentorMode === 2)) && !(usedHints[currentQuestion._id] || []).includes('used') && !(usedHints[currentQuestion._id] || []).includes('mentor') && !(activeMentor && activeMentor.mentorMode > 0)
                       ? activeMentor && activeMentor.mentorMode === 2
                         ? "text-purple-300"
                         : "text-accent"
@@ -632,7 +632,7 @@ export function QuizGame({ matchId, onGameComplete, onLeaveMatch }: QuizGameProp
                     غیرفعال کردن ۲ گزینه
                   </Text>
                   <Text className="text-gray-400 text-xs mt-1" style={{ fontFamily: 'Meem-Regular' }}>
-                    {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode ? "غیرفعال (منتور فعال)" : "۵ امتیاز"}
+                    {activeMentor && activeMentor.mentorMode === 2 ? "رایگان (منتور)" : activeMentor && activeMentor.mentorMode > 0 ? "غیرفعال (منتور فعال)" : "۵ امتیاز"}
                   </Text>
                 </View>
               </TouchableOpacity>

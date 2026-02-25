@@ -64,30 +64,28 @@ export const createTournament = mutation({
         tournament.status !== "cancelled"
     );
     
-    // Calculate tournament limit including stadium bonuses
+    // Calculate tournament limit: base + single active stadium bonus (latest purchase only)
     const baseTournamentsLimit = 1;
     
-    // Get active purchases and calculate bonuses
     const purchases = await ctx.db
       .query("purchases")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
       .collect();
     
     let tournamentsBonus = 0;
+    let bestStadium: { purchasedAt: number; tournamentsBonus: number } | null = null;
     
     for (const purchase of purchases) {
-      // If durationMs is 0, item never expires
       const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
-      if (isActive) {
-        // Purchase is still active
-        const item = await ctx.db.get(purchase.itemId);
-        if (item && item.itemType === "stadium" && item.tournamentsBonus) {
-          tournamentsBonus += item.tournamentsBonus;
-        }
+      if (!isActive) continue;
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "stadium" || item.tournamentsBonus == null) continue;
+      if (!bestStadium || purchase.purchasedAt > bestStadium.purchasedAt) {
+        bestStadium = { purchasedAt: purchase.purchasedAt, tournamentsBonus: item.tournamentsBonus };
       }
     }
+    if (bestStadium) tournamentsBonus = bestStadium.tournamentsBonus;
     
-    // Calculate total limit with bonuses
     const tournamentsLimit = baseTournamentsLimit + tournamentsBonus;
     
     if (recentTournaments.length >= tournamentsLimit) {

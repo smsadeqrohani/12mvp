@@ -137,7 +137,7 @@ export default function StoreScreen() {
                     مدل:
                   </Text>
                   <Text className="text-white font-semibold" style={{ fontFamily: 'Meem-SemiBold' }}>
-                    {item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
+                    {item.mentorMode === 0 ? "حذف ۰ گزینه" : item.mentorMode === 1 ? "حذف ۱ گزینه" : "حذف ۲ گزینه"}
                   </Text>
                 </View>
               </View>

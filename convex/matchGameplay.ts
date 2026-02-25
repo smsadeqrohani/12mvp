@@ -426,7 +426,7 @@ export const disableWrongOptions = mutation({
       throw new Error("You have already answered this question");
     }
     
-    // Check if user has active mentor that matches this request
+    // Check if user's single active mentor (latest purchase) matches this request
     let hasActiveMentor = false;
     const purchases = await ctx.db
       .query("purchases")
@@ -434,16 +434,19 @@ export const disableWrongOptions = mutation({
       .collect();
     
     const now = Date.now();
+    let latest: { purchasedAt: number; mentorMode: 0 | 1 | 2 } | null = null;
     for (const purchase of purchases) {
       const item = await ctx.db.get(purchase.itemId);
       if (!item || item.itemType !== "mentor") continue;
-      
-      // Check if purchase is still active
       const isActive = item.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
-      if (isActive && item.mentorMode === args.numOptionsToDisable) {
-        hasActiveMentor = true;
-        break;
+      if (!isActive) continue;
+      const mode = (item.mentorMode ?? 0) as 0 | 1 | 2;
+      if (!latest || purchase.purchasedAt > latest.purchasedAt) {
+        latest = { purchasedAt: purchase.purchasedAt, mentorMode: mode };
       }
+    }
+    if (latest && latest.mentorMode === args.numOptionsToDisable) {
+      hasActiveMentor = true;
     }
     
     // Get user profile to check points (only if not using mentor)

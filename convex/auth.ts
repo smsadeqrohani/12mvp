@@ -157,6 +157,31 @@ export const createProfile = mutation({
       inviterId,
       referredCount: 0,
     });
+
+    // Assign default stadium and default mentor if configured
+    const appSettings = await ctx.db.query("appSettings").first();
+    if (appSettings?.defaultStadiumItemId) {
+      const stadiumItem = await ctx.db.get(appSettings.defaultStadiumItemId);
+      if (stadiumItem && stadiumItem.itemType === "stadium") {
+        await ctx.db.insert("purchases", {
+          userId,
+          itemId: appSettings.defaultStadiumItemId,
+          purchasedAt: Date.now(),
+          durationMs: stadiumItem.durationMs ?? 0,
+        });
+      }
+    }
+    if (appSettings?.defaultMentorItemId) {
+      const mentorItem = await ctx.db.get(appSettings.defaultMentorItemId);
+      if (mentorItem && mentorItem.itemType === "mentor") {
+        await ctx.db.insert("purchases", {
+          userId,
+          itemId: appSettings.defaultMentorItemId,
+          purchasedAt: Date.now(),
+          durationMs: mentorItem.durationMs ?? 0,
+        });
+      }
+    }
   },
 });
 

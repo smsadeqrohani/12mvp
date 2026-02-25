@@ -25,17 +25,26 @@ export const getStoreItems = query({
       .filter((q) => q.eq(q.field("isActive"), true))
       .collect();
     
-    return items.map(item => ({
-      _id: item._id,
-      name: item.name,
-      description: item.description,
-      price: item.price,
-      itemType: item.itemType || "stadium", // Default to stadium for old items
-      matchesBonus: item.matchesBonus,
-      tournamentsBonus: item.tournamentsBonus,
-      mentorMode: item.mentorMode,
-      avatarId: item.avatarId,
-      durationMs: item.durationMs,
+    return await Promise.all(items.map(async (item) => {
+      let imageUrl: string | null = null;
+      if (item.imageStorageId) {
+        imageUrl = await ctx.storage.getUrl(item.imageStorageId);
+      } else if (item.imagePath && item.imagePath.startsWith("http")) {
+        imageUrl = item.imagePath;
+      }
+      return {
+        _id: item._id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        itemType: item.itemType || "stadium",
+        matchesBonus: item.matchesBonus,
+        tournamentsBonus: item.tournamentsBonus,
+        mentorMode: item.mentorMode,
+        avatarId: item.avatarId,
+        durationMs: item.durationMs,
+        imageUrl,
+      };
     }));
   },
 });
@@ -97,8 +106,8 @@ export const getUserOwnedAvatars = query({
 });
 
 /**
- * Get user's active mentor purchase (if any)
- * Returns the mentor item with its mode (1 or 2)
+ * Get user's active mentor purchase (if any).
+ * Only the single latest purchase is used (new purchase replaces previous).
  */
 export const getUserActiveMentor = query({
   handler: async (ctx) => {
@@ -107,40 +116,31 @@ export const getUserActiveMentor = query({
       return null;
     }
     
-    // Get all user purchases
     const purchases = await ctx.db
       .query("purchases")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
       .collect();
     
     const now = Date.now();
+    let best: { itemId: Id<"storeItems">; mentorMode: 0 | 1 | 2; name: string; purchasedAt: number } | null = null;
     
-    // Find active mentor purchase
     for (const purchase of purchases) {
       const item = await ctx.db.get(purchase.itemId);
       if (!item || item.itemType !== "mentor") continue;
-      
-      // Check if purchase is still active
-      if (item.durationMs === 0) {
-        // Permanent purchase
-        return {
+      const isActive = item.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (!isActive) continue;
+      const mode = (item.mentorMode ?? 0) as 0 | 1 | 2;
+      if (!best || purchase.purchasedAt > best.purchasedAt) {
+        best = {
           itemId: item._id,
-          mentorMode: item.mentorMode!,
+          mentorMode: mode,
           name: item.name,
+          purchasedAt: purchase.purchasedAt,
         };
-      } else {
-        const expiresAt = purchase.purchasedAt + purchase.durationMs;
-        if (expiresAt > now) {
-          return {
-            itemId: item._id,
-            mentorMode: item.mentorMode!,
-            name: item.name,
-          };
-        }
       }
     }
     
-    return null;
+    return best ? { itemId: best.itemId, mentorMode: best.mentorMode, name: best.name } : null;
   },
 });
 
@@ -228,13 +228,15 @@ export const getAllStoreItems = query({
       name: item.name,
       description: item.description,
       price: item.price,
-      itemType: item.itemType || "stadium", // Default to stadium for old items
+      itemType: item.itemType || "stadium",
       matchesBonus: item.matchesBonus,
       tournamentsBonus: item.tournamentsBonus,
       mentorMode: item.mentorMode,
       avatarId: item.avatarId,
       durationMs: item.durationMs,
       isActive: item.isActive,
+      imagePath: item.imagePath,
+      imageStorageId: item.imageStorageId,
     }));
   },
 });
@@ -247,10 +249,12 @@ export const createStoreItem = mutation({
     itemType: v.union(v.literal("stadium"), v.literal("mentor"), v.literal("avatar")),
     matchesBonus: v.optional(v.number()),
     tournamentsBonus: v.optional(v.number()),
-    mentorMode: v.optional(v.union(v.literal(1), v.literal(2))),
+    mentorMode: v.optional(v.number()),
     avatarId: v.optional(v.string()),
     durationMs: v.number(),
     isActive: v.boolean(),
+    imagePath: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -263,22 +267,30 @@ export const createStoreItem = mutation({
       durationMs: args.durationMs,
       isActive: args.isActive,
     };
+    if (args.imagePath !== undefined) itemData.imagePath = args.imagePath;
+    if (args.imageStorageId !== undefined) itemData.imageStorageId = args.imageStorageId;
     
     if (args.itemType === "stadium") {
       itemData.matchesBonus = args.matchesBonus ?? 0;
       itemData.tournamentsBonus = args.tournamentsBonus ?? 0;
     } else if (args.itemType === "mentor") {
-      itemData.mentorMode = args.mentorMode;
-    } else if (args.itemType === "avatar") {
-      if (!args.avatarId) {
-        throw new Error("avatarId is required for avatar items");
+      const mode = args.mentorMode;
+      if (mode !== undefined && mode !== 0 && mode !== 1 && mode !== 2) {
+        throw new Error("mentorMode must be 0, 1, or 2");
       }
-      itemData.avatarId = args.avatarId;
+      itemData.mentorMode = mode === undefined ? undefined : (mode as 0 | 1 | 2);
+    } else if (args.itemType === "avatar") {
+      itemData.avatarId = args.avatarId?.trim() || undefined;
       // Avatar items are always permanent (durationMs = 0)
       itemData.durationMs = 0;
     }
     
     const itemId = await ctx.db.insert("storeItems", itemData);
+    
+    // اگر آواتار بدون avatarId ساخته شد، با شناسه یکتا پر کنیم
+    if (args.itemType === "avatar" && !itemData.avatarId) {
+      await ctx.db.patch(itemId, { avatarId: "store_" + itemId });
+    }
     
     return { itemId };
   },
@@ -293,10 +305,12 @@ export const updateStoreItem = mutation({
     itemType: v.optional(v.union(v.literal("stadium"), v.literal("mentor"), v.literal("avatar"))),
     matchesBonus: v.optional(v.number()),
     tournamentsBonus: v.optional(v.number()),
-    mentorMode: v.optional(v.union(v.literal(1), v.literal(2))),
+    mentorMode: v.optional(v.number()),
     avatarId: v.optional(v.string()),
     durationMs: v.optional(v.number()),
     isActive: v.optional(v.boolean()),
+    imagePath: v.optional(v.union(v.string(), v.null())),
+    imageStorageId: v.optional(v.union(v.id("_storage"), v.null())),
   },
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
@@ -313,8 +327,14 @@ export const updateStoreItem = mutation({
     if (args.itemType !== undefined) updates.itemType = args.itemType;
     if (args.matchesBonus !== undefined) updates.matchesBonus = args.matchesBonus;
     if (args.tournamentsBonus !== undefined) updates.tournamentsBonus = args.tournamentsBonus;
-    if (args.mentorMode !== undefined) updates.mentorMode = args.mentorMode;
+    if (args.mentorMode !== undefined) {
+      const m = args.mentorMode;
+      if (m !== 0 && m !== 1 && m !== 2) throw new Error("mentorMode must be 0, 1, or 2");
+      updates.mentorMode = m as 0 | 1 | 2;
+    }
     if (args.avatarId !== undefined) updates.avatarId = args.avatarId;
+    if (args.imagePath !== undefined) updates.imagePath = args.imagePath === null ? undefined : args.imagePath;
+    if (args.imageStorageId !== undefined) updates.imageStorageId = args.imageStorageId === null ? undefined : args.imageStorageId;
     if (args.durationMs !== undefined) {
       // For avatar items, always set durationMs to 0 (permanent)
       if (args.itemType === "avatar" || item.itemType === "avatar") {

@@ -73,30 +73,28 @@ export const createMatch = mutation({
         match.status !== "cancelled"
     );
     
-    // Calculate match limit including stadium bonuses
+    // Calculate match limit: base + single active stadium bonus (latest purchase only)
     const baseMatchesLimit = 3;
     
-    // Get active purchases and calculate bonuses
     const purchases = await ctx.db
       .query("purchases")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
       .collect();
     
     let matchesBonus = 0;
+    let bestStadium: { purchasedAt: number; matchesBonus: number } | null = null;
     
     for (const purchase of purchases) {
-      // If durationMs is 0, item never expires
       const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
-      if (isActive) {
-        // Purchase is still active
-        const item = await ctx.db.get(purchase.itemId);
-        if (item && item.itemType === "stadium" && item.matchesBonus) {
-          matchesBonus += item.matchesBonus;
-        }
+      if (!isActive) continue;
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "stadium" || item.matchesBonus == null) continue;
+      if (!bestStadium || purchase.purchasedAt > bestStadium.purchasedAt) {
+        bestStadium = { purchasedAt: purchase.purchasedAt, matchesBonus: item.matchesBonus };
       }
     }
+    if (bestStadium) matchesBonus = bestStadium.matchesBonus;
     
-    // Calculate total limit with bonuses
     const matchesLimit = baseMatchesLimit + matchesBonus;
     
     if (recentMatches.length >= matchesLimit) {
@@ -765,7 +763,7 @@ export const getDailyLimits = query({
         tournament.status !== "cancelled"
     );
     
-    // Get active purchases and calculate bonuses
+    // Get single active stadium (latest purchase) for bonuses
     const purchases = await ctx.db
       .query("purchases")
       .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
@@ -773,22 +771,24 @@ export const getDailyLimits = query({
     
     let matchesBonus = 0;
     let tournamentsBonus = 0;
+    let bestStadium: { purchasedAt: number; matchesBonus: number; tournamentsBonus: number } | null = null;
     
     for (const purchase of purchases) {
-      // If durationMs is 0, item never expires
       const isActive = purchase.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
-      if (isActive) {
-        // Purchase is still active
-        const item = await ctx.db.get(purchase.itemId);
-        if (item && item.itemType === "stadium") {
-          if (item.matchesBonus) {
-            matchesBonus += item.matchesBonus;
-          }
-          if (item.tournamentsBonus) {
-            tournamentsBonus += item.tournamentsBonus;
-          }
-        }
+      if (!isActive) continue;
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "stadium") continue;
+      if (!bestStadium || purchase.purchasedAt > bestStadium.purchasedAt) {
+        bestStadium = {
+          purchasedAt: purchase.purchasedAt,
+          matchesBonus: item.matchesBonus ?? 0,
+          tournamentsBonus: item.tournamentsBonus ?? 0,
+        };
       }
+    }
+    if (bestStadium) {
+      matchesBonus = bestStadium.matchesBonus;
+      tournamentsBonus = bestStadium.tournamentsBonus;
     }
     
     // Base limits
