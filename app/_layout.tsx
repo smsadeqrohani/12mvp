@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Slot, useRouter, useSegments, usePathname } from "expo-router";
 import { View, I18nManager, Text, TextInput, Platform } from "react-native";
 import { ConvexProvider, ConvexReactClient, useQuery } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
@@ -139,10 +139,12 @@ export default function RootLayout() {
   }, []);
 
   // Mobile viewport width for web (shared by splash and app)
-  const MOBILE_VIEWPORT_WIDTH = 430;
+  // Admin is full screen on desktop; app/tabs stay in mobile viewport
+  const pathname = usePathname();
+  const isAdminRoute = typeof pathname === "string" && pathname.startsWith("/admin");
 
   const mobileViewportWrapper = (child: React.ReactNode) =>
-    Platform.OS === "web" ? (
+    Platform.OS === "web" && !isAdminRoute ? (
       <View
         style={{
           flex: 1,
@@ -154,7 +156,7 @@ export default function RootLayout() {
       >
         <View
           style={{
-            width: MOBILE_VIEWPORT_WIDTH,
+            width: 430,
             maxWidth: "100%",
             minHeight: "100vh",
             flex: 1,
@@ -164,6 +166,10 @@ export default function RootLayout() {
         >
           {child}
         </View>
+      </View>
+    ) : Platform.OS === "web" && isAdminRoute ? (
+      <View style={{ flex: 1, minHeight: "100vh", width: "100%", direction: "rtl" }}>
+        {child}
       </View>
     ) : (
       child

@@ -1,6 +1,7 @@
-import { View, Text, TouchableOpacity } from "react-native";
-import { LottieBackground } from "../../src/components/ui";
+import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
+
+const authBackground = require("../../assets/background.png");
 
 // YekDo onboarding - Figma node 325-788
 // Same background as login, prominent CTA button
@@ -10,19 +11,23 @@ export default function OnboardingScreen() {
 
   return (
     <View style={{ flex: 1, width: "100%" }}>
-      <LottieBackground />
-      <View
-        style={{
-          flex: 1,
-          width: "100%",
-          paddingHorizontal: 24,
-          justifyContent: "flex-end",
-          paddingBottom: 48,
-        }}
+      <ImageBackground
+        source={authBackground}
+        style={{ flex: 1, width: "100%", height: "auto" }}
+        resizeMode="cover"
       >
+        <View
+          style={{
+            flex: 1,
+            width: "100%",
+            paddingHorizontal: 24,
+            justifyContent: "flex-end",
+            paddingBottom: 48,
+          }}
+        >
         {/* CTA Button - Figma design: height 64px, yellow-500, 3D shadow */}
         <TouchableOpacity
-          onPress={() => router.push("/(auth)/login?mode=signup")}
+          onPress={() => router.push("/(auth)/login")}
           activeOpacity={0.85}
           style={{
             height: 64,
@@ -66,6 +71,7 @@ export default function OnboardingScreen() {
           هر برد، تو رو به صدر جدول نزدیک‌تر میکنه!
         </Text>
       </View>
+      </ImageBackground>
     </View>
   );
 }

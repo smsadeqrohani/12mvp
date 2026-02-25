@@ -6,14 +6,15 @@ import {
   ScrollView,
   SafeAreaView,
   Dimensions,
+  ImageBackground,
 } from "react-native";
-import { LottieBackground } from "../../src/components/ui";
-
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 import { useQuery } from "convex/react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { SignInForm, SignUpForm } from "../../src/features/auth";
 import { api } from "../../convex/_generated/api";
+
+const authBackground = require("../../assets/background.png");
 
 // YekDo login design - Figma node 320-605
 // width: 390px, height: 844px
@@ -39,8 +40,12 @@ export default function LoginScreen() {
 
   return (
     <View style={{ flex: 1, width: "100%" }}>
-      <LottieBackground />
-      <SafeAreaView style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
+      <ImageBackground
+        source={authBackground}
+        style={{ flex: 1, width: "100%", height: "auto" }}
+        resizeMode="cover"
+      >
+        <SafeAreaView style={{ flex: 1, width: "100%", justifyContent: "center", alignItems: "center" }}>
         <ScrollView
           style={{ flex: 1, width: "100%" }}
           contentContainerStyle={{
@@ -59,14 +64,17 @@ export default function LoginScreen() {
             style={{
               width: "100%",
               maxWidth: 400,
-              backgroundColor: "rgba(0, 0, 0, 0.2)",
-              borderRadius: 24,
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: "#073BA3",
+              backgroundColor: "rgba(7, 25, 61, 0.72)",
               paddingHorizontal: 24,
               paddingTop: 32,
               paddingBottom: 28,
-              borderWidth: 1,
-              borderColor: "rgba(255, 255, 255, 0.15)",
               alignSelf: "center",
+              overflow: "hidden",
+              // @ts-expect-error - backdrop-filter for web
+              backdropFilter: "blur(12px)",
             }}
           >
             {/* Welcome message */}
@@ -150,6 +158,7 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }

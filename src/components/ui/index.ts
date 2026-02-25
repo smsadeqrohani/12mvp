@@ -17,5 +17,4 @@ export { TextInput } from './TextInput';
 export { Avatar } from './Avatar';
 export { ConfirmationDialog } from './ConfirmationDialog';
 export { SplashScreen } from './SplashScreen';
-export { LottieBackground } from './LottieBackground';
 
