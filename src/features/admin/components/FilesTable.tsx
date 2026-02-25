@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Modal, Platform } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
