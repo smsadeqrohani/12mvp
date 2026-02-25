@@ -16,6 +16,7 @@ import type {
 import type * as auth from "../auth.js";
 import type * as categories from "../categories.js";
 import type * as crons from "../crons.js";
+import type * as dashboard from "../dashboard.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as matchAdmin from "../matchAdmin.js";
@@ -47,6 +48,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   categories: typeof categories;
   crons: typeof crons;
+  dashboard: typeof dashboard;
   files: typeof files;
   http: typeof http;
   matchAdmin: typeof matchAdmin;

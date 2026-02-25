@@ -1,11 +1,11 @@
-import { SafeAreaView, ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { SafeAreaView, View, Text, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
-import { HelloPage } from "../../src/features/game";
+import { DashboardScreen } from "../../src/features/dashboard";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
-export default function DashboardScreen() {
+export default function DashboardTabScreen() {
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
 
@@ -42,9 +42,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <HelloPage />
-      </ScrollView>
+      <DashboardScreen />
     </SafeAreaView>
   );
 }

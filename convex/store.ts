@@ -122,7 +122,14 @@ export const getUserActiveMentor = query({
       .collect();
     
     const now = Date.now();
-    let best: { itemId: Id<"storeItems">; mentorMode: 0 | 1 | 2; name: string; purchasedAt: number } | null = null;
+    let best: {
+      itemId: Id<"storeItems">;
+      mentorMode: 0 | 1 | 2;
+      name: string;
+      purchasedAt: number;
+      imageStorageId?: Id<"_storage"> | undefined;
+      imagePath?: string | undefined;
+    } | null = null;
     
     for (const purchase of purchases) {
       const item = await ctx.db.get(purchase.itemId);
@@ -136,11 +143,95 @@ export const getUserActiveMentor = query({
           mentorMode: mode,
           name: item.name,
           purchasedAt: purchase.purchasedAt,
+          imageStorageId: item.imageStorageId,
+          imagePath: item.imagePath,
         };
       }
     }
     
-    return best ? { itemId: best.itemId, mentorMode: best.mentorMode, name: best.name } : null;
+    if (!best) return null;
+
+    let imageUrl: string | null = null;
+    if (best.imageStorageId) {
+      imageUrl = await ctx.storage.getUrl(best.imageStorageId);
+    } else if (best.imagePath && best.imagePath.startsWith("http")) {
+      imageUrl = best.imagePath;
+    }
+
+    return {
+      itemId: best.itemId,
+      mentorMode: best.mentorMode,
+      name: best.name,
+      imageUrl,
+    };
+  },
+});
+
+/**
+ * Get user's active stadium (if any) with image and bonuses.
+ * Uses the latest non-expired stadium purchase.
+ */
+export const getUserActiveStadium = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      return null;
+    }
+
+    const purchases = await ctx.db
+      .query("purchases")
+      .withIndex("by_user", (q: any) => q.eq("userId", currentUserId))
+      .collect();
+
+    const now = Date.now();
+    let best: {
+      itemId: Id<"storeItems">;
+      name: string;
+      matchesBonus: number;
+      tournamentsBonus: number;
+      purchasedAt: number;
+      imageStorageId?: Id<"_storage"> | undefined;
+      imagePath?: string | undefined;
+    } | null = null;
+
+    for (const purchase of purchases) {
+      const item = await ctx.db.get(purchase.itemId);
+      if (!item || item.itemType !== "stadium") continue;
+      const isActive = item.durationMs === 0 || (purchase.purchasedAt + purchase.durationMs > now);
+      if (!isActive) continue;
+
+      const matchesBonus = item.matchesBonus ?? 0;
+      const tournamentsBonus = item.tournamentsBonus ?? 0;
+
+      if (!best || purchase.purchasedAt > best.purchasedAt) {
+        best = {
+          itemId: item._id,
+          name: item.name,
+          matchesBonus,
+          tournamentsBonus,
+          purchasedAt: purchase.purchasedAt,
+          imageStorageId: item.imageStorageId,
+          imagePath: item.imagePath,
+        };
+      }
+    }
+
+    if (!best) return null;
+
+    let imageUrl: string | null = null;
+    if (best.imageStorageId) {
+      imageUrl = await ctx.storage.getUrl(best.imageStorageId);
+    } else if (best.imagePath && best.imagePath.startsWith("http")) {
+      imageUrl = best.imagePath;
+    }
+
+    return {
+      itemId: best.itemId,
+      name: best.name,
+      matchesBonus: best.matchesBonus,
+      tournamentsBonus: best.tournamentsBonus,
+      imageUrl,
+    };
   },
 });
 
