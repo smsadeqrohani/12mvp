@@ -93,15 +93,8 @@ export function StatsDonutCard({
 }: StatsDonutCardProps) {
   return (
     <View className="bg-background-light rounded-2xl border border-gray-700/30 p-4">
+      {/* Top row: تعداد بازی (right in RTL), گل رخت (left in RTL) */}
       <View className="flex-row items-center justify-between mb-4">
-        <View className="items-end">
-          <Text className="text-gray-400 text-sm" style={{ fontFamily: "Meem-Regular" }}>
-            تعداد بازی
-          </Text>
-          <Text className="text-white text-2xl font-bold" style={{ fontFamily: "Meem-Bold" }}>
-            {gamesPlayed.toLocaleString("fa-IR")}
-          </Text>
-        </View>
         <View className="items-end">
           <Text className="text-gray-400 text-sm" style={{ fontFamily: "Meem-Regular" }}>
             گل رخت
@@ -110,9 +103,17 @@ export function StatsDonutCard({
             {goalsScored.toLocaleString("fa-IR")}
           </Text>
         </View>
+        <View className="items-end">
+          <Text className="text-gray-400 text-sm" style={{ fontFamily: "Meem-Regular" }}>
+            تعداد بازی
+          </Text>
+          <Text className="text-white text-2xl font-bold" style={{ fontFamily: "Meem-Bold" }}>
+            {gamesPlayed.toLocaleString("fa-IR")}
+          </Text>
+        </View>
       </View>
+      {/* Bottom row: donut (right in RTL), breakdown list (left in RTL) */}
       <View className="flex-row items-center gap-4">
-        <DonutChart wins={wins} draws={draws} losses={losses} />
         <View className="flex-1 gap-2">
           <View className="flex-row items-center gap-2">
             <View className="w-3 h-3 rounded-full bg-green-500" />
@@ -142,6 +143,7 @@ export function StatsDonutCard({
             </Text>
           </View>
         </View>
+        <DonutChart wins={wins} draws={draws} losses={losses} />
       </View>
     </View>
   );

@@ -38,7 +38,7 @@ export function DashboardHeaderCard({
               className="text-gray-400 text-sm"
               style={{ fontFamily: "Meem-Regular" }}
             >
-              تغییرنام
+              تغییر نام
             </Text>
           </TouchableOpacity>
         )}

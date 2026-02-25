@@ -52,7 +52,7 @@ export function TournamentCategoryCarousel({
               style={{ width: 72 }}
             >
               <View
-                className="w-14 h-14 rounded-xl items-center justify-center border border-gray-600/50 bg-gray-800/50"
+                className="w-14 h-14 rounded-xl items-center justify-center border-2 border-yellow-500/60 bg-gray-800/50"
               >
                 {item.imageUrl ? (
                   <Image

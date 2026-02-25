@@ -31,7 +31,7 @@ export function QuotaUsageCard({
             <Gamepad2 size={20} color={COLORS.yellow[400]} strokeWidth={2} />
             <View>
               <Text className="text-white font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
-                {createdGames} بازی
+                {createdGames.toLocaleString("fa-IR")} بازی
               </Text>
               <Text className="text-gray-400 text-sm" style={{ fontFamily: "Meem-Regular" }}>
                 بازی های ایجاد شده
@@ -39,7 +39,7 @@ export function QuotaUsageCard({
             </View>
           </View>
           <Text className="text-gray-500 text-sm" style={{ fontFamily: "Meem-Regular" }}>
-            {createdGames} / {createdGamesLimit}
+            {createdGames.toLocaleString("fa-IR")} / {createdGamesLimit.toLocaleString("fa-IR")}
           </Text>
         </View>
         <View className="flex-row items-center justify-between">
@@ -47,7 +47,7 @@ export function QuotaUsageCard({
             <Trophy size={20} color={COLORS.yellow[400]} strokeWidth={2} />
             <View>
               <Text className="text-white font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
-                {createdTournaments} تورنومنت
+                {createdTournaments.toLocaleString("fa-IR")} تورنومنت
               </Text>
               <Text className="text-gray-400 text-sm" style={{ fontFamily: "Meem-Regular" }}>
                 تورنومنت های ایجاد شده
@@ -55,7 +55,7 @@ export function QuotaUsageCard({
             </View>
           </View>
           <Text className="text-gray-500 text-sm" style={{ fontFamily: "Meem-Regular" }}>
-            {createdTournaments} / {createdTournamentsLimit}
+            {createdTournaments.toLocaleString("fa-IR")} / {createdTournamentsLimit.toLocaleString("fa-IR")}
           </Text>
         </View>
       </View>

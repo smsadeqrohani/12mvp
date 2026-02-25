@@ -2,12 +2,14 @@ import { useEffect } from "react";
 import { SafeAreaView, ScrollView, View, ActivityIndicator } from "react-native";
 import { useQuery } from "convex/react";
 import { Leaderboard } from "../../src/features/game";
+import { DashboardSlider } from "../../src/features/dashboard";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
 
 export default function LeaderboardScreen() {
   const router = useRouter();
   const loggedInUser = useQuery(api.auth.loggedInUser);
+  const leaderboardSliders = useQuery(api.dashboard.getLeaderboardSlidersWithUrls);
 
   useEffect(() => {
     if (loggedInUser === null) {
@@ -31,8 +33,22 @@ export default function LeaderboardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <Leaderboard />
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="gap-4 py-4">
+          {leaderboardSliders && leaderboardSliders.length > 0 && (
+            <DashboardSlider
+              sliderItems={leaderboardSliders.map((s) => ({
+                _id: s._id,
+                slides: s.slides,
+              }))}
+            />
+          )}
+          <Leaderboard />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

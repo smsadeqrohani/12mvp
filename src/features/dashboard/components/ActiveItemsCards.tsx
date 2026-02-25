@@ -34,17 +34,14 @@ function SingleItemCard({
       onPress={onPress}
       className="flex-1 bg-background-light rounded-2xl border border-gray-700/30 overflow-hidden"
     >
-      <View className="flex-row items-center justify-between px-3 pt-2">
-        <Text
-          className="text-xs text-gray-300"
-          style={{ fontFamily: "Meem-SemiBold" }}
-          numberOfLines={1}
-        >
-          {label}
-        </Text>
-        <Ionicons name="football" size={14} color="#9ca3af" />
-      </View>
-      <View className="aspect-[4/3] bg-gray-800/60 mt-1">
+      <Text
+        className="text-white font-semibold text-right px-3 pt-2"
+        style={{ fontFamily: "Meem-SemiBold" }}
+        numberOfLines={1}
+      >
+        {title}
+      </Text>
+      <View className="aspect-[4/3] bg-gray-800/60 mx-2 mt-1 rounded-lg overflow-hidden">
         {imageUrl ? (
           <Image
             source={{ uri: imageUrl }}
@@ -53,16 +50,16 @@ function SingleItemCard({
           />
         ) : (
           <View className="flex-1 items-center justify-center">
-            <Ionicons name="football" size={40} color="#ffffff" />
+            <Ionicons name="football" size={40} color="#6b7280" />
           </View>
         )}
       </View>
       <Text
-        className="text-white text-xs text-right px-3 py-2"
+        className="text-gray-400 text-xs text-right px-3 py-2"
         style={{ fontFamily: "Meem-Regular" }}
         numberOfLines={1}
       >
-        {title}
+        {label}
       </Text>
     </TouchableOpacity>
   );
@@ -77,14 +74,14 @@ export function ActiveItemsCards({
   return (
     <View className="flex-row gap-3">
       <SingleItemCard
+        item={mentor}
+        fallbackLabel="مربی"
+        onPress={onPressMentor}
+      />
+      <SingleItemCard
         item={stadium}
         fallbackLabel="استادیوم"
         onPress={onPressStadium}
-      />
-      <SingleItemCard
-        item={mentor}
-        fallbackLabel="منتور"
-        onPress={onPressMentor}
       />
     </View>
   );

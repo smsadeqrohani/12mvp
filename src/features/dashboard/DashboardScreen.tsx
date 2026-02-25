@@ -192,7 +192,7 @@ export function DashboardScreen() {
   const mentorCard = activeMentor
     ? {
         id: activeMentor.itemId as string,
-        label: "منتور",
+        label: "مربی",
         title: activeMentor.name,
         imageUrl: activeMentor.imageUrl ?? null,
       }
@@ -262,7 +262,7 @@ export function DashboardScreen() {
               else toast.error("خطا در کپی کردن کد");
             }}
             onShare={() => handleShareReferral(referralStats.referralCode!)}
-            hint="این کد را با دوستان خود به اشتراک بگذارید"
+            hint="این کد را با دوستان خود به اشتراک بگذارید."
           />
         )}
 

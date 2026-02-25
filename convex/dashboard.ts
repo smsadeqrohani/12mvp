@@ -138,3 +138,44 @@ export const getDashboardSlidersWithUrls = query({
     return result;
   },
 });
+
+/** Leaderboard sliders with resolved image URLs for position "leaderboard". */
+export const getLeaderboardSlidersWithUrls = query({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) return [];
+
+    const sliders = await ctx.db
+      .query("sliders")
+      .withIndex("by_position", (q: any) => q.eq("position", "leaderboard"))
+      .order("desc")
+      .collect();
+
+    const result: Array<{
+      _id: Id<"sliders">;
+      slides: Array<{ imageUrl: string | null; imagePath?: string; order: number }>;
+    }> = [];
+
+    for (const slider of sliders) {
+      const slides = await Promise.all(
+        slider.slides.map(async (s: any) => {
+          let imageUrl: string | null = null;
+          if (s.imagePath && s.imagePath.startsWith("http")) {
+            imageUrl = s.imagePath;
+          } else if (s.imageStorageId) {
+            imageUrl = await ctx.storage.getUrl(s.imageStorageId);
+          }
+          return {
+            imageUrl,
+            imagePath: s.imagePath,
+            order: s.order ?? 0,
+          };
+        })
+      );
+      slides.sort((a, b) => a.order - b.order);
+      result.push({ _id: slider._id, slides });
+    }
+
+    return result;
+  },
+});

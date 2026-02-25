@@ -27,10 +27,10 @@ export function AccountInfoCard({
       </Text>
       <View className="gap-3">
         <View className="flex-row items-center justify-between flex-wrap gap-2">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-1">
             <TouchableOpacity onPress={onChangeName} activeOpacity={0.7}>
               <Text className="text-accent text-sm" style={{ fontFamily: "Meem-Regular" }}>
-                تغییرنام
+                تغییر نام
               </Text>
             </TouchableOpacity>
             <Text className="text-white text-right flex-1" numberOfLines={1}>
@@ -42,10 +42,10 @@ export function AccountInfoCard({
           </Text>
         </View>
         <View className="flex-row items-center justify-between flex-wrap gap-2">
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-2 flex-1">
             <TouchableOpacity onPress={onChangeEmail} activeOpacity={0.7}>
               <Text className="text-accent text-sm" style={{ fontFamily: "Meem-Regular" }}>
-                تغییرایمیل
+                تغییر ایمیل
               </Text>
             </TouchableOpacity>
             <Text className="text-white text-right flex-1" numberOfLines={1}>
