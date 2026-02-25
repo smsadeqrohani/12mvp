@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView, RefreshControl, Share, FlatList, Image } from "react-native";
 import { useQuery, useMutation } from "convex/react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "../../../lib/toast";
@@ -28,8 +28,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
   const [debouncedJoinCode, setDebouncedJoinCode] = useState("");
   const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const router = useRouter();
-  const categoryCarouselRef = useRef<FlatList>(null);
-  
+
   const userProfile = useQuery(api.auth.getUserProfile);
   const waitingTournaments = useQuery(api.tournaments.getWaitingTournaments);
   const myWaitingTournaments = useQuery(api.tournaments.getMyWaitingTournaments);
@@ -234,7 +233,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
             ایجاد تورنومنت جدید
           </Text>
           
-          {/* Category carousel: infinite horizontal, image above + title, placeholder when no image */}
+          {/* Category carousel: single list, no tripling — efficient and stable */}
           {(() => {
             const CAROUSEL_ITEM_WIDTH = 100;
             const CAROUSEL_ITEM_MARGIN = 8;
@@ -244,10 +243,8 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
               randomOption,
               ...(categories || []).map((c: any) => ({ ...c, isRandom: false })),
             ];
-            const listLength = carouselItems.length;
-            const infiniteData = listLength > 0 ? [...carouselItems, ...carouselItems, ...carouselItems] : [];
 
-            const renderCarouselItem = ({ item, index }: { item: (typeof carouselItems)[number]; index: number }) => {
+            const renderCarouselItem = ({ item }: { item: (typeof carouselItems)[number]; index: number }) => {
               const isRandom = "isRandom" in item && item.isRandom;
               const isSelected = isRandom ? !selectedCategory : selectedCategory === (item as any)._id;
               const imageUrl = isRandom ? null : (item as any).imageUrl;
@@ -258,7 +255,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
                 <TouchableOpacity
                   onPress={() => setSelectedCategory(isRandom ? null : (item as any)._id)}
                   activeOpacity={0.8}
-                  className="items-center mr-2"
+                  className="items-center ml-2"
                   style={{ width: CAROUSEL_ITEM_WIDTH }}
                 >
                   <View
@@ -299,24 +296,7 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
               );
             };
 
-            const carouselRef = categoryCarouselRef;
-            const onMomentumScrollEnd = (e: any) => {
-              const offset = e.nativeEvent.contentOffset.x;
-              const index = Math.round(offset / totalItemWidth);
-              if (index < listLength) {
-                carouselRef.current?.scrollToOffset({
-                  offset: offset + listLength * totalItemWidth,
-                  animated: false,
-                });
-              } else if (index >= 2 * listLength) {
-                carouselRef.current?.scrollToOffset({
-                  offset: offset - listLength * totalItemWidth,
-                  animated: false,
-                });
-              }
-            };
-
-            if (listLength === 0) {
+            if (carouselItems.length === 0) {
               return (
                 <View className="bg-gray-800/50 rounded-xl p-4 mb-4 items-center">
                   <Text className="text-gray-400">در حال بارگذاری دسته‌بندی‌ها...</Text>
@@ -328,24 +308,17 @@ export function TournamentLobby({ onTournamentStart, onTournamentFound }: Tourna
               <View className="mb-4">
                 <Text className="text-gray-400 text-sm mb-2 text-right">انتخاب دسته‌بندی (تصادفی)</Text>
                 <FlatList
-                  ref={carouselRef}
-                  data={infiniteData}
+                  data={carouselItems}
                   keyExtractor={(item, idx) =>
-                    (item as any).isRandom ? `random-${idx}` : `${(item as any)._id}-${idx}`
+                    (item as any).isRandom ? `random-${idx}` : `${(item as any)._id}`
                   }
                   renderItem={renderCarouselItem}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  initialScrollIndex={listLength}
-                  getItemLayout={(_, index) => ({
-                    length: totalItemWidth,
-                    offset: totalItemWidth * index,
-                    index,
-                  })}
-                  onMomentumScrollEnd={onMomentumScrollEnd}
-                  decelerationRate="fast"
+                  contentContainerStyle={{ paddingRight: 4 }}
                   snapToInterval={totalItemWidth}
                   snapToAlignment="start"
+                  decelerationRate="fast"
                 />
               </View>
             );
