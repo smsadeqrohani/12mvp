@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Modal, Platform } from "react-native";
+import { View, Text, ScrollView, SafeAreaView, TouchableOpacity, Modal, Platform, Image } from "react-native";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "expo-router";
 import { api } from "../convex/_generated/api";
@@ -916,6 +916,26 @@ export default function AdminScreen() {
       return <SkeletonAdminTab />;
     }
 
+    // Thumbnail for category image (optional); uses hook so must be a component
+    function CategoryImageThumb({ category }: { category: (typeof allCategories.page)[0] }) {
+      const imageUrl = useQuery(
+        api.categories.getImageUrl,
+        category?.imageStorageId ? { storageId: category.imageStorageId } : "skip"
+      );
+      const externalUrl = category?.imagePath && category.imagePath.startsWith("http") ? category.imagePath : null;
+      if (imageUrl) {
+        return <Image source={{ uri: imageUrl }} className="w-10 h-10 rounded-lg bg-gray-700/50" resizeMode="cover" />;
+      }
+      if (externalUrl) {
+        return <Image source={{ uri: externalUrl }} className="w-10 h-10 rounded-lg bg-gray-700/50" resizeMode="cover" />;
+      }
+      return (
+        <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
+          <Ionicons name="folder" size={20} color="#ff701a" />
+        </View>
+      );
+    }
+
     // Define table columns
     const categoriesColumns: Column<typeof allCategories.page[0]>[] = [
       {
@@ -923,9 +943,7 @@ export default function AdminScreen() {
         header: 'نام فارسی',
         render: (category) => (
           <View className="flex-row items-center gap-3">
-            <View className="w-10 h-10 bg-accent/20 rounded-full items-center justify-center">
-              <Ionicons name="folder" size={20} color="#ff701a" />
-            </View>
+            <CategoryImageThumb category={category} />
             <Text className="text-white font-semibold text-base" style={{ fontFamily: 'Meem-SemiBold' }}>
               {category.persianName}
             </Text>

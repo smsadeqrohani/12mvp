@@ -14,7 +14,7 @@ export function FileUpload({ onUploadComplete }: FileUploadProps) {
   const [selectedFile, setSelectedFile] = useState<FileData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const generateUploadUrl = useMutation(api.questions.generateUploadUrl);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const uploadFile = useMutation(api.files.uploadFile);
 
   const handleSelectFile = async () => {

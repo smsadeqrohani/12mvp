@@ -65,11 +65,25 @@ export const getCategoryBySlug = query({
   },
 });
 
+/** Get URL for category image (authenticated users — used in admin form and app display) */
+export const getImageUrl = query({
+  args: { storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
 export const createCategory = mutation({
   args: {
     persianName: v.string(),
     slug: v.string(),
     englishName: v.optional(v.string()),
+    imagePath: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
   },
   handler: adminOnly(async (ctx: any, args: any) => {
     // Validate slug uniqueness
@@ -100,6 +114,8 @@ export const createCategory = mutation({
       persianName: args.persianName,
       slug: args.slug,
       englishName: args.englishName,
+      imagePath: args.imagePath,
+      imageStorageId: args.imageStorageId,
     });
     
     return categoryId;
@@ -112,8 +128,12 @@ export const updateCategory = mutation({
     persianName: v.string(),
     slug: v.string(),
     englishName: v.optional(v.string()),
+    imagePath: v.optional(v.union(v.string(), v.null())),
+    imageStorageId: v.optional(v.union(v.id("_storage"), v.null())),
   },
   handler: adminOnly(async (ctx: any, args: any) => {
+    const imagePath = args.imagePath === null ? undefined : args.imagePath;
+    const imageStorageId = args.imageStorageId === null ? undefined : args.imageStorageId;
     // Check if category exists
     const category = await ctx.db.get(args.categoryId);
     if (!category) {
@@ -150,6 +170,8 @@ export const updateCategory = mutation({
       persianName: args.persianName,
       slug: args.slug,
       englishName: args.englishName,
+      imagePath,
+      imageStorageId,
     });
   }),
 });

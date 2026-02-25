@@ -21,6 +21,8 @@ const applicationTables = {
     persianName: v.string(),
     slug: v.string(),
     englishName: v.optional(v.string()),
+    imagePath: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
   }).index("by_slug", ["slug"]),
   
   questions: defineTable({

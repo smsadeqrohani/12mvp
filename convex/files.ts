@@ -90,6 +90,24 @@ export const uploadFile = mutation({
   },
 });
 
+/** Generate a Convex storage upload URL (admin only). Use for Files tab uploads. */
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    const currentUserId = await getAuthUserId(ctx);
+    if (!currentUserId) {
+      throw new Error("Not authenticated");
+    }
+    const currentProfile = await ctx.db
+      .query("profiles")
+      .withIndex("by_user", (q) => q.eq("userId", currentUserId))
+      .unique();
+    if (!currentProfile?.isAdmin) {
+      throw new Error("Only admins can upload files");
+    }
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const renameFile = mutation({
   args: {
     fileId: v.id("files"),
