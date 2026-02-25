@@ -8,4 +8,5 @@ export { FileUpload } from './components/FileUpload';
 export { MatchDetailsAdmin } from './components/MatchDetailsAdmin';
 export { TournamentDetailsAdmin } from './components/TournamentDetailsAdmin';
 export { AdminSettingsTab } from './components/AdminSettingsTab';
+export { SliderForm } from './components/SliderForm';
 

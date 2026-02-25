@@ -6,13 +6,13 @@ import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { Ionicons } from "@expo/vector-icons";
 import { toast } from "../src/lib/toast";
-import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin, StoreItemForm, AdminSettingsTab } from "../src/features/admin";
+import { QuestionsForm, CategoryForm, FilesTable, MatchDetailsAdmin, TournamentDetailsAdmin, StoreItemForm, AdminSettingsTab, SliderForm } from "../src/features/admin";
 import { PaginationControls, SkeletonAdminTab, DataTableRN, Avatar, ConfirmationDialog } from "../src/components/ui";
 import { useResponsive } from "../src/hooks";
 import { getOptimalPageSize } from "../src/lib/platform";
 import type { Column } from "../src/components/ui/DataTableRN";
 
-type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store" | "settings";
+type TabType = "users" | "questions" | "categories" | "files" | "matches" | "tournaments" | "store" | "sliders" | "settings";
 
 // Question type from admin query (includes rightAnswer and categories)
 interface QuestionWithAnswer {
@@ -55,6 +55,8 @@ export default function AdminScreen() {
   const [showStoreItemForm, setShowStoreItemForm] = useState(false);
   const [editingStoreItem, setEditingStoreItem] = useState<any>(null);
   const [creatingItemType, setCreatingItemType] = useState<"stadium" | "mentor" | null>(null);
+  const [showSliderForm, setShowSliderForm] = useState(false);
+  const [editingSlider, setEditingSlider] = useState<any>(null);
   const [viewingMatchId, setViewingMatchId] = useState<string | null>(null);
   const [viewingTournamentId, setViewingTournamentId] = useState<string | null>(null);
   const [confirmationDialog, setConfirmationDialog] = useState<{
@@ -107,6 +109,7 @@ export default function AdminScreen() {
   });
   const allTournaments = useQuery(api.tournaments.getAllTournaments);
   const allStoreItems = useQuery(api.store.getAllStoreItems);
+  const allSliders = useQuery(api.sliders.getAllSliders);
 
   const makeUserAdmin = useMutation(api.auth.makeUserAdmin);
   const updateUserName = useMutation(api.auth.updateUserName);
@@ -120,6 +123,7 @@ export default function AdminScreen() {
   const deleteStoreItem = useMutation(api.store.deleteStoreItem);
   const toggleStoreItemStatus = useMutation(api.store.toggleStoreItemStatus);
   const migrateStoreItems = useMutation(api.store.migrateStoreItems);
+  const deleteSlider = useMutation(api.sliders.deleteSlider);
 
   console.log("cancelMatch mutation:", cancelMatch);
 
@@ -481,6 +485,31 @@ export default function AdminScreen() {
     } catch (error) {
       toast.error("خطا در تغییر وضعیت آیتم");
     }
+  };
+
+  const handleEditSlider = (slider: any) => {
+    setEditingSlider(slider);
+    setShowSliderForm(true);
+  };
+
+  const handleCloseSliderForm = () => {
+    setShowSliderForm(false);
+    setEditingSlider(null);
+  };
+
+  const handleDeleteSlider = async (sliderId: string) => {
+    showConfirmation(
+      "حذف اسلایدر",
+      "آیا مطمئن هستید که می‌خواهید این اسلایدر را حذف کنید؟",
+      async () => {
+        try {
+          await deleteSlider({ sliderId: sliderId as Id<"sliders"> });
+          toast.success("اسلایدر حذف شد");
+        } catch (error) {
+          toast.error("خطا در حذف اسلایدر");
+        }
+      }
+    );
   };
 
   // Pagination handlers
@@ -1648,6 +1677,119 @@ export default function AdminScreen() {
     );
   };
 
+  const POSITION_LABELS: Record<string, string> = {
+    dashboard: "داشبورد",
+    game_result: "نتیجه بازی",
+    leaderboard: "جدول امتیازات",
+  };
+
+  const renderSlidersTab = () => {
+    if (allSliders === undefined) {
+      return <SkeletonAdminTab />;
+    }
+    const sliderColumns: Column<typeof allSliders[0]>[] = [
+      {
+        key: "name",
+        header: "نام",
+        render: (row) => (
+          <View className="flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-accent/20 rounded-lg items-center justify-center">
+              <Ionicons name="images-outline" size={20} color="#ff701a" />
+            </View>
+            <Text className="text-white font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
+              {row.name || "—"}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        key: "position",
+        header: "مکان",
+        render: (row) => (
+          <View className="rounded-lg px-3 py-1 border bg-accent/20 border-accent/30 w-fit">
+            <Text className="text-accent font-semibold text-sm" style={{ fontFamily: "Meem-SemiBold" }}>
+              {POSITION_LABELS[row.position] ?? row.position}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        key: "slides",
+        header: "تعداد اسلاید",
+        render: (row) => (
+          <Text className="text-gray-300" style={{ fontFamily: "Meem-Regular" }}>
+            {row.slides?.length ?? 0}
+          </Text>
+        ),
+      },
+      {
+        key: "actions",
+        header: "عملیات",
+        width: 200,
+        render: (row) => (
+          <View className="flex-row items-center gap-2">
+            <TouchableOpacity
+              onPress={() => handleEditSlider(row)}
+              className="px-3 py-2 bg-blue-600/20 border border-blue-500/30 rounded-lg"
+              style={{ minHeight: touchTargetSize }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-blue-400 text-xs font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
+                ویرایش
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleDeleteSlider(row._id)}
+              className="px-3 py-2 bg-red-600/20 border border-red-500/30 rounded-lg"
+              style={{ minHeight: touchTargetSize }}
+              activeOpacity={0.7}
+            >
+              <Text className="text-red-400 text-xs font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
+                حذف
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ),
+      },
+    ];
+    return (
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="mb-6 flex-row items-center justify-between">
+          <View>
+            <Text className="text-2xl font-bold text-white mb-2 text-right" style={{ fontFamily: "Meem-Bold" }}>
+              مدیریت اسلایدرها
+            </Text>
+            <Text className="text-gray-400 text-right" style={{ fontFamily: "Meem-Regular" }}>
+              داشبورد، نتیجه بازی، جدول امتیازات
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              setEditingSlider(null);
+              setShowSliderForm(true);
+            }}
+            className="px-4 py-3 bg-accent rounded-lg flex-row items-center gap-2"
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={20} color="#fff" />
+            <Text className="text-white font-semibold" style={{ fontFamily: "Meem-SemiBold" }}>
+              افزودن اسلایدر
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <DataTableRN
+          columns={sliderColumns}
+          data={allSliders}
+          keyExtractor={(item) => item._id}
+          emptyState={{
+            icon: <Ionicons name="images-outline" size={32} color="#6b7280" />,
+            title: "اسلایدری یافت نشد",
+            description: "اسلایدر جدید اضافه کنید",
+          }}
+        />
+      </ScrollView>
+    );
+  };
 
   const renderTournamentsTab = () => {
     // Show skeleton while loading
@@ -1992,6 +2134,29 @@ export default function AdminScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                onPress={() => setActiveTab("sliders")}
+                className={`p-4 rounded-xl ${
+                  activeTab === "sliders"
+                    ? "bg-accent/20 border border-accent/30"
+                    : "bg-transparent"
+                }`}
+                activeOpacity={0.7}
+              >
+                <View className="flex-row items-center gap-3">
+                  <View className={`w-10 h-10 rounded-lg items-center justify-center ${
+                    activeTab === "sliders" ? "bg-accent" : "bg-gray-700"
+                  }`}>
+                    <Ionicons name="images" size={20} color={activeTab === "sliders" ? "#fff" : "#9ca3af"} />
+                  </View>
+                  <Text className={`font-medium ${
+                    activeTab === "sliders" ? "text-white" : "text-gray-300"
+                  }`} style={{ fontFamily: 'Meem-SemiBold' }}>
+                    اسلایدرها
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 onPress={() => setActiveTab("settings")}
                 className={`p-4 rounded-xl ${
                   activeTab === "settings"
@@ -2047,6 +2212,7 @@ export default function AdminScreen() {
           {activeTab === "matches" && renderMatchesTab()}
           {activeTab === "tournaments" && renderTournamentsTab()}
           {activeTab === "store" && renderStoreTab()}
+          {activeTab === "sliders" && renderSlidersTab()}
           {activeTab === "settings" && <AdminSettingsTab />}
         </View>
       </View>
@@ -2122,6 +2288,24 @@ export default function AdminScreen() {
               onClose={handleCloseStoreItemForm}
             />
           </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* Slider Form Modal */}
+      <Modal
+        visible={showSliderForm}
+        animationType="slide"
+        presentationStyle={Platform.select({
+          ios: Platform.isPad ? 'formSheet' : 'pageSheet',
+          android: 'fullScreen',
+          default: 'pageSheet'
+        })}
+      >
+        <SafeAreaView className="flex-1 bg-background">
+          <SliderForm
+            slider={editingSlider}
+            onClose={handleCloseSliderForm}
+          />
         </SafeAreaView>
       </Modal>
 

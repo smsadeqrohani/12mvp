@@ -162,6 +162,23 @@ const applicationTables = {
     purchasedAt: v.number(),
     durationMs: v.number(), // Duration from the item at time of purchase
   }).index("by_user", ["userId"]).index("by_item", ["itemId"]),
+
+  /** Sliders: multiple images in order, shown in Dashboard / Game Result / Leaderboard */
+  sliders: defineTable({
+    name: v.optional(v.string()), // Optional label for admin
+    position: v.union(
+      v.literal("dashboard"),
+      v.literal("game_result"),
+      v.literal("leaderboard")
+    ),
+    slides: v.array(
+      v.object({
+        imagePath: v.optional(v.string()), // URL when using external link
+        imageStorageId: v.optional(v.id("_storage")), // When using upload or existing file
+        order: v.number(),
+      })
+    ),
+  }).index("by_position", ["position"]),
 };
 
 export default defineSchema({

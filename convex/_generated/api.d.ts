@@ -27,6 +27,7 @@ import type * as questionCategories from "../questionCategories.js";
 import type * as questions from "../questions.js";
 import type * as router from "../router.js";
 import type * as settings from "../settings.js";
+import type * as sliders from "../sliders.js";
 import type * as store from "../store.js";
 import type * as tournamentAdmin from "../tournamentAdmin.js";
 import type * as tournamentCore from "../tournamentCore.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   questions: typeof questions;
   router: typeof router;
   settings: typeof settings;
+  sliders: typeof sliders;
   store: typeof store;
   tournamentAdmin: typeof tournamentAdmin;
   tournamentCore: typeof tournamentCore;
